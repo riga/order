@@ -1,6 +1,6 @@
 <img src="https://raw.githubusercontent.com/riga/order/master/logo.png" alt="order logo" width="250"/>
 
-[![Build Status](https://travis-ci.org/riga/order.svg?branch=master)](https://travis-ci.org/riga/order) [![Documentation Status](https://readthedocs.org/projects/order/badge/?version=latest)](http://order.readthedocs.org/en/latest/?badge=latest) [![Package Status](https://badge.fury.io/py/order.svg)](https://badge.fury.io/py/order)
+[![Build Status](https://travis-ci.org/riga/order.svg?branch=master)](https://travis-ci.org/riga/order) [![Documentation Status](https://readthedocs.org/projects/python-order/badge/?version=latest)](http://python-order.readthedocs.org/en/latest/?badge=latest) [![Package Status](https://badge.fury.io/py/order.svg)](https://badge.fury.io/py/order)
 
 
 **Under development**

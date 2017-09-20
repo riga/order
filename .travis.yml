@@ -4,17 +4,13 @@ dist: stretch
 
 language: python
 
-services:
-  - docker
-
-matrix:
-  include:
-    - env: IMG=python:2.7
-    - env: IMG=python:3.5
-    - env: IMG=python:3.6
+python:
+  - "2.7"
+  - "3.5"
+  - "3.6"
 
 install:
-  - docker pull $IMG
+  - pip install -r requirements.txt
 
 script:
-  - docker run -t --rm -v `pwd`:/root/order -w /root/order $IMG /bin/bash -c "pip install -r requirements.txt; python -m unittest tests"
+  - python -m unittest tests

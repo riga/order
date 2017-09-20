@@ -13,4 +13,4 @@ from order import *
 
 
 # import all tests
-from test_unique import *
+from .test_unique import *

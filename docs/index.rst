@@ -1,6 +1,8 @@
 order
 =====
 
+.. note:: This project is currently under development.
+
 .. centered:: This page contains only API docs. For more info, visit `order on GitHub <https://github.com/riga/order>`_.
 
 
@@ -13,7 +15,20 @@ order
 Classes
 ^^^^^^^
 
-TODO.
+``UniqueObject``
+----------------
+
+.. autoclass:: UniqueObject
+   :member-order: bysource
+   :members:
+
+
+``UniqueObjectIndex``
+---------------------
+
+.. autoclass:: UniqueObjectIndex
+   :member-order: bysource
+   :members:
 
 
 Functions

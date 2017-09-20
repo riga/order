@@ -1,1 +1,2 @@
-scinum
+scinum>=0.1
+six

@@ -43,7 +43,7 @@ To run tests in a docker container, do:
 git clone https://github.com/riga/order.git
 cd order
 
-docker run --rm -v `pwd`:/root/order -w /root/order -e python:3.6 python -m unittest tests
+docker run --rm -v `pwd`:/root/order -w /root/order -e python:3.6 /bin/bash -c "pip install -r requirements.txt; python -m unittest tests"
 ```
 
 

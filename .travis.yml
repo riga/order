@@ -17,4 +17,4 @@ install:
   - docker pull $IMG
 
 script:
-  - docker run -t --rm -v `pwd`:/root/order -w /root/order $IMG python -m unittest tests
+  - docker run -t --rm -v `pwd`:/root/order -w /root/order $IMG /bin/bash -c "pip install -r requirements.txt; python -m unittest tests"

@@ -11,7 +11,8 @@ __all__ = ["UniqueObject", "UniqueObjectIndex"]
 from collections import defaultdict, OrderedDict
 
 import six
-from scinum import typed
+
+from .util import typed
 
 
 class UniqueObject(object):

@@ -16,7 +16,6 @@ from .mixins import AuxDataContainer, TagContainer
 from .util import typed, to_root_latex, join_root_selection
 
 
-
 class Variable(AuxDataContainer, TagContainer):
     """
     Class that provides simplified access to plotting variables. *name* is the name of the variable,

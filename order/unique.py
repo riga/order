@@ -5,7 +5,7 @@ Classes that define unique objects and the index to store them.
 """
 
 
-__all__ = ["UniqueObject", "UniqueObjectIndex"]
+__all__ = ["UniqueObject", "UniqueObjectIndex", "unique_tree"]
 
 
 from collections import defaultdict, OrderedDict
@@ -293,10 +293,9 @@ class UniqueObjectIndex(object):
 
     def __contains__(self, obj):
         """
-        Checks if an object is contained in the index. *obj* might be a *name*, *id*, or an instance
-        of the wrapped *cls*.
+        Checks if an object is contained in the index. Forwarded to :py:meth:`has`.
         """
-        return self.get(obj, None) is not None
+        return self.has(obj)
 
     def __iter__(self):
         """
@@ -405,19 +404,26 @@ class UniqueObjectIndex(object):
             else:
                 raise ValueError("object not known to index: %s" % obj)
 
+    def has(self, obj):
+        """
+        Checks if an object is contained in the index. *obj* might be a *name*, *id*, or an instance
+        of the wrapped *cls*.
+        """
+        return self.get(obj, None) is not None
+
     def remove(self, obj, silent=False):
         """
         Removes an object that is contained in the index. *obj* might be a *name*, *id*, or an
-        instance of *cls*. Returns whether an object was removed. Unless *silent* is *True*, an
-        error is raised if the object was not found.
+        instance of *cls*. Returns the removed object. Unless *silent* is *True*, an error is raised
+        if the object was not found.
         """
         obj = self.get(obj, None)
         if obj:
             del(self._name_index[obj.name])
             del(self._id_index[obj.id])
-            return True
+            return obj
         elif silent:
-            return False
+            return None
         else:
             raise ValueError("object not known to index: %s" % obj)
 
@@ -427,3 +433,196 @@ class UniqueObjectIndex(object):
         """
         self._name_index.clear()
         self._id_index.clear()
+
+
+def unique_tree(**kwargs):
+    """ unique_tree(cls=None, singular=None, plural=None, parents=True)
+    Decorator that adds method to the decorated class that provide tree features. Example:
+
+    .. code-block:: python
+
+        @unique_tree(singular="node")
+        class MyNode(UniqueObject):
+            default_uniqueness_context = "myclass"
+
+        # MyNode has now the following attributes and methods:
+        # nodes,          parent_nodes
+        # has_node(),     has_parent_node()
+        # add_node(),     add_parent_node()
+        # remove_node(),  remove_parent_node()
+        # walk_nodes(),   walk_parent_nodes()
+        # get_node(),     get_parent_node()
+        # is_leaf_node(), is_root_node()
+
+        c1 = MyNode("nodeA", 1)
+        c2 = c1.add_node("nodeB", 2)
+
+        c1.has_node(2)
+        # -> True
+
+        c2.has_parent_node("nodeA")
+        # -> True
+
+        c2.remove_parent_node(c1)
+
+        c2.has_parent_node("nodeA")
+        # -> False
+
+    *cls* denotes the type of instances the tree should hold and defaults to the decorated class
+    itself. *singular* and *plural* are used to name attributes and methods. They default to
+    ``cls.__name__.lower()`` and ``singular + "s"``, respectively. When *parents* is *False*, the
+    additional features are reduced to provide only one directional (top-down) relations.
+
+    A class can be decorated multiple times. Internally, the objects are stored in a
+    :py:class:`UniqueObjectIndex` per added tree functionality.
+    """
+    def decorator(unique_cls):
+        if not issubclass(unique_cls, UniqueObject):
+            raise TypeError("decorated class must inherit from UniqueObject: %s" % unique_cls)
+
+        # determine configuration defaults
+        cls = kwargs.get("cls", unique_cls)
+        singular = kwargs.get("singular", cls.__name__.lower())
+        plural = kwargs.get("plural", singular + "s")
+        parents = kwargs.get("parents", True)
+
+        # decorator for registering new instance methods with proper name and doc string
+        def patch(name=None, **kwargs):
+            def decorator(f):
+                if name is not None:
+                    f.__name__ = name
+                if f.__doc__:
+                    f.__doc__ = f.__doc__.format(name=name, singular=singular, plural=plural,
+                        **kwargs)
+                setattr(cls, f.__name__, f)
+                return f
+            return decorator
+
+        # determine prefixes and labels to add members programatically for children and parents
+        items = [("", "child", "parent_", "parent")]
+        if parents:
+            items.append(items[0][2:] + items[0][:2])
+
+        # patch the init method
+        orig_init = cls.__init__
+        def patched_init(self, *args, **kwargs):
+            # call the original init
+            orig_init(self, *args, **kwargs)
+
+            # register the child and parent indexes
+            for prefix, _, _, _ in items:
+                setattr(self, "_" + prefix + plural, UniqueObjectIndex(cls=cls))
+        cls.__init__ = patched_init
+
+        # register new instance methods that are common for children and parents
+        for tpl in items:
+            # due to lexical scoping rules we need a factory function in a loop to create functions
+            # that need to access the outer local scope
+            def factory(prefix, label, other_prefix, other_label):
+                info = {"prefix": prefix, "label": label, "other_prefix": other_prefix,
+                        "other_label": other_label}
+
+                # direct index access
+                @patch()
+                @typed(setter=False, name=prefix + plural)
+                def get_index(self):
+                    pass
+
+                # has method
+                @patch("has_" + prefix + singular, **info)
+                def has(self, *args, **kwargs):
+                    """
+                    Checks if a {singular} is contained in the {label} {plural} index. Shorthand
+                    for ``{prefix}{plural}.has()``. See :py:class:`UniqueObjectIndex`.
+                    """
+                    index = getattr(self, prefix + plural)
+                    return index.has(*args, **kwargs)
+
+                # add method
+                @patch("add_" + prefix + singular, **info)
+                def add(self, *args, **kwargs):
+                    """
+                    Adds a {label} {singular}. Also adds *this* {singular} to the {other_label}
+                    index of the added {singular}. See :py:class:`UniqueObjectIndex.add` for more
+                    info. 
+                    """
+                    index = getattr(self, prefix + plural)
+                    obj = index.add(*args, **kwargs)
+                    other_index = getattr(obj, other_prefix + plural)
+                    other_index.add(self)
+                    return obj
+
+                # remove method
+                @patch("remove_" + prefix + singular, **info)
+                def remove(self, *args, **kwargs):
+                    """
+                    Removes a {label} {singular}. Also removes *this* {singular} from the
+                    {other_label} index of the removed {singular}. See
+                    :py:class:`UniqueObjectIndex.remove` for more info. 
+                    """
+                    index = getattr(self, prefix + plural)
+                    obj = index.remove(*args, **kwargs)
+                    other_index = getattr(obj, other_prefix + plural)
+                    other_index.remove(self)
+                    return obj
+
+                # walk method
+                @patch("walk_" + prefix + plural, **info)
+                def walk(self):
+                    """
+                    Walks through the {label} {plural} and yields the current one, its depth
+                    relative to *this* {singular}, and its {label} {plural} in a list that can be
+                    modified to alter the walking. Starts at *this* {singular}.
+                    """
+                    lookup = [(self, 0)]
+                    while lookup:
+                        obj, depth = lookup.pop(0)
+                        objs = list(getattr(obj, prefix + plural).values())
+
+                        yield (obj, depth, objs)
+
+                        lookup.extend((obj, depth + 1) for obj in objs)
+
+                # get method
+                @patch("get_" + prefix + singular, **info)
+                def get(self, obj, deep=True, silent=False):
+                    """ get_{prefix}{singular}(obj, deep=True, silent=False)
+                    Returns a {singular} given by *obj*, which might be a *name*, *id*, or an
+                    instance. If *deep* is *True*, the lookup is recursive. When no {singular} is
+                    found and *silent* is *True*, *None* is returned. Otherwise, an error is raised.
+                    """
+                    indexes = [getattr(self, prefix + plural)]
+                    while len(indexes) > 0:
+                        index = indexes.pop(0)
+                        _obj = index.get(obj, None)
+                        if _obj is not None:
+                            return _obj
+                        elif deep:
+                            indexes.extend(getattr(_obj, prefix + plural) for _obj in index)
+
+                    # when this point is reached, no object was found
+                    if silent:
+                        return None
+                    else:
+                        raise ValueError("unknown %s: %s" % (singular, obj))
+
+            factory(*tpl)
+
+        @patch("is_leaf_" + singular)
+        def is_leaf(self):
+            """ is_leaf_{singular}()
+            Returns *True* when this {singular} has no child {plural}, *False* otherwise.
+            """
+            return len(getattr(self, plural)) == 0
+
+        if parents:
+            @patch("is_root_" + singular)
+            def is_root(self):
+                """ is_root_{singular}()
+                Returns *True* when this {singular} has no parent {plural}, *False* otherwise.
+                """
+                return len(getattr(self, "parent_" + plural)) == 0
+
+        return unique_cls
+
+    return decorator

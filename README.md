@@ -6,7 +6,7 @@
 > ### This project is currently under development.
 
 
-If you're designing a high-energy physics analyses (e.g. with data recorded with an [LHC](https://home.cern/topics/large-hadron-collider) experiment at [CERN](http://home.cern)), manual bookkeeping of external data can get complicated quite fast. *order* provides a Python class collection that helps you structuring
+If you're designing a high-energy physics analysis (e.g. with data recorded with an [LHC](https://home.cern/topics/large-hadron-collider) experiment at [CERN](http://home.cern)), manual bookkeeping of external data can get complicated quite fast. *order* provides a Python class collection that helps you structuring
 
 - analyses,
 - MC campaigns,
@@ -15,7 +15,7 @@ If you're designing a high-energy physics analyses (e.g. with data recorded with
 - channels,
 - categories,
 - systematics, and
-- statistical models.
+- models for statistical inference.
 
 
 ### Installation and dependencies

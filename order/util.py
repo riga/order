@@ -5,10 +5,13 @@ Helpful utilities.
 """
 
 
-__all__ = ["typed"]
+__all__ = ["typed", "make_list", "multi_match"]
 
 
 import functools
+import types
+import re
+import fnmatch
 
 
 class typed(property):
@@ -87,3 +90,34 @@ class typed(property):
         def fdel(inst):
             delattr(inst, name)
         return fdel
+
+
+def make_list(obj, cast=True):
+    """
+    Converts an object *obj* to a list and returns it. Objects of types *tuple* and *set* are
+    converted if *cast* is *True*. Otherwise, and for all other types, *obj* is put in a new list.
+    """
+    if isinstance(obj, list):
+        return list(obj)
+    if isinstance(obj, types.GeneratorType):
+        return list(obj)
+    if isinstance(obj, (tuple, set)) and cast:
+        return list(obj)
+    else:
+        return [obj]
+
+
+def multi_match(name, patterns, mode=any, func="fnmatch", *args, **kwargs):
+    """
+    Compares *name* to multiple *patterns* and returns *True* in case of at least one match (*mode*
+    = *any*, the default), or in case all patterns matched (*mode* = *all*). Otherwise, *False* is
+    returned. *func* determines the matching function and accepts ``"fnmatch"``, ``"fnmatchcase"``,
+    and ``"re"``. All *args* and *kwargs* are passed to the actual matching function.
+    """
+    if func == "re":
+        return mode(re.match(pattern, name, *args, **kwargs) for pattern in patterns)
+    elif func in ("fnmatch", "fnmatchcase"):
+        _func = getattr(fnmatch, func)
+        return mode(_func(name, pattern, *args, **kwargs) for pattern in patterns)
+    else:
+        raise ValueError("unknown matching function: %s" % func)

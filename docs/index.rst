@@ -36,8 +36,9 @@ Functions
 
 TODO.
 
+Functions
+^^^^^^^^^
 
-Other attributes
-^^^^^^^^^^^^^^^^
+.. autofunction:: order.util.make_list
 
-TODO.
+.. autofunction:: order.util.multi_match

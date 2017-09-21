@@ -39,10 +39,10 @@ Classes
    :members:
 
 
-``TaggableObject``
-------------------
+``TagContainer``
+----------------
 
-.. autoclass:: TaggableObject
+.. autoclass:: TagContainer
    :member-order: bysource
    :members:
 

@@ -5,7 +5,7 @@ Mixin classes providing common functionality.
 """
 
 
-__all__ = ["AuxDataContainer", "TaggableObject"]
+__all__ = ["AuxDataContainer", "TagContainer"]
 
 
 from collections import OrderedDict
@@ -79,13 +79,13 @@ class AuxDataContainer(object):
             return self._aux_data[key]
 
 
-class TaggableObject(object):
+class TagContainer(object):
     """
     Mixin-class that allows inheriting objects to be tagged.
 
     .. code-block:: python
 
-        class MyClass(TaggableObject):
+        class MyClass(TagContainer):
             ...
 
         c = MyClass()
@@ -113,7 +113,7 @@ class TaggableObject(object):
     """
 
     def __init__(self, tags=None):
-        super(TaggableObject, self).__init__()
+        super(TagContainer, self).__init__()
 
         # tag storage
         self._tags = set()

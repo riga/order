@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 
-__all__ = ["AuxDataContainerTest", "TaggableObjectTest"]
+__all__ = ["AuxDataContainerTest", "TagContainerTest"]
 
 
 import unittest
 
-from order import AuxDataContainer, TaggableObject
+from order import AuxDataContainer, TagContainer
 
 
 class AuxDataContainerTest(unittest.TestCase):
@@ -38,18 +38,18 @@ class AuxDataContainerTest(unittest.TestCase):
         self.assertFalse(c.has_aux("foo"))
 
 
-class TaggableObjectTest(unittest.TestCase):
+class TagContainerTest(unittest.TestCase):
 
     def test_constructor(self):
-        t = TaggableObject()
+        t = TagContainer()
         self.assertEqual(len(t.tags), 0)
 
-        t = TaggableObject(tags=["foo", "bar"])
+        t = TagContainer(tags=["foo", "bar"])
         self.assertEqual(len(t.tags), 2)
         self.assertIsInstance(t.tags, set)
 
     def test_add_remove(self):
-        t = TaggableObject()
+        t = TagContainer()
 
         t.add_tag(("foo", "bar", "baz"))
         self.assertEqual(len(t.tags), 3)
@@ -58,7 +58,7 @@ class TaggableObjectTest(unittest.TestCase):
         self.assertEqual(len(t.tags), 2)
 
     def test_has(self):
-        t = TaggableObject(tags=["foo", "bar", "baz"])
+        t = TagContainer(tags=["foo", "bar", "baz"])
 
         self.assertTrue(t.has_tag("foo"))
         self.assertTrue(t.has_tag("bar"))

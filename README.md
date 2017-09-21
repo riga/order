@@ -6,6 +6,18 @@
 > ### This project is currently under development.
 
 
+If you're designing a high-energy physics analyses (e.g. with data recorded with an [LHC](https://home.cern/topics/large-hadron-collider) experiment at [CERN](http://home.cern)), manual bookkeeping of external data can get complicated quite fast. *order* provides a Python class collection that helps you structuring
+
+- analyses,
+- mC campaigns,
+- datasets,
+- cross sections,
+- channels,
+- categories,
+- systematics, and
+- statistical models.
+
+
 ### Installation and dependencies
 
 Via [pip](https://pypi.python.org/pypi/order):

@@ -191,7 +191,7 @@ class UniqueObject(object):
 
     @typed(setter=False)
     def uniqueness_context(self, uniqueness_context):
-        # parser for the typed member holding the uniqueness context
+        # uniqueness_context parser
         if uniqueness_context is None:
             raise TypeError("invalid uniqueness_context type: %s" % uniqueness_context)
 
@@ -199,7 +199,7 @@ class UniqueObject(object):
 
     @typed(setter=False)
     def name(self, name):
-        # parser for the typed member holding the name
+        # name parser
         if not isinstance(name, six.string_types):
             raise TypeError("invalid name type: %s" % name)
 
@@ -207,7 +207,7 @@ class UniqueObject(object):
 
     @typed(setter=False)
     def id(self, id):
-        # parser for the typed member holding the id
+        # id parser
         if not isinstance(id, six.integer_types):
             raise TypeError("invalid id type: %s" % id)
 
@@ -313,7 +313,7 @@ class UniqueObjectIndex(object):
 
     @typed(setter=False)
     def cls(self, cls):
-        # parser for the typed member holding the wrapped class
+        # cls parser
         if not issubclass(cls, UniqueObject):
             raise ValueError("not a sublcass of UniqueObject: %s" % cls)
 

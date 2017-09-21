@@ -5,13 +5,15 @@ Helpful utilities.
 """
 
 
-__all__ = ["typed", "make_list", "multi_match"]
+__all__ = ["typed", "make_list", "multi_match", "flatten", "to_root_latex", "join_root_selection"]
 
 
 import functools
 import types
 import re
 import fnmatch
+
+import six
 
 
 class typed(property):
@@ -121,3 +123,79 @@ def multi_match(name, patterns, mode=any, func="fnmatch", *args, **kwargs):
         return mode(_func(name, pattern, *args, **kwargs) for pattern in patterns)
     else:
         raise ValueError("unknown matching function: %s" % func)
+
+
+def flatten(struct, depth=-1):
+    """
+    Flattens and returns a complex structured object *struct* up to a certain *depth*. When *depth*
+    is negative, *struct* is flattened entirely.
+    """
+    # generator are not considered as a flattening step, so pass the same depth
+    if isinstance(struct, types.GeneratorType):
+        return flatten(list(struct), depth=depth)
+
+    # stopping criterion
+    if depth == 0:
+        return struct
+
+    # actual flattening
+    if isinstance(struct, dict):
+        return flatten(struct.values(), depth=depth - 1)
+    elif isinstance(struct, (list, tuple, set)):
+        objs = []
+        for obj in struct:
+            objs.extend(flatten(obj, depth=depth - 1))
+        return objs
+    else:
+        return [struct]
+
+
+def to_root_latex(s):
+    """
+    Converts latex expressions in a string *s* to ROOT-compatible latex.
+    """
+    return s.replace("$", "").replace("\\", "#")
+
+
+def join_root_selection(*selection, **kwargs):
+    """ join_root_selection(*selection, op="&&", bracket=False)
+    Returns a concatenation of *selection* strings, which is multiplicative by default (*op*). When
+    *bracket* is *True*, the final selection string is placed into brackets.
+    """
+    # parse the selection strings
+    _selection = []
+    for s in flatten(selection):
+        if isinstance(s, (int, float)):
+            # special case: skip ones
+            if s == 1:
+                continue
+        elif isinstance(s, six.string_types):
+            # special case: skip empty strings and ones
+            if s in ("", "1.", "1"):
+                continue
+        else:
+            raise Exception("invalid selection string: %s" % s)
+        _selection.append(str(s))
+    selection = _selection
+
+    # trivial case, no selection
+    if not selection:
+        return "1"
+
+    # prepare the concatenation op
+    op = kwargs.get("op", "&&")
+    op = " %s " % op.strip()
+
+    def bracket(s, force=False):
+        if force or not s.startswith("("):
+            s = "(" + s
+        if force or not s.endswith(")"):
+            s += ")"
+        return s
+
+    joined = op.join(bracket(s) for s in selection)
+
+    if kwargs.get("bracket", False):
+        return bracket(joined, force=True)
+    else:
+        return joined

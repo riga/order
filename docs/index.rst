@@ -61,3 +61,9 @@ Functions
 .. autofunction:: order.util.make_list
 
 .. autofunction:: order.util.multi_match
+
+.. autofunction:: order.util.flatten
+
+.. autofunction:: order.util.to_root_latex
+
+.. autofunction:: order.util.join_root_selection

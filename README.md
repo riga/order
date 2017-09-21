@@ -14,7 +14,7 @@ Via [pip](https://pypi.python.org/pypi/order):
 pip install order
 ```
 
-Currently, the only dependency is [scinum](https://github.com/riga/scinum) which is also installed with the above command.
+Currently, the only dependencies are [scinum](https://github.com/riga/scinum) and [six](https://pypi.python.org/pypi/six), which are also installed with the above command.
 
 
 ### Contributing

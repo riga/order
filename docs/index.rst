@@ -31,10 +31,21 @@ Classes
    :members:
 
 
-Functions
-^^^^^^^^^
+``AuxDataContainer``
+--------------------
 
-TODO.
+.. autoclass:: AuxDataContainer
+   :member-order: bysource
+   :members:
+
+
+``TaggableObject``
+------------------
+
+.. autoclass:: TaggableObject
+   :member-order: bysource
+   :members:
+
 
 Functions
 ^^^^^^^^^

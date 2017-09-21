@@ -105,7 +105,7 @@ class UniqueObject(object):
     unique_ids = defaultdict(list)
 
     def __init__(self, name, id, context=None):
-        object.__init__(self)
+        super(UniqueObject, self).__init__()
 
         # register empty attributes
         self._uniqueness_context = None
@@ -191,31 +191,25 @@ class UniqueObject(object):
 
     @typed(setter=False)
     def uniqueness_context(self, uniqueness_context):
-        """
-        Parser for the typed member holding the uniqueness context.
-        """
+        # parser for the typed member holding the uniqueness context
         if uniqueness_context is None:
-            raise TypeError("wrong uniqueness_context type: %s" % uniqueness_context)
+            raise TypeError("invalid uniqueness_context type: %s" % uniqueness_context)
 
         return uniqueness_context
 
     @typed(setter=False)
     def name(self, name):
-        """
-        Parser for the typed member holding the name.
-        """
+        # parser for the typed member holding the name
         if not isinstance(name, six.string_types):
-            raise TypeError("wrong name type: %s" % name)
+            raise TypeError("invalid name type: %s" % name)
 
         return str(name)
 
     @typed(setter=False)
     def id(self, id):
-        """
-        Parser for the typed member holding the id.
-        """
+        # parser for the typed member holding the id
         if not isinstance(id, six.integer_types):
-            raise TypeError("wrong id type: %s" % id)
+            raise TypeError("invalid id type: %s" % id)
 
         return int(id)
 
@@ -265,7 +259,7 @@ class UniqueObjectIndex(object):
     _no_default = object()
 
     def __init__(self, cls=UniqueObject):
-        object.__init__(self)
+        super(UniqueObjectIndex, self).__init__()
 
         # set the cls using the typed parser
         self._cls = None
@@ -319,9 +313,7 @@ class UniqueObjectIndex(object):
 
     @typed(setter=False)
     def cls(self, cls):
-        """
-        Parser for the typed member holding the wrapped class.
-        """
+        # parser for the typed member holding the wrapped class
         if not issubclass(cls, UniqueObject):
             raise ValueError("not a sublcass of UniqueObject: %s" % cls)
 

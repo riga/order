@@ -15,6 +15,15 @@ order
 Classes
 ^^^^^^^
 
+``Variable``
+------------
+
+.. autoclass:: Variable
+   :show-inheritance:
+   :member-order: bysource
+   :members:
+
+
 ``UniqueObject``
 ----------------
 

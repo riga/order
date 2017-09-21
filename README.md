@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/riga/order.svg?branch=master)](https://travis-ci.org/riga/order) [![Documentation Status](https://readthedocs.org/projects/python-order/badge/?version=latest)](http://python-order.readthedocs.org/en/latest/?badge=latest) [![Package Status](https://badge.fury.io/py/order.svg)](https://badge.fury.io/py/order)
 
 
-**Under development**
+> ### This project is currently under development.
 
 
 ### Installation and dependencies

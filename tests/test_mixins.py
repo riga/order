@@ -54,6 +54,12 @@ class TagContainerTest(unittest.TestCase):
         t.add_tag(("foo", "bar", "baz"))
         self.assertEqual(len(t.tags), 3)
 
+        with self.assertRaises(TypeError):
+            t.tags = {}
+
+        with self.assertRaises(TypeError):
+            t.tags = [1]
+
         t.remove_tag("baz")
         self.assertEqual(len(t.tags), 2)
 
@@ -85,6 +91,9 @@ class DataSourceContainerTest(unittest.TestCase):
         self.assertFalse(c.is_mc)
         self.assertEqual(c.data_source, "data")
 
+        with self.assertRaises(TypeError):
+            DataSourceContainer(is_data={})
+
     def test_setters(self):
         c = DataSourceContainer()
         self.assertEqual(c.data_source, "mc")
@@ -100,3 +109,6 @@ class DataSourceContainerTest(unittest.TestCase):
 
         c.is_mc = True
         self.assertEqual(c.data_source, "mc")
+
+        with self.assertRaises(TypeError):
+            c.is_mc = {}

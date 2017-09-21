@@ -124,7 +124,7 @@ class TagContainer(object):
 
     @typed
     def tags(self, tags):
-        # parser for the typed member holding the tags
+        # tags parser
         if isinstance(tags, six.string_types):
             tags = {tags}
         if not isinstance(tags, (set, list, tuple)):
@@ -203,7 +203,7 @@ class DataSourceContainer(object):
         super(DataSourceContainer, self).__init__()
 
         # instance members
-        self._is_data = False
+        self._is_data = None
 
         # set the initial is_data value
         self.is_data = is_data

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Pythonic class collection that helps you structure external data from LHC/physics experiments.
+Pythonic class collection that helps you structure external data from LHC / HEP experiments.
 """
 
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Classes that defined unique objects and the index to store them.
+Classes that define unique objects and the index to store them.
 """
 
 

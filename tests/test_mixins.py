@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 
-__all__ = ["AuxDataContainerTest", "TagContainerTest"]
+__all__ = ["AuxDataContainerTest", "TagContainerTest", "DataSourceContainerTest"]
 
 
 import unittest
 
-from order import AuxDataContainer, TagContainer
+from order import AuxDataContainer, TagContainer, DataSourceContainer
 
 
 class AuxDataContainerTest(unittest.TestCase):
@@ -70,3 +70,33 @@ class TagContainerTest(unittest.TestCase):
         self.assertTrue(t.has_tag(("foo", "foo2")))
         self.assertFalse(t.has_tag(("foo", "foo2"), mode=all))
         self.assertTrue(t.has_tag(("foo", "baz"), mode=all))
+
+
+class DataSourceContainerTest(unittest.TestCase):
+
+    def test_constructor(self):
+        c = DataSourceContainer()
+        self.assertFalse(c.is_data)
+        self.assertTrue(c.is_mc)
+        self.assertEqual(c.data_source, "mc")
+
+        c = DataSourceContainer(is_data=True)
+        self.assertTrue(c.is_data)
+        self.assertFalse(c.is_mc)
+        self.assertEqual(c.data_source, "data")
+
+    def test_setters(self):
+        c = DataSourceContainer()
+        self.assertEqual(c.data_source, "mc")
+
+        c.is_data = True
+        self.assertEqual(c.data_source, "data")
+
+        c.is_data = False
+        self.assertEqual(c.data_source, "mc")
+
+        c.is_mc = False
+        self.assertEqual(c.data_source, "data")
+
+        c.is_mc = True
+        self.assertEqual(c.data_source, "mc")

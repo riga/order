@@ -5,7 +5,7 @@ Mixin classes providing common functionality.
 """
 
 
-__all__ = ["AuxDataContainer", "TagContainer"]
+__all__ = ["AuxDataContainer", "TagContainer", "DataSourceContainer"]
 
 
 from collections import OrderedDict
@@ -27,7 +27,7 @@ class AuxDataContainer(object):
         c = MyClass()
         c.set_aux("foo", "bar")
 
-        print(c.aux("foo"))
+        c.aux("foo")
         # -> "bar"
     """
 
@@ -36,7 +36,7 @@ class AuxDataContainer(object):
     def __init__(self, aux=None):
         super(AuxDataContainer, self).__init__()
 
-        # auxiliary data storage
+        # instance members
         self._aux_data = OrderedDict()
 
         # set initial aux data
@@ -115,7 +115,7 @@ class TagContainer(object):
     def __init__(self, tags=None):
         super(TagContainer, self).__init__()
 
-        # tag storage
+        # instance members
         self._tags = set()
 
         # set initial tags
@@ -160,3 +160,76 @@ class TagContainer(object):
         """
         match = lambda tag: any(multi_match(t, [tag], mode=any, **kwargs) for t in self.tags)
         return mode(match(tag) for tag in make_list(tag))
+
+
+class DataSourceContainer(object):
+    """
+    Mixin-class that provides convenience attributes for distinguishing between MC and data.
+
+    .. code-block:: python
+
+        class MyClass(DataSourceContainer):
+            ...
+
+        c = MyClass()
+
+        c.is_data
+        # -> False
+
+        c.data_source
+        # -> "mc"
+
+        c.is_data = True
+        c.data_source
+        # -> "data"
+
+    .. py:attribute:: is_data
+       type: boolean
+
+       *True* if this object contains information on real data.
+
+    .. py:attribute:: is_mc
+       type: boolean
+
+       *True* if this object contains information on MC data.
+
+    .. py:attribute:: data_source
+       type: string
+
+       Either ``"data"`` or ``"mc"``, depending on the source of contained data.
+    """
+
+    def __init__(self, is_data=False):
+        super(DataSourceContainer, self).__init__()
+
+        # instance members
+        self._is_data = False
+
+        # set the initial is_data value
+        self.is_data = is_data
+
+    @property
+    def is_data(self):
+        return self._is_data
+
+    @is_data.setter
+    def is_data(self, is_data):
+        if not isinstance(is_data, bool):
+            raise TypeError("invalid is_data type: %s" % is_data)
+
+        self._is_data = is_data
+
+    @property
+    def is_mc(self):
+        return not self.is_data
+
+    @is_mc.setter
+    def is_mc(self, is_mc):
+        if not isinstance(is_mc, bool):
+            raise TypeError("invalid is_mc type: %s" % is_mc)
+
+        self._is_data = not is_mc
+
+    @property
+    def data_source(self):
+        return "data" if self.is_data else "mc"

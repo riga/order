@@ -13,10 +13,11 @@ __contact__    = "https://github.com/riga/order"
 __license__    = "MIT"
 __status__     = "Development"
 __version__    = "0.0.1"
-__all__        = ["UniqueObject", "UniqueObjectIndex", "AuxDataContainer", "TagContainer"]
+__all__        = ["UniqueObject", "UniqueObjectIndex", "AuxDataContainer", "TagContainer",
+                  "DataSourceContainer"]
 
 
 # provisioning imports
 from .unique import UniqueObject, UniqueObjectIndex
-from .mixins import AuxDataContainer, TagContainer
+from .mixins import AuxDataContainer, TagContainer, DataSourceContainer
 

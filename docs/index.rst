@@ -47,6 +47,14 @@ Classes
    :members:
 
 
+``DataSourceContainer``
+-----------------------
+
+.. autoclass:: DataSourceContainer
+   :member-order: bysource
+   :members:
+
+
 Functions
 ^^^^^^^^^
 

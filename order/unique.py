@@ -236,7 +236,9 @@ class UniqueObject(object):
 
     def remove(self):
         """
-        Removes this instance from the instance cache.
+        Removes this instance from the instance cache. This happens automatically in the destructor,
+        so in most cases one might not want to call this method manually. However, the destructor
+        is triggered when the reference count becomes 0, and not necessarily when *del* is invoked.
         """
         self._instances[self.uniqueness_context].remove(self)
 

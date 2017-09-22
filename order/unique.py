@@ -25,6 +25,10 @@ class UniqueObjectMeta(type):
     """
 
     def __new__(meta_cls, class_name, bases, class_dict):
+        # set default_uniqueness_context to the lower-case class name when not set
+        class_dict.setdefault("default_uniqueness_context", class_name.lower())
+
+        # create the class
         cls = super(UniqueObjectMeta, meta_cls).__new__(meta_cls, class_name, bases, class_dict)
 
         # add an empty instance cache
@@ -84,7 +88,8 @@ class UniqueObject(object):
 
        The default context of uniqueness when none is given in the instance constructor. Two
        instances are only allowed to have the same name *or* the same id if their classes have
-       different contexts.
+       different contexts. Defaults to the lower-case name of the inheriting class When not set
+       during class creation.
 
     .. py:attribute:: uniqueness_context
        type: arbitrary (hashable)
@@ -104,17 +109,20 @@ class UniqueObject(object):
        The unique id.
     """
 
-    default_uniqueness_context = "default"
+    default_uniqueness_context = "uniqueobject"
 
     _instances = {}
 
     @classmethod
-    def get_instance(cls, obj, default=_no_default, context=default_uniqueness_context):
+    def get_instance(cls, obj, default=_no_default, context=None):
         """ get_instance(obj, [default], context=default_uniqueness_context)
         Returns an object that was instantiated in this class before. *obj* might be a *name*, *id*,
         or an instance of *cls*. If *default* is given, it is used as the default return value if no
         such object was be found. Otherwise, an error is raised.
         """
+        if context is None:
+            context = cls.default_uniqueness_context
+
         if context not in cls._instances:
             if default != _no_default:
                 return default
@@ -542,6 +550,24 @@ def unique_tree(**kwargs):
                 setattr(self, "_parent_" + plural, UniqueObjectIndex(cls=cls))
         cls.__init__ = __init__
 
+        if cls.__doc__:
+            cls.__doc__ += """
+    .. py:attribute:: {plural}
+       type: UniqueObjectIndex
+       read-only
+
+       The index of child {plural}.
+    """.format(plural=plural)
+
+            if parents:
+                cls.__doc__ += """
+    .. py:attribute:: parent_{plural}
+       type: UniqueObjectIndex
+       read-only
+
+       The index of parent {plural}.
+    """.format(plural=plural)
+
         #
         # child methods, independent of parents
         #
@@ -557,7 +583,7 @@ def unique_tree(**kwargs):
         def has(self, *args, **kwargs):
             """
             Checks if a {singular} is contained in the child {plural} index. Shorthand for
-            ``{plural}.has()``. See :py:class:`UniqueObjectIndex` for more info.
+            ``{plural}.has()``. See :py:meth:`UniqueObjectIndex.has` for more info.
             """
             return getattr(self, plural).has(*args, **kwargs)
 
@@ -619,7 +645,7 @@ def unique_tree(**kwargs):
             @patch("add_" + singular)
             def add(self, *args, **kwargs):
                 """
-                Adds a child {singular}. See :py:class:`UniqueObjectIndex.add` for more info. 
+                Adds a child {singular}. See :py:meth:`UniqueObjectIndex.add` for more info. 
                 """
                 return getattr(self, plural).add(*args, **kwargs)
 
@@ -627,7 +653,7 @@ def unique_tree(**kwargs):
             @patch("remove_" + singular)
             def remove(self, *args, **kwargs):
                 """
-                Removes a child {singular}. See :py:class:`UniqueObjectIndex.remove` for more info. 
+                Removes a child {singular}. See :py:meth:`UniqueObjectIndex.remove` for more info. 
                 """
                 return getattr(self, plural).remove(*args, **kwargs)
 
@@ -642,7 +668,7 @@ def unique_tree(**kwargs):
             def remove(self, *args, **kwargs):
                 """
                 Removes a child {singular}. Also removes *this* {singular} from the parent
-                index of the removed {singular}. See :py:class:`UniqueObjectIndex.remove` for
+                index of the removed {singular}. See :py:meth:`UniqueObjectIndex.remove` for
                 more info. 
                 """
                 obj = getattr(self, plural).remove(*args, **kwargs)
@@ -660,7 +686,7 @@ def unique_tree(**kwargs):
                 def add(self, *args, **kwargs):
                     """
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
-                    added {singular}. See :py:class:`UniqueObjectIndex.add` for more info. 
+                    added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info. 
                     """
                     obj = getattr(self, plural).add(*args, **kwargs)
                     getattr(obj, "parent_" + plural).add(self)
@@ -678,7 +704,7 @@ def unique_tree(**kwargs):
                     """
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
                     added {singular}. An exception is raised when the number of allowed parents is
-                    exceeded. See :py:class:`UniqueObjectIndex.add` for more info. 
+                    exceeded. See :py:meth:`UniqueObjectIndex.add` for more info. 
                     """
                     index = getattr(self, plural)
                     obj = index.add(*args, **kwargs)
@@ -704,7 +730,7 @@ def unique_tree(**kwargs):
             def has(self, *args, **kwargs):
                 """
                 Checks if a {singular} is contained in the parent {plural} index. Shorthand for
-                ``parent_{plural}.has()``. See :py:class:`UniqueObjectIndex` for more info.
+                ``parent_{plural}.has()``. See :py:meth:`UniqueObjectIndex.has` for more info.
                 """
                 return getattr(self, "parent_" + plural).has(*args, **kwargs)
 
@@ -753,7 +779,7 @@ def unique_tree(**kwargs):
             def remove(self, *args, **kwargs):
                 """
                 Removes a parent {singular}. Also removes *this* {singular} from the parent index
-                of the removed {singular}. See :py:class:`UniqueObjectIndex.remove` for more info.
+                of the removed {singular}. See :py:meth:`UniqueObjectIndex.remove` for more info.
                 """
                 obj = getattr(self, "parent_" + plural).remove(*args, **kwargs)
                 getattr(obj, plural).remove(self)
@@ -777,7 +803,7 @@ def unique_tree(**kwargs):
                 def add(self, *args, **kwargs):
                     """
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
-                    added {singular}. See :py:class:`UniqueObjectIndex.add` for more info. 
+                    added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info. 
                     """
                     obj = getattr(self, "parent_" + plural).add(*args, **kwargs)
                     getattr(obj, plural).add(self)
@@ -794,7 +820,7 @@ def unique_tree(**kwargs):
                 def add(self, *args, **kwargs):
                     """
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
-                    added {singular}. See :py:class:`UniqueObjectIndex.add` for more info. 
+                    added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info. 
                     """
                     parent_index = getattr(self, "parent_" + plural)
                     if len(parent_index) >= parents:

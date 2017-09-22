@@ -437,7 +437,8 @@ class UniqueObjectIndex(object):
 
 def unique_tree(**kwargs):
     """ unique_tree(cls=None, singular=None, plural=None, parents=True)
-    Decorator that adds method to the decorated class that provide tree features. Example:
+    Decorator that adds attributes and methods to the decorated class to provide tree features,
+    i.e., *parent-child* relations. Example:
 
     .. code-block:: python
 
@@ -464,14 +465,15 @@ def unique_tree(**kwargs):
         # -> True
 
         c2.remove_parent_node(c1)
-
         c2.has_parent_node("nodeA")
         # -> False
 
     *cls* denotes the type of instances the tree should hold and defaults to the decorated class
     itself. *singular* and *plural* are used to name attributes and methods. They default to
     ``cls.__name__.lower()`` and ``singular + "s"``, respectively. When *parents* is *False*, the
-    additional features are reduced to provide only one directional (top-down) relations.
+    additional features are reduced to provide only child relations. When *parents* is an integer,
+    it is interpreted as the maximim number of parents a child can have. Additional convenience
+    methods are added when *parents* is exactly 1.
 
     A class can be decorated multiple times. Internally, the objects are stored in a
     :py:class:`UniqueObjectIndex` per added tree functionality.
@@ -489,125 +491,90 @@ def unique_tree(**kwargs):
         # decorator for registering new instance methods with proper name and doc string
         def patch(name=None, **kwargs):
             def decorator(f):
-                if name is not None:
-                    f.__name__ = name
+                _name = name
+                if _name is not None and hasattr(f, "__name__"):
+                    f.__name__ = _name
+                elif _name is None and hasattr(f, "__name__"):
+                    _name = f.__name__
                 if f.__doc__:
-                    f.__doc__ = f.__doc__.format(name=name, singular=singular, plural=plural,
+                    f.__doc__ = f.__doc__.format(name=_name, singular=singular, plural=plural,
                         **kwargs)
-                setattr(cls, f.__name__, f)
+                setattr(cls, _name, f)
                 return f
             return decorator
 
-        # determine prefixes and labels to add members programatically for children and parents
-        items = [("", "child", "parent_", "parent")]
-        if parents:
-            items.append(items[0][2:] + items[0][:2])
-
         # patch the init method
         orig_init = cls.__init__
-        def patched_init(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs):
             # call the original init
             orig_init(self, *args, **kwargs)
 
             # register the child and parent indexes
-            for prefix, _, _, _ in items:
-                setattr(self, "_" + prefix + plural, UniqueObjectIndex(cls=cls))
-        cls.__init__ = patched_init
+            setattr(self, "_" + plural, UniqueObjectIndex(cls=cls))
+            if parents:
+                setattr(self, "_parent_" + plural, UniqueObjectIndex(cls=cls))
+        cls.__init__ = __init__
 
-        # register new instance methods that are common for children and parents
-        for tpl in items:
-            # due to lexical scoping rules we need a factory function in a loop to create functions
-            # that need to access the outer local scope
-            def factory(prefix, label, other_prefix, other_label):
-                info = {"prefix": prefix, "label": label, "other_prefix": other_prefix,
-                        "other_label": other_label}
+        #
+        # child methods, independent of parents
+        #
 
-                # direct index access
-                @patch()
-                @typed(setter=False, name=prefix + plural)
-                def get_index(self):
-                    pass
+        # direct child index access
+        @patch()
+        @typed(setter=False, name=plural)
+        def get_index(self):
+            pass
 
-                # has method
-                @patch("has_" + prefix + singular, **info)
-                def has(self, *args, **kwargs):
-                    """
-                    Checks if a {singular} is contained in the {label} {plural} index. Shorthand
-                    for ``{prefix}{plural}.has()``. See :py:class:`UniqueObjectIndex`.
-                    """
-                    index = getattr(self, prefix + plural)
-                    return index.has(*args, **kwargs)
+        # has child method
+        @patch("has_" + singular)
+        def has(self, *args, **kwargs):
+            """
+            Checks if a {singular} is contained in the child {plural} index. Shorthand for
+            ``{plural}.has()``. See :py:class:`UniqueObjectIndex` for more info.
+            """
+            return getattr(self, plural).has(*args, **kwargs)
 
-                # add method
-                @patch("add_" + prefix + singular, **info)
-                def add(self, *args, **kwargs):
-                    """
-                    Adds a {label} {singular}. Also adds *this* {singular} to the {other_label}
-                    index of the added {singular}. See :py:class:`UniqueObjectIndex.add` for more
-                    info. 
-                    """
-                    index = getattr(self, prefix + plural)
-                    obj = index.add(*args, **kwargs)
-                    other_index = getattr(obj, other_prefix + plural)
-                    other_index.add(self)
-                    return obj
+        # walk children method
+        @patch("walk_" + plural)
+        def walk(self):
+            """
+            Walks through the child {plural} and per iteration yields a child {singular}, its depth
+            relative to *this* {singular}, and its child {plural} in a list that can be modified to
+            alter the walking. Starts at *this* {singular}.
+            """
+            lookup = [(self, 0)]
+            while lookup:
+                obj, depth = lookup.pop(0)
+                objs = list(getattr(obj, plural).values())
 
-                # remove method
-                @patch("remove_" + prefix + singular, **info)
-                def remove(self, *args, **kwargs):
-                    """
-                    Removes a {label} {singular}. Also removes *this* {singular} from the
-                    {other_label} index of the removed {singular}. See
-                    :py:class:`UniqueObjectIndex.remove` for more info. 
-                    """
-                    index = getattr(self, prefix + plural)
-                    obj = index.remove(*args, **kwargs)
-                    other_index = getattr(obj, other_prefix + plural)
-                    other_index.remove(self)
-                    return obj
+                yield (obj, depth, objs)
 
-                # walk method
-                @patch("walk_" + prefix + plural, **info)
-                def walk(self):
-                    """
-                    Walks through the {label} {plural} and yields the current one, its depth
-                    relative to *this* {singular}, and its {label} {plural} in a list that can be
-                    modified to alter the walking. Starts at *this* {singular}.
-                    """
-                    lookup = [(self, 0)]
-                    while lookup:
-                        obj, depth = lookup.pop(0)
-                        objs = list(getattr(obj, prefix + plural).values())
+                lookup.extend((obj, depth + 1) for obj in objs)
 
-                        yield (obj, depth, objs)
+        # get child method
+        @patch("get_" + singular)
+        def get(self, obj, deep=True, silent=False):
+            """ get_{singular}(obj, deep=True, silent=False)
+            Returns a child {singular} given by *obj*, which might be a *name*, *id*, or an
+            instance. If *deep* is *True*, the lookup is recursive. When no {singular} is found and
+            *silent* is *True*, *None* is returned. Otherwise, an error is raised.
+            """
+            indexes = [getattr(self, plural)]
+            while len(indexes) > 0:
+                index = indexes.pop(0)
+                _obj = index.get(obj, None)
+                if _obj is not None:
+                    return _obj
+                elif deep:
+                    indexes.extend(getattr(_obj, plural) for _obj in index)
 
-                        lookup.extend((obj, depth + 1) for obj in objs)
+            # when this point is reached, no object was found
+            if silent:
+                return None
+            else:
+                raise ValueError("unknown %s: %s" % (singular, obj))
 
-                # get method
-                @patch("get_" + prefix + singular, **info)
-                def get(self, obj, deep=True, silent=False):
-                    """ get_{prefix}{singular}(obj, deep=True, silent=False)
-                    Returns a {singular} given by *obj*, which might be a *name*, *id*, or an
-                    instance. If *deep* is *True*, the lookup is recursive. When no {singular} is
-                    found and *silent* is *True*, *None* is returned. Otherwise, an error is raised.
-                    """
-                    indexes = [getattr(self, prefix + plural)]
-                    while len(indexes) > 0:
-                        index = indexes.pop(0)
-                        _obj = index.get(obj, None)
-                        if _obj is not None:
-                            return _obj
-                        elif deep:
-                            indexes.extend(getattr(_obj, prefix + plural) for _obj in index)
-
-                    # when this point is reached, no object was found
-                    if silent:
-                        return None
-                    else:
-                        raise ValueError("unknown %s: %s" % (singular, obj))
-
-            factory(*tpl)
-
+        # is leaf method
         @patch("is_leaf_" + singular)
         def is_leaf(self):
             """ is_leaf_{singular}()
@@ -615,13 +582,212 @@ def unique_tree(**kwargs):
             """
             return len(getattr(self, plural)) == 0
 
-        if parents:
+        #
+        # child methods, disabled parents
+        #
+
+        if not parents:
+
+            # add child method
+            @patch("add_" + singular)
+            def add(self, *args, **kwargs):
+                """
+                Adds a child {singular}. See :py:class:`UniqueObjectIndex.add` for more info. 
+                """
+                return getattr(self, plural).add(*args, **kwargs)
+
+            # remove child method
+            @patch("remove_" + singular)
+            def remove(self, *args, **kwargs):
+                """
+                Removes a child {singular}. See :py:class:`UniqueObjectIndex.remove` for more info. 
+                """
+                return getattr(self, plural).remove(*args, **kwargs)
+
+        #
+        # child methods, enabled parents
+        #
+
+        else:
+
+            # remove child method with limited number of parents
+            @patch("remove_" + singular)
+            def remove(self, *args, **kwargs):
+                """
+                Removes a child {singular}. Also removes *this* {singular} from the parent
+                index of the removed {singular}. See :py:class:`UniqueObjectIndex.remove` for
+                more info. 
+                """
+                obj = getattr(self, plural).remove(*args, **kwargs)
+                getattr(obj, "parent_" + plural).remove(self)
+                return obj
+
+        #
+        # child methods, enabled and unlimited parents
+        #
+
+            if isinstance(parents, six.integer_types):
+
+                # add child method with infinite number of parents
+                @patch("add_" + singular)
+                def add(self, *args, **kwargs):
+                    """
+                    Adds a child {singular}. Also adds *this* {singular} to the parent index of the
+                    added {singular}. See :py:class:`UniqueObjectIndex.add` for more info. 
+                    """
+                    obj = getattr(self, plural).add(*args, **kwargs)
+                    getattr(obj, "parent_" + plural).add(self)
+                    return obj
+
+        #
+        # child methods, enabled but limited parents
+        #
+
+            else:
+
+                # add child method with limited number of parents
+                @patch("add_" + singular)
+                def add(self, *args, **kwargs):
+                    """
+                    Adds a child {singular}. Also adds *this* {singular} to the parent index of the
+                    added {singular}. An exception is raised when the number of allowed parents is
+                    exceeded. See :py:class:`UniqueObjectIndex.add` for more info. 
+                    """
+                    index = getattr(self, plural)
+                    obj = index.add(*args, **kwargs)
+                    parent_index = getattr(obj, "parent_" + plural)
+                    if len(parent_index) >= parents:
+                        index.remove(obj)
+                        raise Exception("number of parents exceeded: %i" % parents)
+                    parent_index.add(self)
+                    return obj
+
+        #
+        # parent methods, independent of number
+        #
+
+            # direct parent index access
+            @patch()
+            @typed(setter=False, name="parent_" + plural)
+            def get_index(self):
+                pass
+
+            # has parent method
+            @patch("has_parent_" + singular)
+            def has(self, *args, **kwargs):
+                """
+                Checks if a {singular} is contained in the parent {plural} index. Shorthand for
+                ``parent_{plural}.has()``. See :py:class:`UniqueObjectIndex` for more info.
+                """
+                return getattr(self, "parent_" + plural).has(*args, **kwargs)
+
+            # walk parents method
+            @patch("walk_parent_" + plural)
+            def walk(self):
+                """
+                Walks through the parent {plural} and per iteration yields a parent {singular},
+                its depth relative to *this* {singular}, and its parent {plural} in a list that
+                can be modified to alter the walking. Starts at *this* {singular}.
+                """
+                lookup = [(self, 0)]
+                while lookup:
+                    obj, depth = lookup.pop(0)
+                    objs = list(getattr(obj, "parent_" + plural).values())
+
+                    yield (obj, depth, objs)
+
+                    lookup.extend((obj, depth + 1) for obj in objs)
+
+            # get parent method
+            @patch("get_parent_" + singular)
+            def get(self, obj, deep=True, silent=False):
+                """ get_parent_{singular}(obj, deep=True, silent=False)
+                Returns a parent {singular} given by *obj*, which might be a *name*, *id*, or an
+                instance. If *deep* is *True*, the lookup is recursive. When no {singular} is found
+                and *silent* is *True*, *None* is returned. Otherwise, an error is raised.
+                """
+                indexes = [getattr(self, "parent_" + plural)]
+                while len(indexes) > 0:
+                    index = indexes.pop(0)
+                    _obj = index.get(obj, None)
+                    if _obj is not None:
+                        return _obj
+                    elif deep:
+                        indexes.extend(getattr(_obj, "parent_" + plural) for _obj in index)
+
+                # when this point is reached, no object was found
+                if silent:
+                    return None
+                else:
+                    raise ValueError("unknown %s: %s" % (singular, obj))
+
+            # remove parent method
+            @patch("remove_parent_" + singular)
+            def remove(self, *args, **kwargs):
+                """
+                Removes a parent {singular}. Also removes *this* {singular} from the parent index
+                of the removed {singular}. See :py:class:`UniqueObjectIndex.remove` for more info.
+                """
+                obj = getattr(self, "parent_" + plural).remove(*args, **kwargs)
+                getattr(obj, plural).remove(self)
+                return obj
+
             @patch("is_root_" + singular)
             def is_root(self):
                 """ is_root_{singular}()
                 Returns *True* when this {singular} has no parent {plural}, *False* otherwise.
                 """
                 return len(getattr(self, "parent_" + plural)) == 0
+
+        #
+        # parent methods, unlimited number
+        #
+
+            if not isinstance(parents, six.integer_types):
+
+                # add parent method with inf number of parents
+                @patch("add_parent_" + singular)
+                def add(self, *args, **kwargs):
+                    """
+                    Adds a child {singular}. Also adds *this* {singular} to the parent index of the
+                    added {singular}. See :py:class:`UniqueObjectIndex.add` for more info. 
+                    """
+                    obj = getattr(self, "parent_" + plural).add(*args, **kwargs)
+                    getattr(obj, plural).add(self)
+                    return obj
+
+        #
+        # parent methods, limited number
+        #
+
+            else:
+
+                # add parent method with inf number of parents
+                @patch("add_parent_" + singular)
+                def add(self, *args, **kwargs):
+                    """
+                    Adds a child {singular}. Also adds *this* {singular} to the parent index of the
+                    added {singular}. See :py:class:`UniqueObjectIndex.add` for more info. 
+                    """
+                    parent_index = getattr(self, "parent_" + plural)
+                    if len(parent_index) >= parents:
+                        raise Exception("number of parents exceeded: %i" % parents)
+                    obj = parent_index.add(*args, **kwargs)
+                    getattr(obj, plural).add(self)
+                    return obj
+
+        #
+        # convenient parent methods, exactly 1 parent
+        #
+
+                if parents == 1:
+
+                    # direct parent access
+                    @patch(name="parent_" + singular)
+                    @property
+                    def parent(self):
+                        index = getattr(self, "parent_" + plural)
+                        return None if len(index) != 1 else index.values()[0]
 
         return unique_cls
 

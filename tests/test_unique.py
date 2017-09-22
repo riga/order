@@ -141,6 +141,7 @@ class UniqueTreeTest(unittest.TestCase):
                         "get_%snode"]
         child_attrs = ["is_leaf_node"]
         parent_attrs = ["is_root_node"]
+        conv_attrs = ["parent_nodes"]
 
         Node = self.make_class()
         self.assertTrue(all(hasattr(Node, attr % "") for attr in common_attrs))
@@ -153,6 +154,10 @@ class UniqueTreeTest(unittest.TestCase):
         self.assertTrue(all(not hasattr(Node, attr % "parent_") for attr in common_attrs))
         self.assertTrue(all(hasattr(Node, attr) for attr in child_attrs))
         self.assertTrue(all(not hasattr(Node, attr) for attr in parent_attrs))
+
+        Node = self.make_class(parents=1)
+        self.assertTrue(all(hasattr(Node, attr % "") for attr in common_attrs))
+        self.assertTrue(all(hasattr(Node, attr) for attr in conv_attrs))
 
         Node = self.make_class(singular="foo")
         common_attrs2 = [attr.replace("node", "foo") for attr in common_attrs]
@@ -187,6 +192,28 @@ class UniqueTreeTest(unittest.TestCase):
         n1.remove_node(2)
         self.assertEqual(len(n1.nodes), 0)
         self.assertEqual(len(n2.parent_nodes), 0)
+
+    def test_tree_methods_single_parent(self):
+        Node = self.make_class(parents=1)
+
+        n1 = Node("a", 1)
+        n2 = n1.add_node("b", 2)
+        n3 = Node("c", 3)
+
+        self.assertEqual(len(n1.nodes), 1)
+        self.assertEqual(len(n2.parent_nodes), 1)
+
+        with self.assertRaises(Exception):
+            n2.add_parent_node(n3)
+
+        with self.assertRaises(Exception):
+            n1.add_child_node(n3)
+
+        self.assertEqual(n2.parent_node, n1)
+
+        n2.remove_parent_node(n1)
+        n2.add_parent_node(n3)
+        self.assertEqual(n2.parent_node, n3)
 
     def test_walking(self):
         Node = self.make_class()

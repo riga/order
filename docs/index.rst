@@ -15,6 +15,15 @@ order
 Classes
 ^^^^^^^
 
+``Channel``
+-----------
+
+.. autoclass:: Channel
+   :show-inheritance:
+   :member-order: bysource
+   :members:
+
+
 ``Variable``
 ------------
 

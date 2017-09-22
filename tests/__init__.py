@@ -15,4 +15,5 @@ from order import *
 # import all tests
 from .test_unique import *
 from .test_mixins import *
+from .test_categorize import *
 from .test_variable import *

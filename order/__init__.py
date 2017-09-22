@@ -14,11 +14,12 @@ __license__    = "MIT"
 __status__     = "Development"
 __version__    = "0.0.1"
 __all__        = ["UniqueObject", "UniqueObjectIndex", "AuxDataContainer", "TagContainer",
-                  "DataSourceContainer", "Variable"]
+                  "DataSourceContainer", "Channel", "Variable"]
 
 
 # provisioning imports
 from .unique import UniqueObject, UniqueObjectIndex
 from .mixins import AuxDataContainer, TagContainer, DataSourceContainer
+from .categorize import Channel
 from .variable import Variable
 

@@ -787,7 +787,7 @@ def unique_tree(**kwargs):
                     @property
                     def parent(self):
                         index = getattr(self, "parent_" + plural)
-                        return None if len(index) != 1 else index.values()[0]
+                        return None if len(index) != 1 else list(index.values())[0]
 
         return unique_cls
 

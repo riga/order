@@ -18,10 +18,10 @@ from .util import typed, to_root_latex
 @unique_tree(parents=1)
 class Channel(UniqueObject, AuxDataContainer):
     """ __init__(name, id, label=None, context=None, aux=None)
-    An object that descibes an analysis channel, often defined by particular decay *channel* that
+    An object that descibes an analysis channel, often defined by a particular decay *channel* that
     results in distinct final state objects. *name*, *id* and *context* are forwarded to the
     :py:class:`UniqueObject` constructor. *aux* is forwarded to the :py:class:`AuxDataContainer`
-    constructor. A channel can have parent-child relations two other channels with one parent per
+    constructor. A channel can have parent-child relations to other channels with one parent per
     child.
 
     .. code-block:: python
@@ -29,7 +29,7 @@ class Channel(UniqueObject, AuxDataContainer):
         SL_channel = Channel("SL", 1, label="lepton+jets")
 
         e_channel  = SL_channel.add_channel("e", 1)
-        mu_channel = SL_channel.add_channel("mu", 2)
+        mu_channel = SL_channel.add_channel("mu", 2, label=r"$\mu$")
 
         len(SL_channel.channels)
         # -> 2
@@ -42,6 +42,9 @@ class Channel(UniqueObject, AuxDataContainer):
 
         mu_channel.label
         # -> "mu"
+
+        mu_channel.root_label
+        # -> "#mu"
 
     .. py:attribute:: label
        type: string

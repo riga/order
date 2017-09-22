@@ -77,6 +77,17 @@ class UniqueObjectTest(unittest.TestCase):
         foo.remove()
         self.assertIsNone(C.get_instance("foo", default=None))
 
+    def test_auto_id(self):
+        C = self.make_class()
+
+        C("foo", 1)
+        bar = C("bar", "+")
+        self.assertEquals(bar.id, 2)
+
+        C("baz", 100)
+        test = C("test", "+")
+        self.assertEquals(test.id, 101)
+
 
 class UniqueObjectIndexTest(unittest.TestCase):
 

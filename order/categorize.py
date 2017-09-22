@@ -40,9 +40,6 @@ class Channel(UniqueObject, AuxDataContainer):
         e_channel.parent_channel
         # -> SL_channel
 
-        mu_channel.label
-        # -> "mu"
-
         mu_channel.root_label
         # -> "#mu"
 

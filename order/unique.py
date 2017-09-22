@@ -83,8 +83,8 @@ class UniqueObject(object):
        # -> False
 
     .. py:attribute:: default_uniqueness_context
-       classmember
        type: arbitrary (hashable)
+       classmember
 
        The default context of uniqueness when none is given in the instance constructor. Two
        instances are only allowed to have the same name *or* the same id if their classes have
@@ -111,14 +111,17 @@ class UniqueObject(object):
 
     default_uniqueness_context = "uniqueobject"
 
+    _auto_id = "+"
+
     _instances = {}
 
     @classmethod
     def get_instance(cls, obj, default=_no_default, context=None):
-        """ get_instance(obj, [default], context=default_uniqueness_context)
+        """ get_instance(obj, [default], context=None)
         Returns an object that was instantiated in this class before. *obj* might be a *name*, *id*,
         or an instance of *cls*. If *default* is given, it is used as the default return value if no
-        such object was be found. Otherwise, an error is raised.
+        such object was be found. Otherwise, an error is raised. *context* defaults to the
+        :py:attr:`default_uniqueness_context` if this class.
         """
         if context is None:
             context = cls.default_uniqueness_context
@@ -130,6 +133,17 @@ class UniqueObject(object):
                 raise ValueError("unknown context: %s" % context)
 
         return cls._instances[context].get(obj, default=default)
+
+    @classmethod
+    def auto_id(cls, name, context):
+        """
+        Method to create an automatic id for instances that are created with ``id="+"``. The default
+        procedure is ``max(ids) + 1``.
+        """
+        if context not in cls._instances:
+            return 1
+        else:
+            return max(cls._instances[context].ids()) + 1
 
     def __init__(self, name, id, context=None):
         super(UniqueObject, self).__init__()
@@ -155,6 +169,10 @@ class UniqueObject(object):
             raise ValueError("duplicate name '%s' in uniqueness context '%s'" \
                 % (name, self.uniqueness_context))
         self._name = name
+
+        # check for auto_id
+        if id == self._auto_id:
+            id = self.auto_id(self.name, self.uniqueness_context)
 
         # use the typed parser to check the passed id, check for duplicates and store it
         id = self.__class__.id.fparse(self, id)

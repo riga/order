@@ -8,13 +8,32 @@ Classes that define unique objects and the index to store them.
 __all__ = ["UniqueObject", "UniqueObjectIndex", "unique_tree"]
 
 
-from collections import defaultdict, OrderedDict
+import collections
 
 import six
 
 from .util import typed
 
 
+_no_default = object()
+
+
+class UniqueObjectMeta(type):
+    """
+    Meta class definition that adds an instance cache to every class inheriting from
+    :py:class:`UniqueObject`.
+    """
+
+    def __new__(meta_cls, class_name, bases, class_dict):
+        cls = super(UniqueObjectMeta, meta_cls).__new__(meta_cls, class_name, bases, class_dict)
+
+        # add an empty instance cache
+        cls._instances = {}
+
+        return cls
+
+
+@six.add_metaclass(UniqueObjectMeta)
 class UniqueObject(object):
     """
     An unique object defined by a *name* and an *id*. The purpose of this class is to provide a
@@ -72,20 +91,6 @@ class UniqueObject(object):
 
        The uniqueness context of this instance.
 
-    .. py:attribute:: unique_names
-       classmember
-       type: defaultdict
-
-       Mapping of uniqueness contexts to a list of names that is synchronized via the constructor
-       and destructor of this class.
-
-    .. py:attribute:: unique_ids
-       classmember
-       type: defaultdict
-
-       Mapping of uniqueness contexts to a list of ids that is synchronized via the constructor and
-       destructor of this class.
-
     .. py:attribute:: name
        type: str
        read-only
@@ -101,8 +106,22 @@ class UniqueObject(object):
 
     default_uniqueness_context = "default"
 
-    unique_names = defaultdict(list)
-    unique_ids = defaultdict(list)
+    _instances = {}
+
+    @classmethod
+    def get_instance(cls, obj, default=_no_default, context=default_uniqueness_context):
+        """ get_instance(obj, [default], context=default_uniqueness_context)
+        Returns an object that was instantiated in this class before. *obj* might be a *name*, *id*,
+        or an instance of *cls*. If *default* is given, it is used as the default return value if no
+        such object was be found. Otherwise, an error is raised.
+        """
+        if context not in cls._instances:
+            if default != _no_default:
+                return default
+            else:
+                raise ValueError("unknown context: %s" % context)
+
+        return cls._instances[context].get(obj, default=default)
 
     def __init__(self, name, id, context=None):
         super(UniqueObject, self).__init__()
@@ -117,32 +136,34 @@ class UniqueObject(object):
             context = self.default_uniqueness_context
         self._uniqueness_context = context
 
+        # register an instance cache if it does not exist yet
+        if self.uniqueness_context not in self._instances:
+            self._instances[self.uniqueness_context] = UniqueObjectIndex(cls=self.__class__)
+        cache = self._instances[self.uniqueness_context]
+
         # use the typed parser to check the passed name, check for duplicates and store it
         name = self.__class__.name.fparse(self, name)
-        if name in self.unique_names[self.uniqueness_context]:
+        if name in cache.names():
             raise ValueError("duplicate name '%s' in uniqueness context '%s'" \
                 % (name, self.uniqueness_context))
-        self.unique_names[self.uniqueness_context].append(name)
         self._name = name
 
         # use the typed parser to check the passed id, check for duplicates and store it
         id = self.__class__.id.fparse(self, id)
-        if id in self.unique_ids[self.uniqueness_context]:
+        if id in cache.ids():
             raise ValueError("duplicate id '%s' in uniqueness context '%s'" \
                 % (id, self.uniqueness_context))
-        self.unique_ids[self.uniqueness_context].append(id)
         self._id = id
 
-    def __del__(self):
-        # cleanup the name
-        names = self.unique_names[self.uniqueness_context]
-        if self.name in names:
-            names.remove(self.name)
+        # add the instance to the cache
+        cache.add(self)
 
-        # cleanup the id
-        ids = self.unique_ids[self.uniqueness_context]
-        if self.id in ids:
-            ids.remove(self.id)
+    def __del__(self):
+        # remove from the instance cache
+        try:
+            self.remove()
+        except:
+            pass
 
     def __repr__(self):
         """
@@ -213,6 +234,12 @@ class UniqueObject(object):
 
         return int(id)
 
+    def remove(self):
+        """
+        Removes this instance from the instance cache.
+        """
+        self._instances[self.uniqueness_context].remove(self)
+
 
 class UniqueObjectIndex(object):
     """ __init__(cls=UniqueObject)
@@ -256,8 +283,6 @@ class UniqueObjectIndex(object):
        Class of objects hold by this index.
     """
 
-    _no_default = object()
-
     def __init__(self, cls=UniqueObject):
         super(UniqueObjectIndex, self).__init__()
 
@@ -266,8 +291,8 @@ class UniqueObjectIndex(object):
         self._cls = self.__class__.cls.fparse(self, cls)
 
         # seperate dicts to map names and ids to unique objects
-        self._name_index = OrderedDict()
-        self._id_index   = OrderedDict()
+        self._name_index = collections.OrderedDict()
+        self._id_index = collections.OrderedDict()
 
     def __repr__(self):
         """
@@ -382,7 +407,7 @@ class UniqueObjectIndex(object):
         if isinstance(obj, self._cls):
             if obj.name in self._name_index and obj == self._name_index[obj.name]:
                 return obj
-            elif default != self._no_default:
+            elif default != _no_default:
                 return default
             else:
                 raise ValueError("object not known to index: %s" % obj)
@@ -399,7 +424,7 @@ class UniqueObjectIndex(object):
             except:
                 pass
 
-            if default != self._no_default:
+            if default != _no_default:
                 return default
             else:
                 raise ValueError("object not known to index: %s" % obj)

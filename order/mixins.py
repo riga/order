@@ -5,14 +5,14 @@ Mixin classes providing common functionality.
 """
 
 
-__all__ = ["AuxDataContainer", "TagContainer", "DataSourceContainer"]
+__all__ = ["AuxDataContainer", "TagContainer", "DataSourceContainer", "SelectionContainer"]
 
 
 from collections import OrderedDict
 
 import six
 
-from .util import typed, make_list, multi_match
+from .util import typed, make_list, multi_match, join_root_selection, join_numexpr_selection
 
 
 class AuxDataContainer(object):
@@ -233,3 +233,92 @@ class DataSourceContainer(object):
     @property
     def data_source(self):
         return "data" if self.is_data else "mc"
+
+
+class SelectionContainer(object):
+    """
+    Mixin-class that adds attibutes and methods to describe a selection rule.
+
+    .. code-block:: python
+
+        class MyClass(SelectionContainer):
+            ...
+
+        c = MyClass(selection="branchA > 0")
+
+        c.add_selection("myBranchB < 100", bracket=True)
+        c.selection
+        # -> "((myBranchA > 0) && (myBranchB < 100))"
+
+        c.add_selection("myWeight", op="*")
+        c.selection
+        # -> "((myBranchA > 0) && (myBranchB < 100)) * (myWeight)"
+
+        c = MyClass(selection="branchA > 0", selection_mode="numexpr")
+
+        c.add_selection("myBranchB < 100")
+        c.selection
+        # -> "(myBranchA > 0) & (myBranchB < 100)"
+
+    .. py:attribute:: default_selection_mode
+       type: string
+       classmember
+
+       The default *selection_mode* when none is given in the instance constructor.
+
+    .. py:attribute:: selection_mode
+       type: string
+
+       The selection mode. Should either be ``"root"`` or ``"numexpr"``.
+    """
+
+    default_selection_mode = "root"
+
+    def __init__(self, selection=None, selection_mode=None):
+        super(SelectionContainer, self).__init__()
+
+        # instance members
+        self._selection = "1"
+        self._selection_mode = None
+
+        # fallback to default selection mode
+        if selection_mode is None:
+            selection_mode = self.default_selection_mode
+
+        # set initial values
+        if selection is not None:
+            self.selection = selection
+        if selection_mode is not None:
+            self.selection_mode = selection_mode
+
+    @typed
+    def selection(self, selection):
+        # selection parser
+        join = join_root_selection if self.selection_mode == "root" else join_numexpr_selection
+        try:
+            selection = join(selection)
+        except:
+            raise TypeError("invalid selection type: %s" % selection)
+
+        return selection
+
+    def add_selection(self, selection, **kwargs):
+        """
+        Adds a *selection* string to the overall selection. The new string will be logically
+        connected via *AND*. All *kwargs* are forwarded to :py:func:`util.join_root_selection` or
+        :py:func:`util.join_numexpr_selection`.
+        """
+        join = join_root_selection if self.selection_mode == "root" else join_numexpr_selection
+        self.selection = join(self.selection, selection, **kwargs)
+
+    @typed
+    def selection_mode(self, selection_mode):
+        # selection mode parser
+        if not isinstance(selection_mode, six.string_types):
+            raise TypeError("invalid selection_mode type: %s" % selection_mode)
+
+        selection_mode = str(selection_mode)
+        if selection_mode not in ("root", "numexpr"):
+            raise ValueError("selection_mode neither 'root' nor 'numexpr': %s" % selection_mode)
+
+        return selection_mode

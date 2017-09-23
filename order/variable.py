@@ -12,18 +12,20 @@ import copy
 
 import six
 
-from .mixins import AuxDataContainer, TagContainer
-from .util import typed, to_root_latex, join_root_selection
+from .mixins import AuxDataContainer, TagContainer, SelectionContainer
+from .util import typed, to_root_latex
 
 
-class Variable(AuxDataContainer, TagContainer):
+class Variable(SelectionContainer, TagContainer, AuxDataContainer):
     """
-    Class that provides simplified access to plotting variables. *name* is the name of the variable,
-    *expression* and *selection* might be used for projection statements. When empty, *expression*
-    defaults to *name*. Other options that are relevant for plotting are *binning*, *x_title*,
-    *x_title_short*, *y_title*, *y_title_short*, and *unit*. *aux* is passed to the
-    :py:class:`AuxDataContainer` constructor, *tags* is passed to the :py:class:`TagContainer`
-    constructor.
+    Class that provides simplified access to plotting variables.
+
+    *name* is the name of the variable, *expression* and *selection* might be used for projection
+    statements. When empty, *expression* defaults to *name*. Other options that are relevant for
+    plotting are *binning*, *x_title*, *x_title_short*, *y_title*, *y_title_short*, and *unit*.
+    *selection* and *selection_mode* are passd to the :py:class:`SelectionContainer` constructor.
+    *tags* is passed to the :py:class:`TagContainer` constructor, *aux* is passed to the
+    :py:class:`AuxDataContainer` constructor.
 
     .. code-block:: python
 
@@ -31,19 +33,15 @@ class Variable(AuxDataContainer, TagContainer):
             expression = "myBranchA * myBranchB",
             selection = "myBranchC > 0",
             binning   = (20, 0., 10.),
-            x_title   = "p_{T}",
+            x_title   = r"$\mu p_{T}$",
             unit      = "GeV"
         )
 
-        v.add_selection("myBranchD < 100", bracket=True)
-        v.selection
-        # -> "((myBranchC > 0) && (myBranchD < 100))"
-
-        v.add_selection("myWeight", op="*")
-        # -> "((myBranchC > 0) && (myBranchD < 100)) * (myWeight)"
+        v.x_title_root
+        # -> "#mu p_{T}"
 
         v.full_title()
-        # -> "myVar;p_{T} [GeV];Entries / 0.5 GeV'"
+        # -> "myVar;$\mu p_{T}$" [GeV];Entries / 0.5 GeV'"
 
     .. py:attribute:: name
        type: string
@@ -55,11 +53,6 @@ class Variable(AuxDataContainer, TagContainer):
 
        The expression of this variable. Defaults to name if *None*.
 
-    .. py:attribute:: selection
-       type: string
-
-       The selection query of this variable.
-
     .. py:attribute:: binning
        type: tuple
 
@@ -70,20 +63,44 @@ class Variable(AuxDataContainer, TagContainer):
 
        The title of the x-axis.
 
+    .. py:attribute:: x_title_root
+       type: string
+       read-only
+
+       The title of the x-axis, converted to *proper* ROOT latex.
+
     .. py:attribute:: x_title_short
        type: string
 
        Short version for the title of the x-axis. Defaults to *x_title* when not explicitely set.
+
+    .. py:attribute:: x_title_short_root
+       type: string
+       read-only
+
+       The short version of the title of the x-axis, converted to *proper* ROOT latex.
 
     .. py:attribute:: y_title
        type: string
 
        The title of the y-axis.
 
+    .. py:attribute:: y_title_root
+       type: string
+       read-only
+
+       The title of the y-axis, converted to *proper* ROOT latex.
+
     .. py:attribute:: y_title_short
        type: string
 
        Short version for the title of the y-axis. Defaults to *y_title* when not explicitely set.
+
+    .. py:attribute:: y_title_short_root
+       type: string
+       read-only
+
+       The short version of the title of the y-axis, converted to *proper* ROOT latex.
 
     .. py:attribute:: unit
        type: string, None
@@ -107,19 +124,19 @@ class Variable(AuxDataContainer, TagContainer):
        The bin width, evaluated from *binning*.
     """
 
-    _copy_attrs = ["expression", "selection", "binning", "x_title", "x_title_short", "y_title",
-                    "y_title_short", "log_x", "log_y", "unit"]
+    _copy_attrs = ["expression", "binning", "x_title", "x_title_short", "y_title", "y_title_short",
+                   "log_x", "log_y", "unit", "selection", "selection_mode", "tags"]
 
-    def __init__(self, name, expression=None, selection="1", binning=(1, 0., 1.), x_title="",
-        x_title_short=None, y_title="Entries", y_title_short=None, log_x=False, log_y=False,
-        unit="1", aux=None, tags=None):
-        AuxDataContainer.__init__(self, aux=aux)
+    def __init__(self, name, expression=None, binning=(1, 0., 1.), x_title="", x_title_short=None,
+                 y_title="Entries", y_title_short=None, log_x=False, log_y=False, unit="1",
+                 selection=None, selection_mode=None, tags=None, aux=None):
+        SelectionContainer.__init__(self, selection=selection, selection_mode=selection_mode)
         TagContainer.__init__(self, tags=tags)
+        AuxDataContainer.__init__(self, aux=aux)
 
         # instance members
         self._name = None
         self._expression = None
-        self._selection = None
         self._binning = None
         self._x_title = None
         self._x_title_short = None
@@ -132,7 +149,6 @@ class Variable(AuxDataContainer, TagContainer):
         # set initial values
         self._name = name
         self._expression = expression
-        self._selection = selection
         self._binning = binning
         self._x_title = x_title
         self._x_title_short = x_title_short
@@ -178,23 +194,6 @@ class Variable(AuxDataContainer, TagContainer):
         self._expression = str(expression)
 
     @typed
-    def selection(self, selection):
-        # selection parser
-        try:
-            selection = join_root_selection(selection, op="*")
-        except:
-            raise TypeError("invalid selection type: %s" % selection)
-
-        return selection
-
-    def add_selection(self, selection, **kwargs):
-        """
-        Adds a *selection* string to the overall selection. The new string will be logically
-        connected via ``"&&"``. All *kwargs* are forwarded to :py:func:`util.join_root_selection`.
-        """
-        self.selection = join_root_selection(self.selection, selection, **kwargs)
-
-    @typed
     def binning(self, binning):
         # binning parser
         if not isinstance(binning, (list, tuple)):
@@ -213,6 +212,11 @@ class Variable(AuxDataContainer, TagContainer):
         return str(x_title)
 
     @property
+    def x_title_root(self):
+        # x_title_root getter
+        return to_root_latex(self.x_title)
+
+    @property
     def x_title_short(self):
         # x_title_short getter
         return self.x_title if self._x_title_short is None else self._x_title_short
@@ -227,6 +231,11 @@ class Variable(AuxDataContainer, TagContainer):
         else:
             self._x_title_short = str(x_title_short)
 
+    @property
+    def x_title_short_root(self):
+        # x_title_short_root getter
+        return to_root_latex(self.x_title_short)
+
     @typed
     def y_title(self, y_title):
         # y_title parser
@@ -234,6 +243,11 @@ class Variable(AuxDataContainer, TagContainer):
             raise TypeError("invalid y_title type: %s" % y_title)
 
         return str(y_title)
+
+    @property
+    def y_title_root(self):
+        # y_title_root getter
+        return to_root_latex(self.y_title)
 
     @property
     def y_title_short(self):
@@ -249,6 +263,11 @@ class Variable(AuxDataContainer, TagContainer):
             raise TypeError("invalid y_title_short type: %s" % y_title_short)
         else:
             self._y_title_short = str(y_title_short)
+
+    @property
+    def y_title_short_root(self):
+        # y_title_short_root getter
+        return to_root_latex(self.y_title_short)
 
     @typed
     def log_x(self, log_x):
@@ -292,11 +311,9 @@ class Variable(AuxDataContainer, TagContainer):
             if attr not in kwargs:
                 kwargs[attr] = copy.deepcopy(getattr(self, attr))
 
-        # copy aux data and tags manually
+        # copy aux data manually
         if "aux" not in kwargs:
             kwargs["aux"] = copy.deepcopy(self.aux())
-        if "tags" not in kwargs:
-            kwargs["tags"] = copy.deepcopy(self.tags)
 
         return self.__class__(name, **kwargs)
 

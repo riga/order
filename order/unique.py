@@ -271,9 +271,10 @@ class UniqueObject(object):
 
 class UniqueObjectIndex(object):
     """ __init__(cls=UniqueObject)
-    Index of :py:class:`UniqueObject` instances for faster lookup by both name and id. *cls* should
-    be a subclass of :py:class:`UniqueObject` and is used for type validation when a new object is
-    added to the index. Examples:
+    Index of :py:class:`UniqueObject` instances for faster lookup by both name and id.
+
+    *cls* should be a subclass of :py:class:`UniqueObject` and is used for type validation when a
+    new object is added to the index. Examples:
 
     .. code-block:: python
 
@@ -537,8 +538,8 @@ def unique_tree(**kwargs):
 
         # determine configuration defaults
         cls = kwargs.get("cls", unique_cls)
-        singular = kwargs.get("singular", cls.__name__.lower())
-        plural = kwargs.get("plural", singular + "s")
+        singular = kwargs.get("singular", cls.__name__).lower()
+        plural = kwargs.get("plural", singular + "s").lower()
         parents = kwargs.get("parents", True)
 
         # decorator for registering new instance methods with proper name and doc string

@@ -5,7 +5,8 @@ Helpful utilities.
 """
 
 
-__all__ = ["typed", "make_list", "multi_match", "flatten", "to_root_latex", "join_root_selection"]
+__all__ = ["typed", "make_list", "multi_match", "flatten", "to_root_latex", "join_root_selection",
+           "join_numexpr_selection"]
 
 
 import functools
@@ -161,12 +162,11 @@ def to_root_latex(s):
     return s.replace("$", "").replace("\\", "#")
 
 
-def join_root_selection(*selection, **kwargs):
-    """ join_root_selection(*selection, op="&&", bracket=False)
-    Returns a concatenation of *selection* strings, which is multiplicative by default (*op*). When
-    *bracket* is *True*, the final selection string is placed into brackets.
+def _parse_selection(*selection):
     """
-    # parse the selection strings
+    Parser for *selection* strings used in :py:func:`join_root_selection` and
+    :py:func:`join_numexpr_selection`.
+    """
     _selection = []
     for s in flatten(selection):
         if isinstance(s, (int, float)):
@@ -180,7 +180,16 @@ def join_root_selection(*selection, **kwargs):
         else:
             raise Exception("invalid selection string: %s" % s)
         _selection.append(str(s))
-    selection = _selection
+    return _selection
+
+
+def join_root_selection(*selection, **kwargs):
+    """ join_root_selection(*selection, op="&&", bracket=False)
+    Returns a concatenation of root *selection* strings, which is done by default via logical *AND*.
+    (*op*). When *bracket* is *True*, the final selection string is placed into brackets.
+    """
+    # parse the selection strings
+    selection = _parse_selection(*selection)
 
     # trivial case, no selection
     if not selection:
@@ -188,6 +197,37 @@ def join_root_selection(*selection, **kwargs):
 
     # prepare the concatenation op
     op = kwargs.get("op", "&&")
+    op = " %s " % op.strip()
+
+    def bracket(s, force=False):
+        if force or not s.startswith("("):
+            s = "(" + s
+        if force or not s.endswith(")"):
+            s += ")"
+        return s
+
+    joined = op.join(bracket(s) for s in selection)
+
+    if kwargs.get("bracket", False):
+        return bracket(joined, force=True)
+    else:
+        return joined
+
+
+def join_numexpr_selection(*selection, **kwargs):
+    """ join_numexpr_selection(*selection, op="&", bracket=False)
+    Returns a concatenation of numexpr *selection* strings, which is done by default via logical
+    *AND*. (*op*). When *bracket* is *True*, the final selection string is placed into brackets.
+    """
+    # parse the selection strings
+    selection = _parse_selection(*selection)
+
+    # trivial case, no selection
+    if not selection:
+        return "1"
+
+    # prepare the concatenation op
+    op = kwargs.get("op", "&")
     op = " %s " % op.strip()
 
     def bracket(s, force=False):

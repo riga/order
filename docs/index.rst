@@ -73,6 +73,14 @@ Classes
    :members:
 
 
+``SelectionContainer``
+----------------------
+
+.. autoclass:: SelectionContainer
+   :member-order: bysource
+   :members:
+
+
 Functions
 ^^^^^^^^^
 
@@ -85,3 +93,5 @@ Functions
 .. autofunction:: order.util.to_root_latex
 
 .. autofunction:: order.util.join_root_selection
+
+.. autofunction:: order.util.join_numexpr_selection

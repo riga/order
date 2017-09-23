@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 
-__all__ = ["AuxDataContainerTest", "TagContainerTest", "DataSourceContainerTest"]
+__all__ = ["AuxDataContainerTest", "TagContainerTest", "DataSourceContainerTest",
+           "SelectionContainerTest"]
 
 
 import unittest
 
-from order import AuxDataContainer, TagContainer, DataSourceContainer
+from order import AuxDataContainer, TagContainer, DataSourceContainer, SelectionContainer
 
 
 class AuxDataContainerTest(unittest.TestCase):
@@ -112,3 +113,26 @@ class DataSourceContainerTest(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             c.is_mc = {}
+
+
+class SelectionContainerTest(unittest.TestCase):
+
+    def test_constructor_root(self):
+        s = SelectionContainer("myBranchC > 0")
+        self.assertEqual(s.selection, "(myBranchC > 0)")
+
+        s.add_selection("myBranchD < 100", bracket=True)
+        self.assertEqual(s.selection, "((myBranchC > 0) && (myBranchD < 100))")
+
+        s.add_selection("myWeight", op="*")
+        self.assertEqual(s.selection, "((myBranchC > 0) && (myBranchD < 100)) * (myWeight)")
+
+    def test_constructor_numexpr(self):
+        s = SelectionContainer("myBranchC > 0", "numexpr")
+        self.assertEqual(s.selection, "(myBranchC > 0)")
+
+        s.add_selection("myBranchD < 100", bracket=True)
+        self.assertEqual(s.selection, "((myBranchC > 0) & (myBranchD < 100))")
+
+        s.add_selection("myWeight", op="*")
+        self.assertEqual(s.selection, "((myBranchC > 0) & (myBranchD < 100)) * (myWeight)")

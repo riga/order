@@ -23,7 +23,7 @@ class VariableTest(unittest.TestCase):
         v = self.make_var()
         self.assertEqual(v.name, "myVar")
         self.assertEqual(v.expression, "myBranchA * myBranchB")
-        self.assertEqual(v.selection, "myBranchC > 0")
+        self.assertEqual(v.selection, "(myBranchC > 0)")
         self.assertEqual(v.binning, (20, 0., 10.))
         self.assertEqual(v.full_title(), "myVar;p_{T} [GeV];Entries / 0.5 GeV")
 
@@ -109,19 +109,9 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(v.full_title(), "myVar;Muon transverse momentum [GeV];Entries / 0.25 GeV")
         self.assertEqual(v.full_title(short=True), "myVar;#mu p_{T} [GeV];N / 0.25 GeV")
 
-    def test_selection(self):
-        v = self.make_var()
-        self.assertEqual(v.selection, "myBranchC > 0")
-
-        v.add_selection("myBranchD < 100", bracket=True)
-        self.assertEqual(v.selection, "((myBranchC > 0) && (myBranchD < 100))")
-
-        v.add_selection("myWeight", op="*")
-        self.assertEqual(v.selection, "((myBranchC > 0) && (myBranchD < 100)) * (myWeight)")
-
     def test_copy(self):
         v = self.make_var().copy("otherVar", expression="otherExpression")
 
         self.assertEqual(v.name, "otherVar")
         self.assertEqual(v.expression, "otherExpression")
-        self.assertEqual(v.selection, "myBranchC > 0")
+        self.assertEqual(v.selection, "(myBranchC > 0)")

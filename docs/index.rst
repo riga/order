@@ -24,6 +24,15 @@ Classes
    :members:
 
 
+``Category``
+------------
+
+.. autoclass:: Category
+   :show-inheritance:
+   :member-order: bysource
+   :members:
+
+
 ``Variable``
 ------------
 

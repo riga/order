@@ -317,25 +317,25 @@ class Variable(SelectionContainer, TagContainer, AuxDataContainer):
 
         return self.__class__(name, **kwargs)
 
-    def full_x_title(self, short=False, root_latex=False):
+    def full_x_title(self, short=False, root=False):
         """
         Returns the full title (i.e. with unit string) of the x-axis. When *short* is *True*, the
-        short version is returned. When *root_latex* is *True*, the title is converted to *proper*
-        ROOT latex.
+        short version is returned. When *root* is *True*, the title is converted to *proper* ROOT
+        latex.
         """
         title = self.x_title_short if short else self.x_title
 
         if self.unit not in (None, "1"):
             title += " [%s]" % self.unit
 
-        return to_root_latex(title) if root_latex else title
+        return to_root_latex(title) if root else title
 
-    def full_y_title(self, bin_width=None, short=False, root_latex=False):
+    def full_y_title(self, bin_width=None, short=False, root=False):
         """
         Returns the full title (i.e. with bin width and unit string) of the y-axis. When not *None*,
         the value *bin_width* instead of the one evaluated from *binning*. When *short* is *True*,
-        the short version is returned. When *root_latex* is *True*, the title is converted to
-        *proper* ROOT latex.
+        the short version is returned. When *root* is *True*, the title is converted to *proper*
+        ROOT latex.
         """
         title = self.y_title_short if short else self.y_title
 
@@ -346,15 +346,15 @@ class Variable(SelectionContainer, TagContainer, AuxDataContainer):
         if self.unit not in (None, "1"):
             title += " %s" % self.unit
 
-        return to_root_latex(title) if root_latex else title
+        return to_root_latex(title) if root else title
 
-    def full_title(self, name=None, short=False, short_x=None, short_y=None, root_latex=True,
+    def full_title(self, name=None, short=False, short_x=None, short_y=None, root=True,
                    bin_width=None):
         """
         Returns the full combined title that is compliant with ROOT's TH1 classes. *short_x*
         (*short_y*) is passed to :py:meth:`full_x_title` (:py:meth:`full_y_title`). Both values
         fallback to *short* when *None*. *bin_width* is forwarded to :py:meth:`full_y_title`. When
-        *root_latex* is *False*, the axis titles are not converted to *proper* ROOT latex.
+        *root* is *False*, the axis titles are not converted to *proper* ROOT latex.
         """
         if name is None:
             name = self.name
@@ -363,7 +363,7 @@ class Variable(SelectionContainer, TagContainer, AuxDataContainer):
         if short_y is None:
             short_y = short
 
-        x_title = self.full_x_title(short=short_x, root_latex=root_latex)
-        y_title = self.full_y_title(bin_width=bin_width, short=short_y, root_latex=root_latex)
+        x_title = self.full_x_title(short=short_x, root=root)
+        y_title = self.full_y_title(bin_width=bin_width, short=short_y, root=root)
 
         return ";".join([name, x_title, y_title])

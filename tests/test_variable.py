@@ -102,7 +102,7 @@ class VariableTest(unittest.TestCase):
 
         self.assertEqual(v.full_x_title(), "Muon transverse momentum [GeV]")
         self.assertEqual(v.full_x_title(short=True), "$\\mu p_{T}$ [GeV]")
-        self.assertEqual(v.full_x_title(short=True, root_latex=True), "#mu p_{T} [GeV]")
+        self.assertEqual(v.full_x_title(short=True, root=True), "#mu p_{T} [GeV]")
         self.assertEqual(v.full_y_title(), "Entries / 0.25 GeV")
         self.assertEqual(v.full_y_title(bin_width=0.2), "Entries / 0.2 GeV")
         self.assertEqual(v.full_y_title(short=True), "N / 0.25 GeV")

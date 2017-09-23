@@ -19,8 +19,7 @@ __all__        = ["UniqueObject", "UniqueObjectIndex", "AuxDataContainer", "TagC
 
 # provisioning imports
 from .unique import UniqueObject, UniqueObjectIndex
-from .mixins import AuxDataContainer, TagContainer, DataSourceContainer
-from .categorize import Channel
 from .mixins import AuxDataContainer, TagContainer, DataSourceContainer, SelectionContainer
+from .categorize import Channel, Category
 from .variable import Variable
 

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 
-__all__ = ["ChannelTest"]
+__all__ = ["ChannelTest", "CategoryTest"]
 
 
 import unittest
 
-from order import Channel
+from order import Channel, Category
 
 
 class ChannelTest(unittest.TestCase):
@@ -45,3 +45,31 @@ class ChannelTest(unittest.TestCase):
 
         c.label = None
         self.assertEqual(c.label, c.name)
+
+
+class CategoryTest(unittest.TestCase):
+
+    def test_constructor(self):
+        c = Category("eq3j", label=r"$\eq$ 3 jets", label_short="3j")
+
+        self.assertEquals(c.name, "eq3j")
+        self.assertEquals(c.label, r"$\eq$ 3 jets")
+        self.assertEquals(c.label_short, "3j")
+        self.assertEquals(c.label_root, "#eq 3 jets")
+
+        c.label_short = None
+        self.assertEquals(c.label_short, c.label)
+        c.label = None
+        self.assertEquals(c.label_short, c.name)
+
+    def test_channel(self):
+        SL = Channel("SL", 1, context="category")
+        c = Category("eq4j", channel=SL, label=r"$\eq$ 4 jets")
+
+        c2 = c.add_category("eq4j_eq2b")
+
+        self.assertIsNone(c2.channel)
+        self.assertEquals(c2.parent_channel, SL)
+
+        self.assertEqual(c.full_label(), r"SL, $\eq$ 4 jets")
+        self.assertEqual(c.full_label(root=True), "SL, #eq 4 jets")

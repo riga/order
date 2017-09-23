@@ -140,7 +140,7 @@ class UniqueObject(object):
         Method to create an automatic id for instances that are created with ``id="+"``. The default
         procedure is ``max(ids) + 1``.
         """
-        if context not in cls._instances:
+        if context not in cls._instances or len(cls._instances[context]) == 0:
             return 1
         else:
             return max(cls._instances[context].ids()) + 1

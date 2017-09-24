@@ -2,12 +2,13 @@
 
 
 __all__ = ["CopyMixinTest", "AuxDataMixinTest", "TagMixinTest", "DataSourceMixinTest",
-           "SelectionMixinTest", "LabelMixinTest"]
+           "SelectionMixinTest", "LabelMixinTest", "ColorMixinTest"]
 
 
 import unittest
 
-from order import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, LabelMixin
+from order import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, LabelMixin, \
+    ColorMixin
 
 
 class CopyMixinTest(unittest.TestCase):
@@ -37,8 +38,8 @@ class CopyMixinTest(unittest.TestCase):
 
         b = a.copy(callbacks=[])
         self.assertIsInstance(b, C)
-        self.assertEquals(b.name, "foo")
-        self.assertEquals(b.id, 1)
+        self.assertEqual(b.name, "foo")
+        self.assertEqual(b.id, 1)
 
     def test_attrs(self):
         C = self.make_class()
@@ -46,8 +47,8 @@ class CopyMixinTest(unittest.TestCase):
 
         b = a.copy(attrs=["name"], callbacks=[])
         self.assertIsInstance(b, C)
-        self.assertEquals(b.name, "foo")
-        self.assertEquals(b.id, 0)
+        self.assertEqual(b.name, "foo")
+        self.assertEqual(b.id, 0)
 
     def test_callbacks(self):
         C = self.make_class()
@@ -55,8 +56,8 @@ class CopyMixinTest(unittest.TestCase):
 
         b = a.copy()
         self.assertIsInstance(b, C)
-        self.assertEquals(b.name, "foo_")
-        self.assertEquals(b.id, 2)
+        self.assertEqual(b.name, "foo_")
+        self.assertEqual(b.id, 2)
 
     def test_class(self):
         C = self.make_class()
@@ -66,8 +67,8 @@ class CopyMixinTest(unittest.TestCase):
 
         b = a.copy(cls=D)
         self.assertIsInstance(b, D)
-        self.assertEquals(b.name, "foo_")
-        self.assertEquals(b.id, 2)
+        self.assertEqual(b.name, "foo_")
+        self.assertEqual(b.id, 2)
 
 
 class AuxDataMixinTest(unittest.TestCase):
@@ -203,11 +204,53 @@ class LabelMixinTest(unittest.TestCase):
     def test_constructor(self):
         l = LabelMixin(label=r"$\eq$ 3 jets", label_short="3j")
 
-        self.assertEquals(l.label, r"$\eq$ 3 jets")
-        self.assertEquals(l.label_short, "3j")
-        self.assertEquals(l.label_root, "#eq 3 jets")
+        self.assertEqual(l.label, r"$\eq$ 3 jets")
+        self.assertEqual(l.label_short, "3j")
+        self.assertEqual(l.label_root, "#eq 3 jets")
 
         l.label_short = None
-        self.assertEquals(l.label_short, l.label)
+        self.assertEqual(l.label_short, l.label)
         l.label = None
         self.assertIsNone(l.label_short)
+
+
+class ColorMixinTest(unittest.TestCase):
+
+    def test_constructor(self):
+        c = ColorMixin((0.5, 0.4, 0.3))
+        self.assertEqual(c.color_r, 0.5)
+        self.assertEqual(c.color_g, 0.4)
+        self.assertEqual(c.color_b, 0.3)
+
+        c = ColorMixin((255, 0, 255))
+        self.assertEqual(c.color_r, 1)
+        self.assertEqual(c.color_g, 0)
+        self.assertEqual(c.color_b, 1)
+
+        with self.assertRaises(TypeError):
+            c = ColorMixin("foo")
+
+        with self.assertRaises(ValueError):
+            c = ColorMixin((255, 255))
+
+    def test_setters_getters(self):
+        c = ColorMixin((0.5, 0.4, 0.3))
+
+        c.color_r = 255
+        self.assertEqual(c.color_r, 1)
+        self.assertEqual(c.color_r_int, 255)
+
+        c.color = (255, 0, 255, 0.5)
+        self.assertEqual(c.color_alpha, 0.5)
+
+        with self.assertRaises(ValueError):
+            c.color_r = -100
+
+        with self.assertRaises(ValueError):
+            c.color_g = 256
+
+        with self.assertRaises(ValueError):
+            c.color_b = 1.1
+
+        with self.assertRaises(ValueError):
+            c.color_alpha = 1.1

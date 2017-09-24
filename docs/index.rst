@@ -217,6 +217,14 @@ Helper classes and mixins
    :members:
 
 
+``ColorMixin``
+--------------
+
+.. autoclass:: ColorMixin
+   :member-order: bysource
+   :members:
+
+
 ``util`` functions
 ^^^^^^^^^^^^^^^^^^
 

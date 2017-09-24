@@ -6,7 +6,7 @@ Mixin classes providing common functionality.
 
 
 __all__ = ["CopyMixin", "AuxDataMixin", "TagMixin", "DataSourceMixin", "SelectionMixin",
-           "LabelMixin"]
+           "LabelMixin", "ColorMixin"]
 
 
 import copy
@@ -93,7 +93,7 @@ class CopyMixin(object):
             elif isinstance(callback, six.string_types):
                 getattr(self, str(callback))(self, kwargs)
             else:
-                raise TypeError("invalid callback type: %s" % callback)
+                raise TypeError("invalid callback type: %s" % (callback,))
 
         return cls(**kwargs)
 
@@ -110,7 +110,7 @@ class AuxDataMixin(object):
         c = MyClass()
         c.set_aux("foo", "bar")
 
-        c.aux("foo")
+        c.get_aux("foo")
         # -> "bar"
 
     .. :py:attribute:: aux
@@ -138,7 +138,7 @@ class AuxDataMixin(object):
         try:
             aux = collections.OrderedDict(aux)
         except:
-            raise TypeError("invalid aux type: %s" % aux)
+            raise TypeError("invalid aux type: %s" % (aux,))
 
         return aux
 
@@ -224,12 +224,12 @@ class TagMixin(object):
         if isinstance(tags, six.string_types):
             tags = {tags}
         if not isinstance(tags, (set, list, tuple)):
-            raise TypeError("invalid tags type: %s" % tags)
+            raise TypeError("invalid tags type: %s" % (tags,))
 
         _tags = set()
         for tag in tags:
             if not isinstance(tag, six.string_types):
-                raise TypeError("invalid tag type: %s" % tag)
+                raise TypeError("invalid tag type: %s" % (tag,))
             _tags.add(str(tag))
 
         return _tags
@@ -311,7 +311,7 @@ class DataSourceMixin(object):
     @is_data.setter
     def is_data(self, is_data):
         if not isinstance(is_data, bool):
-            raise TypeError("invalid is_data type: %s" % is_data)
+            raise TypeError("invalid is_data type: %s" % (is_data,))
 
         self._is_data = is_data
 
@@ -322,7 +322,7 @@ class DataSourceMixin(object):
     @is_mc.setter
     def is_mc(self, is_mc):
         if not isinstance(is_mc, bool):
-            raise TypeError("invalid is_mc type: %s" % is_mc)
+            raise TypeError("invalid is_mc type: %s" % (is_mc,))
 
         self._is_data = not is_mc
 
@@ -401,7 +401,7 @@ class SelectionMixin(object):
         try:
             selection = join(selection)
         except:
-            raise TypeError("invalid selection type: %s" % selection)
+            raise TypeError("invalid selection type: %s" % (selection,))
 
         return selection
 
@@ -422,11 +422,11 @@ class SelectionMixin(object):
     def selection_mode(self, selection_mode):
         # selection mode parser
         if not isinstance(selection_mode, six.string_types):
-            raise TypeError("invalid selection_mode type: %s" % selection_mode)
+            raise TypeError("invalid selection_mode type: %s" % (selection_mode,))
 
         selection_mode = str(selection_mode)
         if selection_mode not in (self.MODE_ROOT, self.MODE_NUMEXPR):
-            raise ValueError("unknown selection_mode: %s" % selection_mode)
+            raise ValueError("unknown selection_mode: %s" % (selection_mode,))
 
         return selection_mode
 
@@ -504,7 +504,7 @@ class LabelMixin(object):
         if label is None:
             self._label = None
         elif not isinstance(label, six.string_types):
-            raise TypeError("invalid label type: %s" % label)
+            raise TypeError("invalid label type: %s" % (label,))
         else:
             self._label = str(label)
 
@@ -526,9 +526,168 @@ class LabelMixin(object):
         elif isinstance(label_short, six.string_types):
             self._label_short = str(label_short)
         else:
-            raise TypeError("invalid label_short type: %s" % label_short)
+            raise TypeError("invalid label_short type: %s" % (label_short,))
 
     @property
     def label_short_root(self):
         # label_short_root getter
         return to_root_latex(self.label_short)
+
+
+class ColorMixin(object):
+    """
+    Mixin-class that provides a color in terms of RGB values as well as some convenience methods.
+
+    .. code-block:: python
+
+        c = ColorMixin(color=(255, 0.5, 100))
+
+        c.color
+        # -> (1.0, 0.5, 0.392..)
+
+        c.color_int
+        # -> (255, 128, 100)
+
+    .. py:attribute:: color_r
+       type: float
+
+       Red component.
+
+    .. py:attribute:: color_g
+       type: float
+
+       Green component.
+
+    .. py:attribute:: color_b
+       type: float
+
+       Blue component.
+
+    .. py:attribute:: color_r_int
+       type: int
+
+       Red component, converted to an integer in the [0, 255] range.
+
+    .. py:attribute:: color_g_int
+       type: int
+
+       Green component, converted to an integer in the [0, 255] range.
+
+    .. py:attribute:: color_b_int
+       type: int
+
+       Blue component, converted to an integer in the [0, 255] range.
+
+    .. py:attribute:: color_alpha
+       type: float
+
+       The alpha value, defaults to 1.
+
+    .. py:attribute:: color
+       type: tuple (float)
+
+       The RGB color values in a 3-tuple.
+
+    .. py:attribute:: color_int
+       type: tuple (int)
+
+       The RGB int color values in a 3-tuple.
+    """
+
+    def __init__(self, color=None):
+        super(ColorMixin, self).__init__()
+
+        # instance members
+        self._color_r = 0.
+        self._color_g = 0.
+        self._color_b = 0.
+        self._color_alpha = 1.
+
+        # set initial values
+        if color is not None:
+            self.color = color
+
+    @typed
+    def color_r(self, color_r):
+        if isinstance(color_r, six.integer_types):
+            color_r /= 255.
+        if isinstance(color_r, float):
+            if not (0 <= color_r <= 1):
+                raise ValueError("invalid color_r value: %s" % (color_r,))
+        else:
+            raise TypeError("invalid color_r type: %s" % (color_r,))
+
+        return color_r
+
+    @typed
+    def color_g(self, color_g):
+        if isinstance(color_g, six.integer_types):
+            color_g /= 255.
+        if isinstance(color_g, float):
+            if not (0 <= color_g <= 1):
+                raise ValueError("invalid color_g value: %s" % (color_g,))
+        else:
+            raise TypeError("invalid color_g type: %s" % (color_g,))
+
+        return color_g
+
+    @typed
+    def color_b(self, color_b):
+        if isinstance(color_b, six.integer_types):
+            color_b /= 255.
+        if isinstance(color_b, float):
+            if not (0 <= color_b <= 1):
+                raise ValueError("invalid color_b value: %s" % (color_b,))
+        else:
+            raise TypeError("invalid color_b type: %s" % (color_b,))
+
+        return color_b
+
+    @typed
+    def color_alpha(self, color_alpha):
+        if isinstance(color_alpha, (float, int)):
+            if not (0 <= color_alpha <= 1):
+                raise ValueError("invalid color_alpha value: %s" % (color_alpha,))
+        else:
+            raise TypeError("invalid color_alpha type: %s" % (color_alpha,))
+
+        return float(color_alpha)
+
+    @property
+    def color(self):
+        # color getter
+        return (self.color_r, self.color_g, self.color_b)
+
+    @color.setter
+    def color(self, color):
+        # color setter
+        if not isinstance(color, (tuple, list)):
+            raise TypeError("invalid color type: %s" % (color,))
+        elif not len(color) in (3, 4):
+            raise ValueError("invalid color value: %s" % (color,))
+        else:
+            self.color_r = color[0]
+            self.color_g = color[1]
+            self.color_b = color[2]
+            if len(color) == 4:
+                self.color_alpha = color[3]
+
+    @property
+    def color_r_int(self):
+        # color_r_int getter
+        return min(255, max(0, int(round(self.color_r * 255))))
+
+    @property
+    def color_g_int(self):
+        # color_g_int getter
+        return min(255, max(0, int(round(self.color_g * 255))))
+
+    @property
+    def color_b_int(self):
+        # color_b_int getter
+        return min(255, max(0, int(round(self.color_b * 255))))
+
+    @property
+    def color_int(self):
+        # color_int getter
+        return (self.color_r_int, self.color_g_int, self.color_b_int)

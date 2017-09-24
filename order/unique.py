@@ -553,12 +553,12 @@ def unique_tree(**kwargs):
                 if f.__doc__:
                     f.__doc__ = f.__doc__.format(name=_name, singular=singular, plural=plural,
                         **kwargs)
-                setattr(cls, _name, f)
+                setattr(unique_cls, _name, f)
                 return f
             return decorator
 
         # patch the init method
-        orig_init = cls.__init__
+        orig_init = unique_cls.__init__
         def __init__(self, *args, **kwargs):
             # call the original init
             orig_init(self, *args, **kwargs)
@@ -567,10 +567,10 @@ def unique_tree(**kwargs):
             setattr(self, "_" + plural, UniqueObjectIndex(cls=cls))
             if parents:
                 setattr(self, "_parent_" + plural, UniqueObjectIndex(cls=cls))
-        cls.__init__ = __init__
+        unique_cls.__init__ = __init__
 
-        if cls.__doc__:
-            cls.__doc__ += """
+        if unique_cls.__doc__:
+            unique_cls.__doc__ += """
     .. py:attribute:: {plural}
        type: UniqueObjectIndex
        read-only
@@ -579,7 +579,7 @@ def unique_tree(**kwargs):
     """.format(plural=plural)
 
             if parents:
-                cls.__doc__ += """
+                unique_cls.__doc__ += """
     .. py:attribute:: parent_{plural}
        type: UniqueObjectIndex
        read-only

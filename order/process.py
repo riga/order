@@ -107,6 +107,8 @@ class Process(UniqueObject, AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixi
 
     def set_xsec(self, ecm, xsec):
         """
-        Sets the *xsec* *Number* for a center-of-mass energy *ecm*.
+        Sets the *xsec* *Number* for a center-of-mass energy *ecm*. Returns the value.
         """
-        self.xsecs.update(self.__class__.xsecs.fparse({ecm: xsec}))
+        ecm, xsec = list(self.__class__.xsecs.fparse({ecm: xsec}))[0]
+        self.xsecs[ecm] = xsec
+        return xsec

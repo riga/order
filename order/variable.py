@@ -8,15 +8,13 @@ Tools to work with variables.
 __all__ = ["Variable"]
 
 
-import copy
-
 import six
 
-from .mixins import AuxDataMixin, TagMixin, SelectionMixin
+from .mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin
 from .util import typed, to_root_latex
 
 
-class Variable(AuxDataMixin, TagMixin, SelectionMixin):
+class Variable(CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     """
     Class that provides simplified access to plotting variables.
 
@@ -123,8 +121,8 @@ class Variable(AuxDataMixin, TagMixin, SelectionMixin):
        The bin width, evaluated from *binning*.
     """
 
-    _copy_attrs = ["expression", "binning", "x_title", "x_title_short", "y_title", "y_title_short",
-                   "log_x", "log_y", "unit", "selection", "selection_mode", "tags"]
+    copy_attrs = ["expression", "binning", "x_title", "x_title_short", "y_title", "y_title_short",
+                  "log_x", "log_y", "unit", "selection", "selection_mode", "tags", "aux"]
 
     def __init__(self, name, expression=None, binning=(1, 0., 1.), x_title="", x_title_short=None,
                  y_title="Entries", y_title_short=None, log_x=False, log_y=False, unit="1",
@@ -296,25 +294,6 @@ class Variable(AuxDataMixin, TagMixin, SelectionMixin):
     @property
     def bin_width(self):
         return (self.binning[2] - self.binning[1]) / float(self.binning[0])
-
-    def copy(self, name=None, **kwargs):
-        """
-        Returns a copy of the variable. When not *None*, *name* is the name of the copied variable.
-        All *kwargs* are passed to the initialization of the copied variable and default to the
-        members of *this* variable.
-        """
-        if name is None:
-            name = self.name
-
-        for attr in self._copy_attrs:
-            if attr not in kwargs:
-                kwargs[attr] = copy.deepcopy(getattr(self, attr))
-
-        # copy aux data manually
-        if "aux" not in kwargs:
-            kwargs["aux"] = copy.deepcopy(self.aux())
-
-        return self.__class__(name, **kwargs)
 
     def full_x_title(self, short=False, root=False):
         """

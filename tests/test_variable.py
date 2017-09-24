@@ -110,7 +110,7 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(v.full_title(short=True), "myVar;#mu p_{T} [GeV];N / 0.25 GeV")
 
     def test_copy(self):
-        v = self.make_var().copy("otherVar", expression="otherExpression")
+        v = self.make_var().copy(name="otherVar", expression="otherExpression")
 
         self.assertEqual(v.name, "otherVar")
         self.assertEqual(v.expression, "otherExpression")

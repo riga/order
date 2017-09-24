@@ -67,6 +67,14 @@ Classes
    :members:
 
 
+``CopyMixin``
+-------------
+
+.. autoclass:: CopyMixin
+   :member-order: bysource
+   :members:
+
+
 ``AuxDataMixin``
 ----------------
 

@@ -5,15 +5,97 @@ Mixin classes providing common functionality.
 """
 
 
-__all__ = ["AuxDataMixin", "TagMixin", "DataSourceMixin", "SelectionMixin", "LabelMixin"]
+__all__ = ["CopyMixin", "AuxDataMixin", "TagMixin", "DataSourceMixin", "SelectionMixin",
+           "LabelMixin"]
 
 
-from collections import OrderedDict
+import copy
+import collections
 
 import six
 
 from .util import typed, make_list, multi_match, join_root_selection, join_numexpr_selection, \
     to_root_latex
+
+
+class CopyMixin(object):
+    """
+    Mixin-class that adds copy features to inheriting classes.
+
+    .. code-block:: python
+
+        class MyClass(CopyMixin):
+
+            copy_attrs = ["name"]
+
+            def __init__(self, name):
+                super(MyClass, self).__init__()
+                self.name = name
+
+        a = MyClass("foo")
+        a.name
+        # -> "foo"
+
+        b = a.copy()
+        b.name
+        # -> "foo"
+
+        def update_name(inst, kwargs):
+            kwargs["name"] += "_updated"
+
+        c = a.copy(callbacks=[update_name])
+        c.name
+        # -> "foo_updated"
+
+    .. :py:attribute:: copy_attrs
+       type: list
+       classmember
+
+       The default attributes to copy when *attrs* is *None* in the copy method.
+
+    .. :py:attribute:: copy_callbacks
+       type: list
+       classmember
+
+       The default callbacks to call when *callbacks* is *None* in the copy method.
+    """
+
+    copy_attrs = []
+    copy_callbacks = []
+
+    def __init__(self): pass
+
+    def copy(self, cls=None, attrs=None, callbacks=None, **kwargs):
+        """
+        Returns a copy of this instance via copying attributes defined in *attrs* which default to
+        *copy_attrs*. *kwargs* overwrite copied attributes. *cls* is the class of the returned
+        instance . When *None*, *this* class is used. *callbacks* can be a list of functions that
+        receive the instance to copy and the attributes in a dict, so they can be updated *before*
+        the actual copy is created.
+        """
+        # default args
+        if cls is None:
+            cls = self.__class__
+        if attrs is None:
+            attrs = self.copy_attrs
+        if callbacks is None:
+            callbacks = self.copy_callbacks
+
+        # copy attributes
+        for attr in attrs:
+            if attr not in kwargs:
+                kwargs[attr] = copy.deepcopy(getattr(self, attr))
+
+        # invoke callbacks
+        for callback in callbacks:
+            if callable(callback):
+                callback(self, kwargs)
+            elif isinstance(callback, six.string_types):
+                getattr(self, str(callback))(self, kwargs)
+            else:
+                raise TypeError("invalid callback type: %s" % callback)
+
+        return cls(**kwargs)
 
 
 class AuxDataMixin(object):
@@ -30,6 +112,11 @@ class AuxDataMixin(object):
 
         c.aux("foo")
         # -> "bar"
+
+    .. :py:attribute:: aux
+       type: OrderedDict
+
+       The dictionary of auxiliary data.
     """
 
     _no_default = object()
@@ -38,46 +125,54 @@ class AuxDataMixin(object):
         super(AuxDataMixin, self).__init__()
 
         # instance members
-        self._aux_data = OrderedDict()
+        self._aux = collections.OrderedDict()
 
-        # set initial aux data
+        # set initial values
         if aux is not None:
             for key, data in dict(aux).items():
                 self.set_aux(key, data)
+
+    @typed
+    def aux(self, aux):
+        # aux parser
+        try:
+            aux = collections.OrderedDict(aux)
+        except:
+            raise TypeError("invalid aux type: %s" % aux)
+
+        return aux
 
     def set_aux(self, key, data):
         """
         Stores auxiliary *data* for a specific *key*. Returns *data*.
         """
-        self._aux_data[key] = data
+        self.aux[key] = data
         return data
 
     def remove_aux(self, key=None):
         """
-        Removes the auxiliary data for a specific *key*, or all data in a dict if *key* is *None*.
+        Removes the auxiliary data for a specific *key*, or all data if *key* is *None*.
         """
         if key is None:
-            self._aux_data.clear()
-        elif key in self._aux_data:
-            del(self._aux_data[key])
+            self.aux.clear()
+        elif key in self.aux:
+            del(self.aux[key])
 
     def has_aux(self, key):
         """
         Returns *True* when an auxiliary data entry for a specific *key* exists, *False* otherwise.
         """
-        return key in self._aux_data
+        return key in self.aux
 
-    def aux(self, key=None, default=_no_default):
-        """ aux(key=None, [default])
-        Returns the auxiliary data for a specific *key*, or all data in a dict if *key* is *None*.
-        If *key* is set and if a *default* is given, it is returned in case *key* is not found.
+    def get_aux(self, key, default=_no_default):
+        """ get_aux(key, [default])
+        Returns the auxiliary data for a specific *key*. If a *default* is given, it is returned in
+        case *key* is not found.
         """
-        if key is None:
-            return self._aux_data
-        elif default != self._no_default:
-            return self._aux_data.get(key, default)
+        if default != self._no_default:
+            return self.aux.get(key, default)
         else:
-            return self._aux_data[key]
+            return self.aux[key]
 
 
 class TagMixin(object):

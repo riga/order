@@ -20,7 +20,7 @@ __all__        = ["UniqueObject", "UniqueObjectIndex", "AuxDataMixin", "TagMixin
 
 # provisioning imports
 from .unique import UniqueObject, UniqueObjectIndex
-from .mixins import AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, LabelMixin
+from .mixins import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, LabelMixin
 from .categorize import Channel, Category
 from .variable import Variable
 from .shift import Shift

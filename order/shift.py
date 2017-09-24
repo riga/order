@@ -134,17 +134,16 @@ class Shift(LabelMixin):
             return (None, None)
         elif key == cls.NOMINAL:
             return (cls.NOMINAL, cls.NOMINAL)
-        elif not "_" in key:
-            raise ValueError("invalid shift key format: %s" % key)
-        else:
+        elif "_" in key:
             name, direction = tuple(key.rsplit("_", 1))
-
             if name == cls.NOMINAL:
                 raise ValueError("pointless nominal shift key: %s" % key)
             elif direction not in (cls.UP, cls.DOWN):
                 raise ValueError("invalid shift direction: %s" % direction)
-
-            return (name, direction)
+            else:
+                return (name, direction)
+        else:
+            raise ValueError("invalid shift key format: %s" % key)
 
     @classmethod
     def join_key(cls, name, direction):
@@ -169,10 +168,10 @@ class Shift(LabelMixin):
                 raise ValueError("pointless nominal shift direction: %s", direction)
             else:
                 return cls.NOMINAL
-        elif direction not in (cls.UP, cls.DOWN):
-            raise ValueError("unknown shift direction: %s" % direction)
-        else:
+        elif direction in (cls.UP, cls.DOWN):
             return "%s_%s" % (name, direction)
+        else:
+            raise ValueError("unknown shift direction: %s" % direction)
 
     def __init__(self, key, type=None, label=None, label_short=None):
         LabelMixin.__init__(self, label=label, label_short=label_short)

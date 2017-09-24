@@ -1,31 +1,91 @@
 # -*- coding: utf-8 -*-
 
 
-__all__ = ["AuxDataMixinTest", "TagMixinTest", "DataSourceMixinTest", "SelectionMixinTest",
-           "LabelMixinTest"]
+__all__ = ["CopyMixinTest", "AuxDataMixinTest", "TagMixinTest", "DataSourceMixinTest",
+           "SelectionMixinTest", "LabelMixinTest"]
 
 
 import unittest
 
-from order import AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, LabelMixin
+from order import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, LabelMixin
+
+
+class CopyMixinTest(unittest.TestCase):
+
+    def make_class(self):
+        def extend_name(inst, kwargs):
+            kwargs["name"] += "_"
+
+        class C(CopyMixin):
+            copy_attrs = ["name", "id"]
+            copy_callbacks = [extend_name, "increment_id"]
+
+            def __init__(self, name, id=0):
+                super(C, self).__init__()
+                self.name = name
+                self.id = id
+
+            @staticmethod
+            def increment_id(inst, kwargs):
+                kwargs["id"] += 1
+
+        return C
+
+    def test_plain(self):
+        C = self.make_class()
+        a = C("foo", 1)
+
+        b = a.copy(callbacks=[])
+        self.assertIsInstance(b, C)
+        self.assertEquals(b.name, "foo")
+        self.assertEquals(b.id, 1)
+
+    def test_attrs(self):
+        C = self.make_class()
+        a = C("foo", 1)
+
+        b = a.copy(attrs=["name"], callbacks=[])
+        self.assertIsInstance(b, C)
+        self.assertEquals(b.name, "foo")
+        self.assertEquals(b.id, 0)
+
+    def test_callbacks(self):
+        C = self.make_class()
+        a = C("foo", 1)
+
+        b = a.copy()
+        self.assertIsInstance(b, C)
+        self.assertEquals(b.name, "foo_")
+        self.assertEquals(b.id, 2)
+
+    def test_class(self):
+        C = self.make_class()
+        a = C("foo", 1)
+
+        class D(C): pass
+
+        b = a.copy(cls=D)
+        self.assertIsInstance(b, D)
+        self.assertEquals(b.name, "foo_")
+        self.assertEquals(b.id, 2)
 
 
 class AuxDataMixinTest(unittest.TestCase):
 
     def test_constructor(self):
         c = AuxDataMixin()
-        self.assertEqual(len(c.aux()), 0)
+        self.assertEqual(len(c.aux), 0)
 
         c = AuxDataMixin(aux={"foo": "bar"})
-        self.assertEqual(len(c.aux()), 1)
+        self.assertEqual(len(c.aux), 1)
 
     def test_set_has_remove(self):
         c = AuxDataMixin()
         c.set_aux("foo", "bar")
-        self.assertEqual(len(c.aux()), 1)
+        self.assertEqual(len(c.aux), 1)
 
-        self.assertEqual(c.aux("foo"), "bar")
-        self.assertEqual(c.aux()["foo"], "bar")
+        self.assertEqual(c.get_aux("foo"), "bar")
+        self.assertEqual(c.aux["foo"], "bar")
 
         self.assertTrue(c.has_aux("foo"))
         self.assertFalse(c.has_aux("foo2"))

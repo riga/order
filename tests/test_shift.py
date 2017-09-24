@@ -12,10 +12,10 @@ from order import Shift
 class ShiftTest(unittest.TestCase):
 
     def test_split(self):
-        self.assertEquals(Shift.split_key("nominal"), ("nominal", "nominal"))
-        self.assertEquals(Shift.split_key("pdf_up"), ("pdf", "up"))
-        self.assertEquals(Shift.split_key("isr_down"), ("isr", "down"))
-        self.assertEquals(Shift.split_key("long_name_down"), ("long_name", "down"))
+        self.assertEqual(Shift.split_key("nominal"), ("nominal", "nominal"))
+        self.assertEqual(Shift.split_key("pdf_up"), ("pdf", "up"))
+        self.assertEqual(Shift.split_key("isr_down"), ("isr", "down"))
+        self.assertEqual(Shift.split_key("long_name_down"), ("long_name", "down"))
 
         with self.assertRaises(ValueError):
             Shift.split_key("nominal_up")
@@ -24,9 +24,9 @@ class ShiftTest(unittest.TestCase):
             Shift.split_key("foo_bar")
 
     def test_join(self):
-        self.assertEquals(Shift.join_key("nominal", "nominal"), "nominal")
-        self.assertEquals(Shift.join_key("pdf", "up"), "pdf_up")
-        self.assertEquals(Shift.join_key("isr", "down"), "isr_down")
+        self.assertEqual(Shift.join_key("nominal", "nominal"), "nominal")
+        self.assertEqual(Shift.join_key("pdf", "up"), "pdf_up")
+        self.assertEqual(Shift.join_key("isr", "down"), "isr_down")
 
         with self.assertRaises(ValueError):
             Shift.join_key("nominal", "up")
@@ -37,30 +37,30 @@ class ShiftTest(unittest.TestCase):
     def test_constructor(self):
         s = Shift("nominal", type=Shift.RATE)
 
-        self.assertEquals(s.key, "nominal")
-        self.assertEquals(s.name, "nominal")
-        self.assertEquals(s.direction, "nominal")
-        self.assertEquals(s.type, Shift.RATE)
+        self.assertEqual(s.key, "nominal")
+        self.assertEqual(s.name, "nominal")
+        self.assertEqual(s.direction, "nominal")
+        self.assertEqual(s.type, Shift.RATE)
 
         s = Shift("pdf_up", type=Shift.SHAPE)
 
-        self.assertEquals(s.key, "pdf_up")
-        self.assertEquals(s.name, "pdf")
-        self.assertEquals(s.direction, "up")
-        self.assertEquals(s.type, Shift.SHAPE)
+        self.assertEqual(s.key, "pdf_up")
+        self.assertEqual(s.name, "pdf")
+        self.assertEqual(s.direction, "up")
+        self.assertEqual(s.type, Shift.SHAPE)
 
     def test_attributes(self):
         s = Shift("pdf_up", type=Shift.SHAPE)
 
-        self.assertEquals(s.key, "pdf_up")
+        self.assertEqual(s.key, "pdf_up")
         self.assertTrue(s.is_up)
 
         s.direction = "down"
-        self.assertEquals(s.key, "pdf_down")
+        self.assertEqual(s.key, "pdf_down")
         self.assertTrue(s.is_down)
 
         s.key = "nominal"
-        self.assertEquals(s.name, "nominal")
+        self.assertEqual(s.name, "nominal")
         self.assertTrue(s.is_nominal)
 
     def test_comparison(self):

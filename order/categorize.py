@@ -94,7 +94,7 @@ class Category(UniqueObject, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin)
     def channel(self, channel):
         # channel parser
         if not isinstance(channel, Channel):
-            raise TypeError("invalid channel type: %s" % channel)
+            raise TypeError("invalid channel type: %s" % (channel,))
 
         return channel
 

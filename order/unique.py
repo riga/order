@@ -130,7 +130,7 @@ class UniqueObject(object):
             if default != _no_default:
                 return default
             else:
-                raise ValueError("unknown context: %s" % context)
+                raise ValueError("unknown context: %s" % (context,))
 
         return cls._instances[context].get(obj, default=default)
 
@@ -240,7 +240,7 @@ class UniqueObject(object):
     def uniqueness_context(self, uniqueness_context):
         # uniqueness_context parser
         if uniqueness_context is None:
-            raise TypeError("invalid uniqueness_context type: %s" % uniqueness_context)
+            raise TypeError("invalid uniqueness_context type: %s" % (uniqueness_context,))
 
         return uniqueness_context
 
@@ -248,7 +248,7 @@ class UniqueObject(object):
     def name(self, name):
         # name parser
         if not isinstance(name, six.string_types):
-            raise TypeError("invalid name type: %s" % name)
+            raise TypeError("invalid name type: %s" % (name,))
 
         return str(name)
 
@@ -256,7 +256,7 @@ class UniqueObject(object):
     def id(self, id):
         # id parser
         if not isinstance(id, six.integer_types):
-            raise TypeError("invalid id type: %s" % id)
+            raise TypeError("invalid id type: %s" % (id,))
 
         return int(id)
 
@@ -368,7 +368,7 @@ class UniqueObjectIndex(object):
     def cls(self, cls):
         # cls parser
         if not issubclass(cls, UniqueObject):
-            raise ValueError("not a sublcass of UniqueObject: %s" % cls)
+            raise ValueError("not a sublcass of UniqueObject: %s" % (cls,))
 
         return cls
 
@@ -418,7 +418,7 @@ class UniqueObjectIndex(object):
         # before adding the object to the index check for duplicate name or id
         # which might happen when instances of the same class have different uniqueness contexts
         if self.get(obj, None) is not None:
-            raise ValueError("duplicate object in index: %s" % obj)
+            raise ValueError("duplicate object in index: %s" % (obj,))
 
         # add to indexes
         self._name_index[obj.name] = obj
@@ -439,7 +439,7 @@ class UniqueObjectIndex(object):
             elif default != _no_default:
                 return default
             else:
-                raise ValueError("object not known to index: %s" % obj)
+                raise ValueError("object not known to index: %s" % (obj,))
         else:
             # name?
             try:
@@ -456,7 +456,7 @@ class UniqueObjectIndex(object):
             if default != _no_default:
                 return default
             else:
-                raise ValueError("object not known to index: %s" % obj)
+                raise ValueError("object not known to index: %s" % (obj,))
 
     def has(self, obj):
         """
@@ -479,7 +479,7 @@ class UniqueObjectIndex(object):
         elif silent:
             return None
         else:
-            raise ValueError("object not known to index: %s" % obj)
+            raise ValueError("object not known to index: %s" % (obj,))
 
     def flush(self):
         """
@@ -490,7 +490,7 @@ class UniqueObjectIndex(object):
 
 
 def unique_tree(**kwargs):
-    """ unique_tree(cls=None, singular=None, plural=None, parents=True)
+    """ unique_tree(cls=None, singular=None, plural=None, parents=Truez)
     Decorator that adds attributes and methods to the decorated class to provide tree features,
     i.e., *parent-child* relations. Example:
 
@@ -534,7 +534,7 @@ def unique_tree(**kwargs):
     """
     def decorator(unique_cls):
         if not issubclass(unique_cls, UniqueObject):
-            raise TypeError("decorated class must inherit from UniqueObject: %s" % unique_cls)
+            raise TypeError("decorated class must inherit from UniqueObject: %s" % (unique_cls,))
 
         # determine configuration defaults
         cls = kwargs.get("cls", unique_cls)
@@ -730,7 +730,7 @@ def unique_tree(**kwargs):
                     parent_index = getattr(obj, "parent_" + plural)
                     if len(parent_index) >= parents:
                         index.remove(obj)
-                        raise Exception("number of parents exceeded: %i" % parents)
+                        raise Exception("number of parents exceeded: %i" % (parents,))
                     parent_index.add(self)
                     return obj
 
@@ -843,7 +843,7 @@ def unique_tree(**kwargs):
                     """
                     parent_index = getattr(self, "parent_" + plural)
                     if len(parent_index) >= parents:
-                        raise Exception("number of parents exceeded: %i" % parents)
+                        raise Exception("number of parents exceeded: %i" % (parents,))
                     obj = parent_index.add(*args, **kwargs)
                     getattr(obj, plural).add(self)
                     return obj

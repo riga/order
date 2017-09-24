@@ -137,13 +137,13 @@ class Shift(LabelMixin):
         elif "_" in key:
             name, direction = tuple(key.rsplit("_", 1))
             if name == cls.NOMINAL:
-                raise ValueError("pointless nominal shift key: %s" % key)
+                raise ValueError("pointless nominal shift key: %s" % (key,))
             elif direction not in (cls.UP, cls.DOWN):
-                raise ValueError("invalid shift direction: %s" % direction)
+                raise ValueError("invalid shift direction: %s" % (direction,))
             else:
                 return (name, direction)
         else:
-            raise ValueError("invalid shift key format: %s" % key)
+            raise ValueError("invalid shift key format: %s" % (key,))
 
     @classmethod
     def join_key(cls, name, direction):
@@ -165,13 +165,13 @@ class Shift(LabelMixin):
             return None
         elif name == cls.NOMINAL:
             if direction not in (cls.NOMINAL, None):
-                raise ValueError("pointless nominal shift direction: %s", direction)
+                raise ValueError("pointless nominal shift direction: %s" % (direction,))
             else:
                 return cls.NOMINAL
         elif direction in (cls.UP, cls.DOWN):
             return "%s_%s" % (name, direction)
         else:
-            raise ValueError("unknown shift direction: %s" % direction)
+            raise ValueError("unknown shift direction: %s" % (direction,))
 
     def __init__(self, key, type=None, label=None, label_short=None):
         LabelMixin.__init__(self, label=label, label_short=label_short)
@@ -231,7 +231,7 @@ class Shift(LabelMixin):
     def key(self, key):
         # key setter
         if not isinstance(key, six.string_types):
-            raise TypeError("invalid key type: %s" % key)
+            raise TypeError("invalid key type: %s" % (key,))
 
         self._name, self._direction = self.split_key(key)
 
@@ -244,7 +244,7 @@ class Shift(LabelMixin):
     def direction(self, direction):
         # direction parser
         if not isinstance(direction, six.string_types):
-            raise TypeError("invalid direction type: %s" % direction)
+            raise TypeError("invalid direction type: %s" % (direction,))
 
         # also check if it can be correctly joined with the current name
         direction = str(direction)
@@ -256,7 +256,7 @@ class Shift(LabelMixin):
     def type(self, type):
         # type parser
         if type not in (self.UNKNOWN, self.RATE, self.SHAPE):
-            raise ValueError("unknown type: %s" % type)
+            raise ValueError("unknown type: %s" % (type,))
 
         return type
 

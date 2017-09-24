@@ -14,24 +14,16 @@ __license__    = "MIT"
 __status__     = "Development"
 __version__    = "0.0.1"
 
-__all__ = [
-    "UniqueObject", "UniqueObjectIndex",
-    "CopyMixin", "AuxDataMixin", "TagMixin", "DataSourceMixin", "SelectionMixin", "LabelMixin",
-    "Channel",
-    "Category",
-    "Variable",
-    "Shift",
-    "Process",
-    "Dataset", "DatasetInfo", "AnalysisDataset",
-    "Era", "AnalysisEra",
-    "Analysis",
-    "cms"
-]
+__all__ = ["UniqueObject", "UniqueObjectIndex", "CopyMixin", "AuxDataMixin", "TagMixin",
+           "DataSourceMixin", "SelectionMixin", "LabelMixin", "ColorMixin", "Channel", "Category",
+           "Variable", "Shift", "Process", "Dataset", "DatasetInfo", "AnalysisDataset", "Era",
+           "AnalysisEra", "Analysis", "cms", "util"]
 
 
 # provisioning imports
 from .unique import UniqueObject, UniqueObjectIndex
-from .mixins import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, LabelMixin
+from .mixins import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, \
+    LabelMixin, ColorMixin
 from .categorize import Channel, Category
 from .variable import Variable
 from .shift import Shift

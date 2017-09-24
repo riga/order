@@ -82,11 +82,11 @@ class UniqueObjectTest(unittest.TestCase):
 
         C("foo", 1)
         bar = C("bar", "+")
-        self.assertEquals(bar.id, 2)
+        self.assertEqual(bar.id, 2)
 
         C("baz", 100)
         test = C("test", "+")
-        self.assertEquals(test.id, 101)
+        self.assertEqual(test.id, 101)
 
 
 class UniqueObjectIndexTest(unittest.TestCase):

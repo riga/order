@@ -52,11 +52,11 @@ class CategoryTest(unittest.TestCase):
     def test_constructor(self):
         c = Category("eq3j", label=r"$\eq$ 3 jets")
 
-        self.assertEquals(c.name, "eq3j")
-        self.assertEquals(c.label, r"$\eq$ 3 jets")
+        self.assertEqual(c.name, "eq3j")
+        self.assertEqual(c.label, r"$\eq$ 3 jets")
 
         c.label = None
-        self.assertEquals(c.label_short, c.name)
+        self.assertEqual(c.label_short, c.name)
 
     def test_channel(self):
         SL = Channel("SL", 1, context="category")
@@ -65,7 +65,7 @@ class CategoryTest(unittest.TestCase):
         c2 = c.add_category("eq4j_eq2b")
 
         self.assertIsNone(c2.channel)
-        self.assertEquals(c2.parent_channel, SL)
+        self.assertEqual(c2.parent_channel, SL)
 
         self.assertEqual(c.full_label(), r"SL, $\eq$ 4 jets")
         self.assertEqual(c.full_label(root=True), "SL, #eq 4 jets")

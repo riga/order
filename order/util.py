@@ -127,7 +127,7 @@ def multi_match(name, patterns, mode=any, func="fnmatch", *args, **kwargs):
         _func = getattr(fnmatch, func)
         return mode(_func(name, pattern, *args, **kwargs) for pattern in patterns)
     else:
-        raise ValueError("unknown matching function: %s" % func)
+        raise ValueError("unknown matching function: %s" % (func,))
 
 
 def flatten(struct, depth=-1):
@@ -178,7 +178,7 @@ def _parse_selection(*selection):
             if s in ("", "1.", "1"):
                 continue
         else:
-            raise Exception("invalid selection string: %s" % s)
+            raise Exception("invalid selection string: %s" % (s,))
         _selection.append(str(s))
     return _selection
 

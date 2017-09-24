@@ -13,9 +13,20 @@ __contact__    = "https://github.com/riga/order"
 __license__    = "MIT"
 __status__     = "Development"
 __version__    = "0.0.1"
-__all__        = ["UniqueObject", "UniqueObjectIndex", "AuxDataMixin", "TagMixin",
-                  "DataSourceMixin", "SelectionMixin", "LabelMixin", "Channel", "Category",
-                  "Variable", "Shift"]
+
+__all__ = [
+    "UniqueObject", "UniqueObjectIndex",
+    "CopyMixin", "AuxDataMixin", "TagMixin", "DataSourceMixin", "SelectionMixin", "LabelMixin",
+    "Channel",
+    "Category",
+    "Variable",
+    "Shift",
+    "Process",
+    "Dataset", "DatasetInfo", "AnalysisDataset",
+    "Era", "AnalysisEra",
+    "Analysis",
+    "cms"
+]
 
 
 # provisioning imports
@@ -24,4 +35,8 @@ from .mixins import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, Selectio
 from .categorize import Channel, Category
 from .variable import Variable
 from .shift import Shift
+from .process import Process
+from .dataset import Dataset, DatasetInfo, AnalysisDataset
+from .era import Era, AnalysisEra
+from .analysis import Analysis
 

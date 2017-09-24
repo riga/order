@@ -12,8 +12,71 @@ order
 .. automodule:: order
 
 
-Classes
-^^^^^^^
+Main classes
+^^^^^^^^^^^^
+
+``Analysis``
+------------
+
+.. autoclass:: Analysis
+   :show-inheritance:
+   :member-order: bysource
+   :members:
+
+
+``Era``
+-------
+
+.. autoclass:: Era
+   :show-inheritance:
+   :member-order: bysource
+   :members:
+
+
+``AnalysisEra``
+---------------
+
+.. autoclass:: AnalysisEra
+   :show-inheritance:
+   :member-order: bysource
+   :members:
+
+
+``Dataset``
+-----------
+
+.. autoclass:: Dataset
+   :show-inheritance:
+   :member-order: bysource
+   :members:
+
+
+``DatasetInfo``
+---------------
+
+.. autoclass:: DatasetInfo
+   :show-inheritance:
+   :member-order: bysource
+   :members:
+
+
+``AnalysisDataset``
+-------------------
+
+.. autoclass:: AnalysisDataset
+   :show-inheritance:
+   :member-order: bysource
+   :members:
+
+
+``Process``
+-----------
+
+.. autoclass:: Process
+   :show-inheritance:
+   :member-order: bysource
+   :members:
+
 
 ``Channel``
 -----------
@@ -50,6 +113,45 @@ Classes
    :member-order: bysource
    :members:
 
+
+CMS-related classes
+^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: order.cms
+
+
+``LumiList``
+------------
+
+.. autoclass:: LumiList
+   :show-inheritance:
+   :member-order: bysource
+   :members:
+
+
+``StatModel``
+-------------
+
+.. autoclass:: StatModel
+   :show-inheritance:
+   :member-order: bysource
+   :members:
+
+
+``Datacard``
+------------
+
+.. autoclass:: Datacard
+   :show-inheritance:
+   :member-order: bysource
+   :members:
+
+
+.. currentmodule:: order
+
+
+Helper classes and mixins
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``UniqueObject``
 ----------------
@@ -115,8 +217,8 @@ Classes
    :members:
 
 
-Functions
-^^^^^^^^^
+``util`` functions
+^^^^^^^^^^^^^^^^^^
 
 .. autofunction:: order.util.make_list
 

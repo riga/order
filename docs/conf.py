@@ -15,12 +15,13 @@ author = od.__author__
 copyright = od.__copyright__
 version = od.__version__
 release = od.__version__
-
+language = "en"
 
 templates_path = ["_templates"]
 html_static_path = ["_static"]
 master_doc = "index"
 source_suffix = ".rst"
+add_module_names = True
 
 
 exclude_patterns = []

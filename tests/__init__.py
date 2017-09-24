@@ -18,3 +18,10 @@ from .test_mixins import *
 from .test_categorize import *
 from .test_variable import *
 from .test_shift import *
+from .test_process import *
+from .test_dataset import *
+from .test_era import *
+from .test_analysis import *
+
+from .test_cms_lumi import *
+from .test_cms_combine import *

@@ -23,7 +23,6 @@ master_doc = "index"
 source_suffix = ".rst"
 add_module_names = True
 
-
 exclude_patterns = []
 pygments_style = "sphinx"
 html_logo = "../logo.png"
@@ -36,9 +35,9 @@ html_sidebars = {"**": [
 html_theme_options = {
     "github_user": "riga",
     "github_repo": "order",
-    "travis_button": True
+    "travis_button": True,
+    "fixed_sidebar": True
 }
-
 
 extensions = [
     "sphinx.ext.autodoc"

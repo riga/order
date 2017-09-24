@@ -111,7 +111,7 @@ class UniqueObject(object):
 
     default_uniqueness_context = "uniqueobject"
 
-    _auto_id = "+"
+    AUTO_ID = "+"
 
     _instances = {}
 
@@ -171,7 +171,7 @@ class UniqueObject(object):
         self._name = name
 
         # check for auto_id
-        if id == self._auto_id:
+        if id == self.AUTO_ID:
             id = self.auto_id(self.name, self.uniqueness_context)
 
         # use the typed parser to check the passed id, check for duplicates and store it

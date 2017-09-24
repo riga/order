@@ -67,34 +67,42 @@ Classes
    :members:
 
 
-``AuxDataContainer``
---------------------
-
-.. autoclass:: AuxDataContainer
-   :member-order: bysource
-   :members:
-
-
-``TagContainer``
+``AuxDataMixin``
 ----------------
 
-.. autoclass:: TagContainer
+.. autoclass:: AuxDataMixin
    :member-order: bysource
    :members:
 
 
-``DataSourceContainer``
------------------------
+``TagMixin``
+------------
 
-.. autoclass:: DataSourceContainer
+.. autoclass:: TagMixin
    :member-order: bysource
    :members:
 
 
-``SelectionContainer``
-----------------------
+``DataSourceMixin``
+-------------------
 
-.. autoclass:: SelectionContainer
+.. autoclass:: DataSourceMixin
+   :member-order: bysource
+   :members:
+
+
+``SelectionMixin``
+------------------
+
+.. autoclass:: SelectionMixin
+   :member-order: bysource
+   :members:
+
+
+``LabelMixin``
+--------------
+
+.. autoclass:: LabelMixin
    :member-order: bysource
    :members:
 

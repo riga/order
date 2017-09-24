@@ -5,23 +5,24 @@ Mixin classes providing common functionality.
 """
 
 
-__all__ = ["AuxDataContainer", "TagContainer", "DataSourceContainer", "SelectionContainer"]
+__all__ = ["AuxDataMixin", "TagMixin", "DataSourceMixin", "SelectionMixin", "LabelMixin"]
 
 
 from collections import OrderedDict
 
 import six
 
-from .util import typed, make_list, multi_match, join_root_selection, join_numexpr_selection
+from .util import typed, make_list, multi_match, join_root_selection, join_numexpr_selection, \
+    to_root_latex
 
 
-class AuxDataContainer(object):
+class AuxDataMixin(object):
     """
     Mixin-class that provides storage of auxiliary data via a simple interface:
 
     .. code-block:: python
 
-        class MyClass(AuxDataContainer):
+        class MyClass(AuxDataMixin):
             ...
 
         c = MyClass()
@@ -34,7 +35,7 @@ class AuxDataContainer(object):
     _no_default = object()
 
     def __init__(self, aux=None):
-        super(AuxDataContainer, self).__init__()
+        super(AuxDataMixin, self).__init__()
 
         # instance members
         self._aux_data = OrderedDict()
@@ -79,13 +80,13 @@ class AuxDataContainer(object):
             return self._aux_data[key]
 
 
-class TagContainer(object):
+class TagMixin(object):
     """
     Mixin-class that allows inheriting objects to be tagged.
 
     .. code-block:: python
 
-        class MyClass(TagContainer):
+        class MyClass(TagMixin):
             ...
 
         c = MyClass()
@@ -113,7 +114,7 @@ class TagContainer(object):
     """
 
     def __init__(self, tags=None):
-        super(TagContainer, self).__init__()
+        super(TagMixin, self).__init__()
 
         # instance members
         self._tags = set()
@@ -162,13 +163,13 @@ class TagContainer(object):
         return mode(match(tag) for tag in make_list(tag))
 
 
-class DataSourceContainer(object):
+class DataSourceMixin(object):
     """
     Mixin-class that provides convenience attributes for distinguishing between MC and data.
 
     .. code-block:: python
 
-        class MyClass(DataSourceContainer):
+        class MyClass(DataSourceMixin):
             ...
 
         c = MyClass()
@@ -200,7 +201,7 @@ class DataSourceContainer(object):
     """
 
     def __init__(self, is_data=False):
-        super(DataSourceContainer, self).__init__()
+        super(DataSourceMixin, self).__init__()
 
         # instance members
         self._is_data = None
@@ -235,13 +236,13 @@ class DataSourceContainer(object):
         return "data" if self.is_data else "mc"
 
 
-class SelectionContainer(object):
+class SelectionMixin(object):
     """
     Mixin-class that adds attibutes and methods to describe a selection rule.
 
     .. code-block:: python
 
-        class MyClass(SelectionContainer):
+        class MyClass(SelectionMixin):
             ...
 
         c = MyClass(selection="branchA > 0")
@@ -272,10 +273,13 @@ class SelectionContainer(object):
        The selection mode. Should either be ``"root"`` or ``"numexpr"``.
     """
 
-    default_selection_mode = "root"
+    MODE_ROOT = "root"
+    MODE_NUMEXPR = "numexpr"
+
+    default_selection_mode = MODE_ROOT
 
     def __init__(self, selection=None, selection_mode=None):
-        super(SelectionContainer, self).__init__()
+        super(SelectionMixin, self).__init__()
 
         # instance members
         self._selection = "1"
@@ -294,7 +298,11 @@ class SelectionContainer(object):
     @typed
     def selection(self, selection):
         # selection parser
-        join = join_root_selection if self.selection_mode == "root" else join_numexpr_selection
+        if self.selection_mode == self.MODE_ROOT:
+            join = join_root_selection
+        else:
+            join = join_numexpr_selection
+
         try:
             selection = join(selection)
         except:
@@ -308,7 +316,11 @@ class SelectionContainer(object):
         connected via *AND*. All *kwargs* are forwarded to :py:func:`util.join_root_selection` or
         :py:func:`util.join_numexpr_selection`.
         """
-        join = join_root_selection if self.selection_mode == "root" else join_numexpr_selection
+        if self.selection_mode == self.MODE_ROOT:
+            join = join_root_selection
+        else:
+            join = join_numexpr_selection
+
         self.selection = join(self.selection, selection, **kwargs)
 
     @typed
@@ -318,7 +330,110 @@ class SelectionContainer(object):
             raise TypeError("invalid selection_mode type: %s" % selection_mode)
 
         selection_mode = str(selection_mode)
-        if selection_mode not in ("root", "numexpr"):
-            raise ValueError("selection_mode neither 'root' nor 'numexpr': %s" % selection_mode)
+        if selection_mode not in (self.MODE_ROOT, self.MODE_NUMEXPR):
+            raise ValueError("unknown selection_mode: %s" % selection_mode)
 
         return selection_mode
+
+
+class LabelMixin(object):
+    """
+    Mixin-class that provides a label, a short version of that label, and some convenience
+    attributes.
+
+    .. code-block:: python
+
+        l = LabelMixin(label="Muon", label_short=r"$\mu$")
+
+        l.label
+        # -> "Muon"
+
+        l.label_short_root
+        # -> "#mu"
+
+        l.label_short = None
+        l.label_short_root
+        # -> "Muon"
+
+    .. py:attribute:: label
+       type: string
+
+       The label. When this object has a *name* (configurable via *_label_fallback_attr*) attribute,
+       the label defaults to that value.
+
+    .. py:attribute:: label_root
+       type: string
+       read-only
+
+       The label, converted to *proper* ROOT latex.
+
+    .. py:attribute:: label_short
+       type: string
+
+       A short label, defaults to the normal label.
+
+    .. py:attribute:: label_short_root
+       type: string
+       read-only
+
+       Short version of the label, converted to *proper* ROOT latex.
+    """
+
+    def __init__(self, label=None, label_short=None):
+        super(LabelMixin, self).__init__()
+
+        # register empty attributes
+        self._label = None
+        self._label_short = None
+
+        # set initial values
+        if label is not None:
+            self.label = label
+        if label_short is not None:
+            self.label_short = label_short
+
+        # attribute to query for fallback label
+        self._label_fallback_attr = "name"
+
+    @property
+    def label(self):
+        # label getter
+        if self._label is not None or self._label_fallback_attr is None:
+            return self._label
+        else:
+            return getattr(self, self._label_fallback_attr, None)
+
+    @label.setter
+    def label(self, label):
+        # label setter
+        if label is None:
+            self._label = None
+        elif not isinstance(label, six.string_types):
+            raise TypeError("invalid label type: %s" % label)
+        else:
+            self._label = str(label)
+
+    @property
+    def label_root(self):
+        # label_root getter
+        return to_root_latex(self.label)
+
+    @property
+    def label_short(self):
+        # label_short getter
+        return self.label if self._label_short is None else self._label_short
+
+    @label_short.setter
+    def label_short(self, label_short):
+        # label_short setter
+        if label_short is None:
+            self._label_short = None
+        elif isinstance(label_short, six.string_types):
+            self._label_short = str(label_short)
+        else:
+            raise TypeError("invalid label_short type: %s" % label_short)
+
+    @property
+    def label_short_root(self):
+        # label_short_root getter
+        return to_root_latex(self.label_short)

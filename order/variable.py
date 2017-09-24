@@ -12,20 +12,19 @@ import copy
 
 import six
 
-from .mixins import AuxDataContainer, TagContainer, SelectionContainer
+from .mixins import AuxDataMixin, TagMixin, SelectionMixin
 from .util import typed, to_root_latex
 
 
-class Variable(SelectionContainer, TagContainer, AuxDataContainer):
+class Variable(AuxDataMixin, TagMixin, SelectionMixin):
     """
     Class that provides simplified access to plotting variables.
 
     *name* is the name of the variable, *expression* and *selection* might be used for projection
     statements. When empty, *expression* defaults to *name*. Other options that are relevant for
     plotting are *binning*, *x_title*, *x_title_short*, *y_title*, *y_title_short*, and *unit*.
-    *selection* and *selection_mode* are passd to the :py:class:`SelectionContainer` constructor.
-    *tags* is passed to the :py:class:`TagContainer` constructor, *aux* is passed to the
-    :py:class:`AuxDataContainer` constructor.
+    *selection* and *selection_mode* are passed to the :py:class:`SelectionMixin`, *tags* to the
+    :py:class:`TagMixin`, and *aux* to the :py:class:`AuxDataMixin` constructor.
 
     .. code-block:: python
 
@@ -130,9 +129,9 @@ class Variable(SelectionContainer, TagContainer, AuxDataContainer):
     def __init__(self, name, expression=None, binning=(1, 0., 1.), x_title="", x_title_short=None,
                  y_title="Entries", y_title_short=None, log_x=False, log_y=False, unit="1",
                  selection=None, selection_mode=None, tags=None, aux=None):
-        SelectionContainer.__init__(self, selection=selection, selection_mode=selection_mode)
-        TagContainer.__init__(self, tags=tags)
-        AuxDataContainer.__init__(self, aux=aux)
+        AuxDataMixin.__init__(self, aux=aux)
+        TagMixin.__init__(self, tags=tags)
+        SelectionMixin.__init__(self, selection=selection, selection_mode=selection_mode)
 
         # instance members
         self._name = None
@@ -226,10 +225,10 @@ class Variable(SelectionContainer, TagContainer, AuxDataContainer):
         # x_title_short setter
         if x_title_short is None:
             self._x_title_short = None
-        elif not isinstance(x_title_short, six.string_types):
-            raise TypeError("invalid x_title_short type: %s" % x_title_short)
-        else:
+        elif isinstance(x_title_short, six.string_types):
             self._x_title_short = str(x_title_short)
+        else:
+            raise TypeError("invalid x_title_short type: %s" % x_title_short)
 
     @property
     def x_title_short_root(self):
@@ -259,10 +258,10 @@ class Variable(SelectionContainer, TagContainer, AuxDataContainer):
         # y_title_short setter
         if y_title_short is None:
             self._y_title_short = None
-        elif not isinstance(y_title_short, six.string_types):
-            raise TypeError("invalid y_title_short type: %s" % y_title_short)
-        else:
+        elif isinstance(y_title_short, six.string_types):
             self._y_title_short = str(y_title_short)
+        else:
+            raise TypeError("invalid y_title_short type: %s" % y_title_short)
 
     @property
     def y_title_short_root(self):
@@ -289,10 +288,10 @@ class Variable(SelectionContainer, TagContainer, AuxDataContainer):
     def unit(self, unit):
         if unit is None:
             return None
-        elif not isinstance(unit, six.string_types):
-            raise TypeError("invalid unit type: %s" % unit)
-        else:
+        elif isinstance(unit, six.string_types):
             return str(unit)
+        else:
+            raise TypeError("invalid unit type: %s" % unit)
 
     @property
     def bin_width(self):

@@ -50,15 +50,11 @@ class ChannelTest(unittest.TestCase):
 class CategoryTest(unittest.TestCase):
 
     def test_constructor(self):
-        c = Category("eq3j", label=r"$\eq$ 3 jets", label_short="3j")
+        c = Category("eq3j", label=r"$\eq$ 3 jets")
 
         self.assertEquals(c.name, "eq3j")
         self.assertEquals(c.label, r"$\eq$ 3 jets")
-        self.assertEquals(c.label_short, "3j")
-        self.assertEquals(c.label_root, "#eq 3 jets")
 
-        c.label_short = None
-        self.assertEquals(c.label_short, c.label)
         c.label = None
         self.assertEquals(c.label_short, c.name)
 

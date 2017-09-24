@@ -42,6 +42,15 @@ Main classes
    :members:
 
 
+``Process``
+-----------
+
+.. autoclass:: Process
+   :show-inheritance:
+   :member-order: bysource
+   :members:
+
+
 ``Dataset``
 -----------
 
@@ -64,15 +73,6 @@ Main classes
 -------------------
 
 .. autoclass:: AnalysisDataset
-   :show-inheritance:
-   :member-order: bysource
-   :members:
-
-
-``Process``
------------
-
-.. autoclass:: Process
    :show-inheritance:
    :member-order: bysource
    :members:

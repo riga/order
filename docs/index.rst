@@ -42,6 +42,15 @@ Classes
    :members:
 
 
+``Shift``
+---------
+
+.. autoclass:: Shift
+   :show-inheritance:
+   :member-order: bysource
+   :members:
+
+
 ``UniqueObject``
 ----------------
 

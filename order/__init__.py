@@ -16,8 +16,8 @@ __version__    = "0.0.1"
 
 __all__ = ["UniqueObject", "UniqueObjectIndex", "CopyMixin", "AuxDataMixin", "TagMixin",
            "DataSourceMixin", "SelectionMixin", "LabelMixin", "ColorMixin", "Channel", "Category",
-           "Variable", "Shift", "Process", "Dataset", "DatasetInfo", "AnalysisDataset", "Campaign",
-           "Config", "Analysis", "cms", "util"]
+           "Variable", "Shift", "Process", "Dataset", "DatasetInfo", "Campaign", "Config",
+           "Analysis", "cms", "util"]
 
 
 # provisioning imports
@@ -28,7 +28,10 @@ from .categorize import Channel, Category
 from .variable import Variable
 from .shift import Shift
 from .process import Process
-from .dataset import Dataset, DatasetInfo, AnalysisDataset
+from .dataset import Dataset, DatasetInfo
 from .config import Campaign, Config
 from .analysis import Analysis
 
+# submodules
+import util
+import cms

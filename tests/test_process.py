@@ -36,3 +36,14 @@ class ProcessTest(unittest.TestCase):
 
         self.assertEqual(p.get_process(5), p5)
         self.assertEqual(p5.get_parent_process(4), p)
+
+    def test_attributes(self):
+        p = Process("ST", 6, xsecs={13: 5})
+        self.assertEqual(p.get_xsec(13).n, 5.)
+
+        p.set_xsec(13, 6)
+        self.assertEqual(p.get_xsec(13).n, 6.)
+
+        p.xsecs = {14: 7}
+        self.assertNotIn(13, p.xsecs)
+        self.assertEqual(p.get_xsec(14).n, 7.)

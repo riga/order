@@ -69,15 +69,6 @@ Main classes
    :members:
 
 
-``AnalysisDataset``
--------------------
-
-.. autoclass:: AnalysisDataset
-   :show-inheritance:
-   :member-order: bysource
-   :members:
-
-
 ``Channel``
 -----------
 

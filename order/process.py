@@ -109,6 +109,6 @@ class Process(UniqueObject, AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixi
         """
         Sets the *xsec* *Number* for a center-of-mass energy *ecm*. Returns the value.
         """
-        ecm, xsec = list(self.__class__.xsecs.fparse({ecm: xsec}))[0]
+        ecm, xsec = list(self.__class__.xsecs.fparse(self, {ecm: xsec}).items())[0]
         self.xsecs[ecm] = xsec
         return xsec

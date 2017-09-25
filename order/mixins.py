@@ -53,6 +53,12 @@ class CopyMixin(object):
 
        The default attributes to copy when *attrs* is *None* in the copy method.
 
+    .. :py:attribute:: copy_skip_attrs
+       type: list
+       classmember
+
+       The default attributes to skip from copying when *skip_attrs* is *None* in the copy method.
+
     .. :py:attribute:: copy_callbacks
        type: list
        classmember
@@ -61,9 +67,10 @@ class CopyMixin(object):
     """
 
     copy_attrs = []
+    copy_skip_attrs = []
     copy_callbacks = []
 
-    def copy(self, cls=None, attrs=None, callbacks=None, **kwargs):
+    def copy(self, cls=None, attrs=None, skip_attrs=None, callbacks=None, **kwargs):
         """
         Returns a copy of this instance via copying attributes defined in *attrs* which default to
         *copy_attrs*. *kwargs* overwrite copied attributes. *cls* is the class of the returned
@@ -76,13 +83,17 @@ class CopyMixin(object):
             cls = self.__class__
         if attrs is None:
             attrs = self.copy_attrs
+        if skip_attrs is None:
+            skip_attrs = self.copy_skip_attrs
         if callbacks is None:
             callbacks = self.copy_callbacks
 
         # copy attributes
         for attr in attrs:
-            if attr not in kwargs:
-                kwargs[attr] = copy.deepcopy(getattr(self, attr))
+            if attr not in kwargs and attr not in skip_attrs:
+                obj = getattr(self, attr)
+                # when obj is also a CopyMixin instance, call copy, otherwise use deepcopy
+                kwargs[attr] = obj.copy if isinstance(obj, CopyMixin) else copy.deepcopy(obj)
 
         # invoke callbacks
         for callback in callbacks:

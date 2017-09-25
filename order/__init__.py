@@ -33,4 +33,5 @@ from .config import Campaign, Config
 from .analysis import Analysis
 
 # submodules
-import cms
+from . import cms
+

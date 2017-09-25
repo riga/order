@@ -27,6 +27,21 @@ class Campaign(UniqueObject, AuxDataMixin):
     :py:class:`AuxDataMixin`, *name*, *id* and *context* to the :py:class:`UniqueObject`
     constructor.
 
+    .. code-block:: python
+
+        c = Campaign("2017B", 1,
+            ecm = 13,
+            bx  = 25
+        )
+
+        d = c.add_dataset("ttH", 1)
+
+        d in c.datasets
+        # -> True
+
+        d.campaign == c
+        # -> True
+
     .. py:attribute:: ecm
        type: float
 

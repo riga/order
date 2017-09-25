@@ -56,4 +56,17 @@ class CampaignTest(unittest.TestCase):
 class ConfigTest(unittest.TestCase):
 
     def test_constructor(self):
-        c = Config()
+        a = Campaign("2017A", 1, context="test_config_constructor")
+        c = Config(a)
+
+        self.assertEqual(c.campaign, a)
+        self.assertEqual(c.name, a.name)
+        self.assertEqual(c.id, a.id)
+        self.assertEqual(c.uniqueness_context, a.uniqueness_context)
+
+        a = Campaign("2017D", 4)
+        c = Config(a, name="otherName", id=3)
+
+        self.assertEqual(c.name, "otherName")
+        self.assertEqual(c.id, 3)
+        self.assertEqual(c.uniqueness_context, "config")

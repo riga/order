@@ -11,7 +11,6 @@ from order import Dataset, DatasetInfo, Campaign
 
 class DatasetTest(unittest.TestCase):
 
-
     def test_constructor(self):
         c = Campaign("2017B", 2)
 

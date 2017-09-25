@@ -6,10 +6,26 @@ __all__ = ["AnalysisTest"]
 
 import unittest
 
-from order import Analysis
+from order import Analysis, Campaign, Config
 
 
 class AnalysisTest(unittest.TestCase):
 
-    def test_constructor(self):
-        a = Analysis("ttH_bb", 1)
+    def test_configs(self):
+        ca = Campaign("2017A", 1, context="test_configs")
+        cf = Config(ca)
+        p = cf.add_process("ttH_bb", 1, context="test_configs")
+        an = Analysis("ttH_cbb", 1)
+
+        an.add_config(cf)
+
+        self.assertEqual(an.get_config("2017A"), cf)
+        self.assertEqual(len(an.get_processes(1)), 1)
+        self.assertEqual(an.get_processes(1).get(1), p)
+
+        self.assertEqual(an.remove_config(cf), cf)
+        self.assertEqual(len(an.configs), 0)
+
+        cf.analysis = an
+        self.assertEqual(len(an.configs), 1)
+        self.assertEqual(an.get_config("2017A"), cf)

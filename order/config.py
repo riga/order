@@ -11,7 +11,11 @@ __all__ = ["Campaign", "Config"]
 
 from .unique import UniqueObject, unique_tree
 from .mixins import AuxDataMixin
+from .shift import Shift
 from .dataset import Dataset
+from .process import Process
+from .categorize import Channel, Category
+from .variable import Variable
 from .util import typed
 
 
@@ -90,7 +94,7 @@ class Campaign(UniqueObject, AuxDataMixin):
         """
         dataset = self.datasets.add(*args, **kwargs)
 
-        # update the dataset campaign
+        # update the dataset's campaign
         dataset.campaign = None
         dataset._campaign = self
 
@@ -103,14 +107,123 @@ class Campaign(UniqueObject, AuxDataMixin):
         """
         dataset = self.datasets.remove(*args, **kwargs)
 
-        # reset the dataset campaign
+        # reset the dataset's campaign
         if dataset:
             dataset._campaign = None
 
         return dataset
 
 
-class Config(AuxDataMixin):
+@unique_tree(cls=Dataset, parents=False)
+@unique_tree(cls=Process, plural="processes", parents=False)
+@unique_tree(cls=Channel, parents=False)
+@unique_tree(cls=Category, plural="categories", parents=False)
+@unique_tree(cls=Variable, parents=False)
+@unique_tree(cls=Shift, parents=False)
+class Config(UniqueObject, AuxDataMixin):
     """
-    TODO.
+    Class holding analysis information that is related to a :py:class:`Campaign` instance. Most of
+    the analysis configuration happens here.
+
+    It stores analysis *datasets*, *processes*, *channels*, *categories*, *variables*, and *shifts*
+    as well as references to the :py:class:`Analysis` and :py:class:`Campaign` instances it belongs
+    to. *name*, *id* and *context* are forwarded to the :py:class:`UniqueObject` constructor and
+    default to the values of the *campaign* instance (*context* only if it is not the default
+    uniqueness context of the :py:class:`Campaign` class). Specialized data such as integrated
+    luminosities, triggers, or statistical models can be stored as auxiliary data.
+
+    .. code-block:: python
+
+        analysis = Analysis("ttH", 1, ...)
+        campaign = Campaign("2017B", 1, ...)
+
+        c = Config("2017B", analysis="ttH")
+
+        c.name, c.id
+        # -> "2017B", 1
+
+        c.analysis == analysis
+        # -> True
+
+        c.campaign == campaign
+        # -> True
+
+        # start configuration
+        c.add_dataset(campaign.get_dataset("ttH_bb"))
+        c.add_process("ttH_bb", 1, xsecs={13: 0.5071})
+        bb = c.add_channel("bb", 1)
+        c.add_category("eq6j_eq4b", channel=bb)
+        c.add_variable("jet1_px", expression="jet1_pt * cos(jet1_phi)")
+        c.add_shift("pdf_up", type=Shift.SHAPE)
+        ...
+
+    .. py:attribute:: campaign
+       type: Campaign
+       read-only
+
+       The :py:class:`Campaign` instance this config belongs to.
+
+    .. py:attribute:: analysis
+       type: Analysis
+       read-only
+
+       The :py:class:`Analysis` instance this config belongs to. When set, *this* config is added
+       to the index of configs of the analysis object.
     """
+
+    def __init__(self, campaign, name=None, id=None, analysis=None, aux=None, context=None):
+        # parse campaign
+        if not isinstance(campaign, Campaign):
+            campaign = Campaign.get_instance(campaign)
+
+        # default name and id
+        if name is None:
+            name = campaign.name
+        if id is None:
+            id = campaign.id
+        if context is None and campaign.uniqueness_context != campaign.default_uniqueness_context:
+            context = campaign.uniqueness_context
+
+        UniqueObject.__init__(self, name=name, id=id, context=context)
+        AuxDataMixin.__init__(self, aux=aux)
+
+        # instance members
+        self._campaign = campaign
+        self._analysis = None
+
+        # set initial values
+        if analysis is not None:
+            self.analysis = analysis
+
+    @property
+    def campaign(self):
+        # campaign getter
+        return self._campaign
+
+    @property
+    def analysis(self):
+        # analysis getter
+        return self._analysis
+
+    @analysis.setter
+    def analysis(self, analysis):
+        # analysis setter
+        if analysis is not None and not isinstance(analysis, Analysis):
+            try:
+                analysis = Analysis.get_instance(analysis)
+            except:
+                raise TypeError("invalid analysis type: %s" % (analysis,))
+
+        # remove this config from the current analysis' config index
+        if self._analysis:
+            self._analysis.configs.remove(self)
+
+        # add this config to the analysis' config index
+        if analysis:
+            analysis.configs.add(self)
+
+        self._analysis = analysis
+
+
+# prevent circular imports
+from .analysis import Analysis

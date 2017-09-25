@@ -5,7 +5,8 @@
 *.DS_Store
 *.pkl
 *.egg-info
-dist
 MANIFEST
+__pycache__
+dist
 build
 docs/_build

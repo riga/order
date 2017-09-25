@@ -31,9 +31,9 @@ class Dataset(UniqueObject, DataSourceMixin, LabelMixin):
     Independent is e.g. whether or not it contains real data, whereas shift-dependent information is
     e.g. the number of events in the *nominal* or a *shifted* variation. Latter information is
     contained in :py:class:`DatasetInfo` objects that are stored in *this* class and mapped to
-    string keys that fullfill the format rules of :py:meth:`Shift.split_key`. Those info objects can
-    be accessed via :py:meth:`get_info` or via items (*__getitem__*) However, for convenience, some
-    of the properties of the *nominal* :py:class:`DatasetInfo` are accessible on this class via
+    string that fulfill the format rules of :py:meth:`Shift.split_name`. Those info objects can be
+    accessed via :py:meth:`get_info` or via items (*__getitem__*) However, for convenience, some of
+    the properties of the *nominal* :py:class:`DatasetInfo` are accessible on this class via
     forwarding.
 
     A dataset is always measured in (real data) / created for (MC) a dedicated *campaign*, therefore
@@ -103,7 +103,7 @@ class Dataset(UniqueObject, DataSourceMixin, LabelMixin):
     .. py:attribute:: info
        type: dictionary
 
-       Mapping of shift keys to :py:class:`DatasetInfo` instances.
+       Mapping of shift names to :py:class:`DatasetInfo` instances.
 
     .. py:attribute:: keys
        type: list
@@ -144,11 +144,11 @@ class Dataset(UniqueObject, DataSourceMixin, LabelMixin):
         elif kwargs:
             self.info = {Shift.NOMINAL: kwargs}
 
-    def __getitem__(self, key):
+    def __getitem__(self, name):
         """
         Forwarded to :py:meth:`get_info`.
         """
-        return self.get_info(key)
+        return self.get_info(name)
 
     @property
     def campaign(self):
@@ -164,11 +164,11 @@ class Dataset(UniqueObject, DataSourceMixin, LabelMixin):
             except:
                 raise TypeError("invalid campaign type: %s" % (campaign,))
 
-        # remove this dataset from the current campaigns dataset index
+        # remove this dataset from the current campaign's dataset index
         if self._campaign:
             self._campaign.datasets.remove(self)
 
-        # add this dataset to the campaigns dataset index
+        # add this dataset to the campaign's dataset index
         if campaign:
             campaign.datasets.add(self)
 
@@ -183,29 +183,29 @@ class Dataset(UniqueObject, DataSourceMixin, LabelMixin):
             raise TypeError("invalid info type: %s" % (info,))
 
         _info = {}
-        for key, obj in info.items():
-            Shift.split_key(key)
+        for name, obj in info.items():
+            Shift.split_name(name)
             if isinstance(obj, dict):
                 obj = DatasetInfo(**obj)
             elif not isinstance(obj, DatasetInfo):
                 raise TypeError("invalid info value type: %s" % (obj,))
-            _info[str(key)] = obj
+            _info[str(name)] = obj
 
         return _info
 
-    def set_info(self, shift_key, info):
+    def set_info(self, shift_name, info):
         """
-        Sets an :py:class:`DatasetInfo` object *info* for a given *shift_key*. Returns the object.
+        Sets an :py:class:`DatasetInfo` object *info* for a given *shift_name*. Returns the object.
         """
-        shift_key, info = list(self.__class__.info.fparse(self, {shift_key: info}).items())[0]
-        self.info[shift_key] = info
+        shift_name, info = list(self.__class__.info.fparse(self, {shift_name: info}).items())[0]
+        self.info[shift_name] = info
         return info
 
-    def get_info(self, shift_key):
+    def get_info(self, shift_name):
         """
-        Returns the :py:class:`DatasetInfo` object for a given *shift_key*.
+        Returns the :py:class:`DatasetInfo` object for a given *shift_name*.
         """
-        return self.info[shift_key]
+        return self.info[shift_name]
 
     @property
     def keys(self):

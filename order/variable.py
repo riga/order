@@ -10,19 +10,21 @@ __all__ = ["Variable"]
 
 import six
 
+from .unique import UniqueObject
 from .mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin
 from .util import typed, to_root_latex
 
 
-class Variable(CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
+class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     """
     Class that provides simplified access to plotting variables.
 
-    *name* is the name of the variable, *expression* and *selection* might be used for projection
-    statements. When empty, *expression* defaults to *name*. Other options that are relevant for
-    plotting are *binning*, *x_title*, *x_title_short*, *y_title*, *y_title_short*, and *unit*.
-    *selection* and *selection_mode* are passed to the :py:class:`SelectionMixin`, *tags* to the
-    :py:class:`TagMixin`, and *aux* to the :py:class:`AuxDataMixin` constructor.
+    *expression* and *selection* can be used for projection statements. When empty, *expression*
+    defaults to *name*. Other options that are relevant for plotting are *binning*, *x_title*,
+    *x_title_short*, *y_title*, *y_title_short*, and *unit*. *selection* and *selection_mode* are
+    passed to the :py:class:`SelectionMixin`, *tags* to the :py:class:`TagMixin`, *aux* to the
+    :py:class:`AuxDataMixin`, and *name*, *id* (defaulting to an auto id) and *context* to the
+    :py:class:`UniqueObject` constructor.
 
     .. code-block:: python
 
@@ -39,11 +41,6 @@ class Variable(CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
         v.full_title()
         # -> "myVar;$\mu p_{T}$" [GeV];Entries / 0.5 GeV'"
-
-    .. py:attribute:: name
-       type: string
-
-       The name of this variable.
 
     .. py:attribute:: expression
        type: string, None
@@ -124,15 +121,16 @@ class Variable(CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     copy_attrs = ["expression", "binning", "x_title", "x_title_short", "y_title", "y_title_short",
                   "log_x", "log_y", "unit", "selection", "selection_mode", "tags", "aux"]
 
-    def __init__(self, name, expression=None, binning=(1, 0., 1.), x_title="", x_title_short=None,
-                 y_title="Entries", y_title_short=None, log_x=False, log_y=False, unit="1",
-                 selection=None, selection_mode=None, tags=None, aux=None):
+    def __init__(self, name, id="+", expression=None, binning=(1, 0., 1.), x_title="",
+                 x_title_short=None, y_title="Entries", y_title_short=None, log_x=False,
+                 log_y=False, unit="1", selection=None, selection_mode=None, tags=None, aux=None,
+                 context=None):
+        UniqueObject.__init__(self, name, id, context=context)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)
         SelectionMixin.__init__(self, selection=selection, selection_mode=selection_mode)
 
         # instance members
-        self._name = None
         self._expression = None
         self._binning = None
         self._x_title = None
@@ -144,7 +142,6 @@ class Variable(CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         self._unit = None
 
         # set initial values
-        self._name = name
         self._expression = expression
         self._binning = binning
         self._x_title = x_title
@@ -154,18 +151,6 @@ class Variable(CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         self._log_x = log_x
         self._log_y = log_y
         self._unit = unit
-
-    def __repr__(self):
-        tpl = (self.__class__.__name__, self.name, hex(id(self)))
-        return "<%s '%s' at %s>" % tpl
-
-    @typed
-    def name(self, name):
-        # name parser
-        if not isinstance(name, six.string_types):
-            raise TypeError("invalid name type: %s" % (name,))
-
-        return str(name)
 
     @property
     def expression(self):

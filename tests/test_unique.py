@@ -263,10 +263,8 @@ class UniqueTreeTest(unittest.TestCase):
         n4 = n2.add_node("d", 4)
 
         for n, depth, nodes in n1.walk_nodes():
-            if depth == 0:
-                self.assertEqual(n, n1)
-                self.assertEqual(len(nodes), 2)
-            elif depth == 1:
+            self.assertIn(depth, (1, 2))
+            if depth == 1:
                 self.assertIn(n, (n2, n3))
                 if n == n2:
                     self.assertEqual(len(nodes), 1)
@@ -276,10 +274,8 @@ class UniqueTreeTest(unittest.TestCase):
                 self.assertEqual(n, n4)
 
         for n, depth, nodes in n4.walk_parent_nodes():
-            if depth == 0:
-                self.assertEqual(n, n4)
-                self.assertEqual(len(nodes), 1)
-            elif depth == 1:
+            self.assertIn(depth, (1, 2))
+            if depth == 1:
                 self.assertEqual(n, n2)
                 self.assertEqual(len(nodes), 1)
             elif depth == 2:

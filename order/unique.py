@@ -553,7 +553,9 @@ def unique_tree(**kwargs):
                 if f.__doc__:
                     f.__doc__ = f.__doc__.format(name=_name, singular=singular, plural=plural,
                         **kwargs)
-                setattr(unique_cls, _name, f)
+                # only patch when there is not attribute with that name
+                if not hasattr(unique_cls, _name):
+                    setattr(unique_cls, _name, f)
                 return f
             return decorator
 
@@ -612,9 +614,9 @@ def unique_tree(**kwargs):
             """
             Walks through the child {plural} and per iteration yields a child {singular}, its depth
             relative to *this* {singular}, and its child {plural} in a list that can be modified to
-            alter the walking. Starts at *this* {singular}.
+            alter the walking.
             """
-            lookup = [(self, 0)]
+            lookup = [(obj, 1) for obj in getattr(self, plural).values()]
             while lookup:
                 obj, depth = lookup.pop(0)
                 objs = list(getattr(obj, plural).values())
@@ -646,13 +648,15 @@ def unique_tree(**kwargs):
             else:
                 raise ValueError("unknown %s: %s" % (singular, obj))
 
-        # is leaf method
-        @patch("is_leaf_" + singular)
-        def is_leaf(self):
-            """ is_leaf_{singular}()
-            Returns *True* when this {singular} has no child {plural}, *False* otherwise.
-            """
-            return len(getattr(self, plural)) == 0
+        if unique_cls == cls:
+
+            # is leaf method
+            @patch("is_leaf_" + singular)
+            def is_leaf(self):
+                """ is_leaf_{singular}()
+                Returns *True* when this {singular} has no child {plural}, *False* otherwise.
+                """
+                return len(getattr(self, plural)) == 0
 
         #
         # child methods, disabled parents
@@ -759,9 +763,9 @@ def unique_tree(**kwargs):
                 """
                 Walks through the parent {plural} and per iteration yields a parent {singular},
                 its depth relative to *this* {singular}, and its parent {plural} in a list that
-                can be modified to alter the walking. Starts at *this* {singular}.
+                can be modified to alter the walking.
                 """
-                lookup = [(self, 0)]
+                lookup = [(obj, 1) for obj in getattr(self, "parent_" + plural).values()]
                 while lookup:
                     obj, depth = lookup.pop(0)
                     objs = list(getattr(obj, "parent_" + plural).values())
@@ -804,12 +808,15 @@ def unique_tree(**kwargs):
                 getattr(obj, plural).remove(self)
                 return obj
 
-            @patch("is_root_" + singular)
-            def is_root(self):
-                """ is_root_{singular}()
-                Returns *True* when this {singular} has no parent {plural}, *False* otherwise.
-                """
-                return len(getattr(self, "parent_" + plural)) == 0
+            if unique_cls == cls:
+
+                # is_root method
+                @patch("is_root_" + singular)
+                def is_root(self):
+                    """ is_root_{singular}()
+                    Returns *True* when this {singular} has no parent {plural}, *False* otherwise.
+                    """
+                    return len(getattr(self, "parent_" + plural)) == 0
 
         #
         # parent methods, unlimited number

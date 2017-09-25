@@ -490,7 +490,7 @@ class UniqueObjectIndex(object):
 
 
 def unique_tree(**kwargs):
-    """ unique_tree(cls=None, singular=None, plural=None, parents=Truez)
+    """ unique_tree(cls=None, singular=None, plural=None, parents=True)
     Decorator that adds attributes and methods to the decorated class to provide tree features,
     i.e., *parent-child* relations. Example:
 

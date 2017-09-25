@@ -63,8 +63,6 @@ class CopyMixin(object):
     copy_attrs = []
     copy_callbacks = []
 
-    def __init__(self): pass
-
     def copy(self, cls=None, attrs=None, callbacks=None, **kwargs):
         """
         Returns a copy of this instance via copying attributes defined in *attrs* which default to

@@ -24,19 +24,19 @@ Main classes
    :members:
 
 
-``Era``
--------
+``Campaign``
+------------
 
-.. autoclass:: Era
+.. autoclass:: Campaign
    :show-inheritance:
    :member-order: bysource
    :members:
 
 
-``AnalysisEra``
----------------
+``Config``
+----------
 
-.. autoclass:: AnalysisEra
+.. autoclass:: Config
    :show-inheritance:
    :member-order: bysource
    :members:

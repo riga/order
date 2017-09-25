@@ -12,7 +12,7 @@ import collections
 
 import six
 
-from .util import typed
+from .util import typed, make_list
 
 
 _no_default = object()
@@ -271,9 +271,9 @@ class UniqueObject(object):
 
 class UniqueObjectIndex(object):
     """ __init__(cls=UniqueObject)
-    Index of :py:class:`UniqueObject` instances for faster lookup by both name and id.
+    Index of :py:class:`UniqueObject` instances for faster lookup by either name or id.
 
-    *cls* should be a subclass of :py:class:`UniqueObject` and is used for type validation when a
+    *cls* must be a subclass of :py:class:`UniqueObject` which is used for type validation when a
     new object is added to the index. Examples:
 
     .. code-block:: python
@@ -490,7 +490,7 @@ class UniqueObjectIndex(object):
 
 
 def unique_tree(**kwargs):
-    """ unique_tree(cls=None, singular=None, plural=None, parents=True)
+    """ unique_tree(cls=None, singular=None, plural=None, parents=True, skip=None)
     Decorator that adds attributes and methods to the decorated class to provide tree features,
     i.e., *parent-child* relations. Example:
 
@@ -527,7 +527,8 @@ def unique_tree(**kwargs):
     ``cls.__name__.lower()`` and ``singular + "s"``, respectively. When *parents* is *False*, the
     additional features are reduced to provide only child relations. When *parents* is an integer,
     it is interpreted as the maximim number of parents a child can have. Additional convenience
-    methods are added when *parents* is exactly 1.
+    methods are added when *parents* is exactly 1. When *skip* is a sequence, it can contain names
+    of attributes to skip that would normally be created.
 
     A class can be decorated multiple times. Internally, the objects are stored in a
     :py:class:`UniqueObjectIndex` per added tree functionality.
@@ -541,6 +542,7 @@ def unique_tree(**kwargs):
         singular = kwargs.get("singular", cls.__name__).lower()
         plural = kwargs.get("plural", singular + "s").lower()
         parents = kwargs.get("parents", True)
+        skip = make_list(kwargs.get("skip", None) or [])
 
         # decorator for registering new instance methods with proper name and doc string
         def patch(name=None, **kwargs):
@@ -554,7 +556,7 @@ def unique_tree(**kwargs):
                     f.__doc__ = f.__doc__.format(name=_name, singular=singular, plural=plural,
                         **kwargs)
                 # only patch when there is not attribute with that name
-                if not hasattr(unique_cls, _name):
+                if not hasattr(unique_cls, _name) and _name not in skip:
                     setattr(unique_cls, _name, f)
                 return f
             return decorator

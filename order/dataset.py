@@ -7,6 +7,7 @@ Classes to define datasets.
 
 __all__ = ["Dataset", "DatasetInfo"]
 
+
 import types
 
 import six
@@ -15,7 +16,6 @@ from scinum import Number
 from .unique import UniqueObject, unique_tree
 from .mixins import DataSourceMixin, LabelMixin
 from .process import Process
-from .config import Campaign
 from .shift import Shift
 from .util import typed, make_list
 
@@ -97,7 +97,8 @@ class Dataset(UniqueObject, DataSourceMixin, LabelMixin):
     .. py:attribute:: campaign
        type: Campaign, None
 
-       The :py:class:`Campaign` object this dataset belongs to.
+       The :py:class:`Campaign` object this dataset belongs to. When set, *this* dataset is also
+       added to the dataset index of the campaign object.
 
     .. py:attribute:: info
        type: dictionary
@@ -149,16 +150,29 @@ class Dataset(UniqueObject, DataSourceMixin, LabelMixin):
         """
         return self.get_info(key)
 
-    @typed
+    @property
+    def campaign(self):
+        # campaign getter
+        return self._campaign
+
+    @campaign.setter
     def campaign(self, campaign):
-        # campaign parser
-        if not isinstance(campaign, Campaign):
+        # campaign setter
+        if campaign is not None and not isinstance(campaign, Campaign):
             try:
                 campaign = Campaign.get_instance(campaign)
             except:
                 raise TypeError("invalid campaign type: %s" % (campaign,))
 
-        return campaign
+        # remove this dataset from the current campaigns dataset index
+        if self._campaign:
+            self._campaign.datasets.remove(self)
+
+        # add this dataset to the campaigns dataset index
+        if campaign:
+            campaign.datasets.add(self)
+
+        self._campaign = campaign
 
     @typed
     def info(self, info):
@@ -306,3 +320,7 @@ class DatasetInfo(object):
             raise TypeError("invalid n_events type: %s" % (n_events,))
 
         return n_events
+
+
+# prevent circular imports
+from .config import Campaign

@@ -6,7 +6,7 @@ __all__ = ["UniqueObjectTest", "UniqueObjectIndexTest", "UniqueTreeTest"]
 
 import unittest
 
-from order import UniqueObject, UniqueObjectIndex
+from order import current_uniqueness_context, UniqueObject, UniqueObjectIndex
 from order.unique import unique_tree
 
 
@@ -87,6 +87,26 @@ class UniqueObjectTest(unittest.TestCase):
         C("baz", 100)
         test = C("test", "+")
         self.assertEqual(test.id, 101)
+
+    def test_current_context(self):
+        C = self.make_class()
+        self.assertEqual(C.default_uniqueness_context, "c")
+
+        c = C("foo", 1)
+        self.assertEqual(c.uniqueness_context, "c")
+
+        c = C("foo", 1, context="test_context")
+        self.assertEqual(c.uniqueness_context, "test_context")
+
+        with current_uniqueness_context("x"):
+            c = C("foo", 1)
+            self.assertEqual(c.uniqueness_context, "x")
+
+            c = C("foo", 1, context="y")
+            self.assertEqual(c.uniqueness_context, "y")
+
+        c = C("bar", 2)
+        self.assertEqual(c.uniqueness_context, "c")
 
 
 class UniqueObjectIndexTest(unittest.TestCase):

@@ -5,10 +5,11 @@ Classes that define unique objects and the index to store them.
 """
 
 
-__all__ = ["UniqueObject", "UniqueObjectIndex", "unique_tree"]
+__all__ = ["UniqueObject", "UniqueObjectIndex", "current_uniqueness_context", "unique_tree"]
 
 
 import collections
+import contextlib
 
 import six
 
@@ -16,6 +17,8 @@ from .util import typed, make_list
 
 
 _no_default = object()
+
+_uniqueness_context_stack = []
 
 
 class UniqueObjectMeta(type):
@@ -47,8 +50,9 @@ class UniqueObject(object):
     2. have a unique identifier that can be saved to files, such as (e.g.) ROOT trees. 
 
     Both, *name* and *id* should have unique values on their own per *uniqueness context*
-    separately. If *context* is not *None*, this value is used instead of the class member
-    *uniqueness_context*. Examples:
+    separately. If *context* is *None*, either the current one as defined with
+    :py:func:`current_uniqueness_context` or, when empty, the class member
+    *default_uniqueness_context* is used. Examples:
 
     .. code-block:: python
 
@@ -109,8 +113,6 @@ class UniqueObject(object):
        The unique id.
     """
 
-    default_uniqueness_context = "uniqueobject"
-
     AUTO_ID = "+"
 
     _instances = {}
@@ -155,7 +157,10 @@ class UniqueObject(object):
 
         # set the context
         if context is None:
-            context = self.default_uniqueness_context
+            if _uniqueness_context_stack:
+                context = _uniqueness_context_stack[-1]
+            else:
+                context = self.default_uniqueness_context
         self._uniqueness_context = context
 
         # register an instance cache if it does not exist yet
@@ -487,6 +492,32 @@ class UniqueObjectIndex(object):
         """
         self._name_index.clear()
         self._id_index.clear()
+
+
+@contextlib.contextmanager
+def current_uniqueness_context(context):
+    """
+    Adds the uniqueness *context* on top of the list of the *current context* which is priotized in
+    the :py:class:`UniqueObject` constructor when no context is given.
+
+    .. code-block:: python
+
+        obj = UniqueObject("myObj", 1, context="myContext")
+
+        obj.uniqueness_context
+        # -> "myContext"
+
+        with current_uniqueness_context("otherContext"):
+            obj2 = UniqueObject("otherObj", 2)
+
+        obj2.uniqueness_context
+        # -> "otherContext"
+    """
+    try:
+        _uniqueness_context_stack.append(context)
+        yield
+    finally:
+        _uniqueness_context_stack.pop()
 
 
 def unique_tree(**kwargs):

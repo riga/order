@@ -223,8 +223,10 @@ Helper classes and mixins
    :members:
 
 
-``util`` functions
-^^^^^^^^^^^^^^^^^^
+Functions
+^^^^^^^^^
+
+.. autofunction:: order.current_uniqueness_context
 
 .. autofunction:: order.util.make_list
 

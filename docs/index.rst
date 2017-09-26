@@ -12,6 +12,13 @@ order
 .. automodule:: order
 
 
+Simple installation via `pip <https://pypi.python.org/pypi/order>`_:
+
+.. code-block:: bash
+
+   pip install order
+
+
 Main classes
 ^^^^^^^^^^^^
 

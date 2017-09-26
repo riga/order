@@ -58,3 +58,12 @@ class ShiftTest(unittest.TestCase):
 
         s.type = Shift.RATE
         self.assertTrue(s.is_rate)
+
+    def test_copy(self):
+        s = Shift("scale_down", type=Shift.SHAPE)
+        s2 = s.copy(name="scale_up", label_short="sup")
+
+        self.assertEqual(s2.name, "scale_up")
+        self.assertEqual(s2.type, Shift.SHAPE)
+        self.assertEqual(s2.label, s2.name)
+        self.assertEqual(s2.label_short, "sup")

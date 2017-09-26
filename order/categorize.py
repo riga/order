@@ -11,12 +11,12 @@ __all__ = ["Channel", "Category"]
 import six
 
 from .unique import UniqueObject, unique_tree
-from .mixins import AuxDataMixin, TagMixin, SelectionMixin, LabelMixin
+from .mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin
 from .util import typed, to_root_latex
 
 
 @unique_tree(parents=1)
-class Channel(UniqueObject, AuxDataMixin, LabelMixin):
+class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
     """ __init__(name, id, label=None, label_short=None, aux=None, context=None)
     An object that descibes an analysis channel, often defined by a particular decay *channel* that
     results in distinct final state objects.
@@ -25,7 +25,8 @@ class Channel(UniqueObject, AuxDataMixin, LabelMixin):
     :py:class:`AuxDataMixin`, and *name*, *id* and *context* to the :py:class:`UniqueObject`
     constructor.
 
-    A channel can have parent-child relations to other channels with one parent per child.
+    A channel can have parent-child relations to other channels with one parent per child. When
+    copied via :py:meth:`copy` these relations are lost.
 
     .. code-block:: python
 
@@ -44,25 +45,32 @@ class Channel(UniqueObject, AuxDataMixin, LabelMixin):
         # -> SL_channel
     """
 
+    # attributes for copying
+    copy_attrs = ["aux"]
+    copy_private_attrs = ["label", "label_short"]
+
     def __init__(self, name, id, label=None, label_short=None, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
+        CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
         LabelMixin.__init__(self, label=label, label_short=label_short)
 
 
 @unique_tree(plural="categories")
-class Category(UniqueObject, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin):
+class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin):
     """ __init__(name, id="+", channel=None, label=None, label_short=None, context=None, selection=None, selection_mode=None, aux=None, tags=None)
     Class that describes an analysis category. This is not to be confused with an analysis
     :py:class:`Channel`. While the definition of a channel is somewaht fixed by the final state of
     an event, a category describes an arbitrary sub phase-space. Therefore, a category can be
-    uniquely assigned to a channel - it *has* a channel. A category can also have child and parent
-    categories.
+    uniquely assigned to a channel - it *has* a channel.
 
     *label* and *label_short* are forwarded to the :py:class:`LabelMixin`, *selection* and
     *selection_mode* to the :py:class:`SelectionMixin`, *tags* to the :py:class:`TagMixin`, *aux* to
     the :py:class:`AuxDataMixin`, and *name*, *id* (defaulting to an auto id) and *context* to the
     :py:class:`UniqueObject` constructor.
+
+    A category can also have child and parent categories. When copied via :py:meth:`copy` these
+    relations are lost.
 
     .. py:attribute:: channel
        type: Channel, None
@@ -75,9 +83,15 @@ class Category(UniqueObject, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin)
        The channel instance of the first parent category.
     """
 
+    # attributes for copying
+    copy_attrs = ["selection", "selection_mode", "tags", "aux"]
+    copy_ref_attrs = ["channel"]
+    copy_private_attrs = ["label", "label_short"]
+
     def __init__(self, name, id="+", channel=None, label=None, label_short=None, selection=None,
                  selection_mode=None, tags=None, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
+        CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)
         SelectionMixin.__init__(self, selection=selection, selection_mode=selection_mode)

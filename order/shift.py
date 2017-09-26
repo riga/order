@@ -12,11 +12,11 @@ import six
 import scinum as sn
 
 from .unique import UniqueObject
-from .mixins import LabelMixin
+from .mixins import CopyMixin, LabelMixin
 from .util import typed, to_root_latex
 
 
-class Shift(UniqueObject, LabelMixin):
+class Shift(UniqueObject, CopyMixin, LabelMixin):
     """
     Description of a systematic shift.
 
@@ -126,6 +126,10 @@ class Shift(UniqueObject, LabelMixin):
     RATE = "rate"
     SHAPE = "shape"
 
+    # attributes for copying
+    copy_attrs = ["type"]
+    copy_private_attrs = ["label", "label_short"]
+
     @classmethod
     def split_name(cls, name):
         """
@@ -180,6 +184,7 @@ class Shift(UniqueObject, LabelMixin):
 
     def __init__(self, name, id="+", type=None, label=None, label_short=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
+        CopyMixin.__init__(self)
         LabelMixin.__init__(self, label=label, label_short=label_short)
 
         # register empty attributes

@@ -6,7 +6,7 @@ __all__ = ["DatasetTest", "DatasetInfoTest"]
 
 import unittest
 
-from order import Dataset, DatasetInfo, Campaign
+from order import Dataset, DatasetInfo, Campaign, Process
 
 
 class DatasetTest(unittest.TestCase):
@@ -86,6 +86,23 @@ class DatasetTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             d.info = "foo"
 
+    def test_copy(self):
+        c = Campaign("2017B", 2, context="test_copy_dataset")
+        d = Dataset("ttH", 1, context="test_copy_dataset",
+            campaign = c,
+            keys     = ["/ttHTobb_M125.../.../..."],
+            n_files  = 123,
+            n_events = 456789
+        )
+        d.add_process("ttH", 1, context="test_copy_dataset")
+        d2 = d.copy(name="ttH2", id=2, context="test_copy_dataset")
+
+        self.assertEqual(d2.name, "ttH2")
+        self.assertEqual(d2.id, 2)
+        self.assertEqual(len(d.processes), 1)
+        self.assertEqual(len(d2.processes), 0)
+        self.assertEqual(d.campaign, d2.campaign)
+
 
 class DatasetInfoTest(unittest.TestCase):
 
@@ -114,3 +131,12 @@ class DatasetInfoTest(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             d.n_events = "foo"
+
+    def test_copy(self):
+        d = DatasetInfo(keys="/ttH", gen_eff=0.99, n_files=100, n_events=10000)
+        d2 = d.copy(skip_attrs=["n_files"], keys="/ttH2")
+
+        self.assertEqual(d2.keys[0], "/ttH2")
+        self.assertEqual(d2.gen_eff, 0.99)
+        self.assertEqual(d2.n_files, -1)
+        self.assertEqual(d2.n_events, 10000)

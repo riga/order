@@ -46,6 +46,18 @@ class ChannelTest(unittest.TestCase):
         c.label = None
         self.assertEqual(c.label, c.name)
 
+    def test_copy(self):
+        c = Channel("test3", 10, aux={"foo": "bar"}, label="test3 channel")
+        c.add_channel("test3a", 101)
+        c2 = c.copy(name="test4", id=11, label="test3 channel")
+
+        self.assertEqual(len(c.channels), 1)
+        self.assertEqual(len(c2.channels), 0)
+        self.assertEqual(c2.name, "test4")
+        self.assertEqual(c2.id, 11)
+        self.assertEqual(c2.aux, c.aux)
+        self.assertEqual(c2.label_short, c2.label)
+
 
 class CategoryTest(unittest.TestCase):
 
@@ -69,3 +81,13 @@ class CategoryTest(unittest.TestCase):
 
         self.assertEqual(c.full_label(), r"SL, $\eq$ 4 jets")
         self.assertEqual(c.full_label(root=True), "SL, #eq 4 jets")
+
+    def test_copy(self):
+        SL = Channel("SL", 1, context="test_category_copy")
+        c = Category("eq4j", channel=SL, context="test_category_copy")
+        c.add_category("eq4j_eq2b", context="test_category_copy")
+        c2 = c.copy(name="SL2", context="test_category_copy")
+
+        self.assertEqual(len(c.categories), 1)
+        self.assertEqual(len(c2.categories), 0)
+        self.assertEqual(c2.channel, c.channel)

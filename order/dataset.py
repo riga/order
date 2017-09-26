@@ -14,14 +14,14 @@ import six
 from scinum import Number
 
 from .unique import UniqueObject, unique_tree
-from .mixins import DataSourceMixin, LabelMixin
+from .mixins import CopyMixin, DataSourceMixin, LabelMixin
 from .process import Process
 from .shift import Shift
 from .util import typed, make_list
 
 
 @unique_tree(cls=Process, plural="processes", parents=False)
-class Dataset(UniqueObject, DataSourceMixin, LabelMixin):
+class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
     """ __init__(name, id, campaign=None, info=None, label=None, label_short=None, is_data=False, context=None, **kwargs)
     Dataset definition providing two kinds of information:
 
@@ -38,10 +38,11 @@ class Dataset(UniqueObject, DataSourceMixin, LabelMixin):
 
     A dataset is always measured in (real data) / created for (MC) a dedicated *campaign*, therefore
     it *belongs* to a :py:class:`Campaign` object. In addition, physics processes can be *linked* to
-    a dataset, therefore it *has* :py:class:`Process` objects.
+    a dataset, therefore it *has* :py:class:`Process` objects. When copied via :py:meth:`copy`
+    the *campaign* reference is kept while the process relations are lost.
 
-    When *info* is *None*, all *kwargs* are used to create a :py:class:`DatasetInfo` object which is
-    stored as ``"nominal"``. Otherwise, it should be a dictionary matching the format of the *info*
+    When *info* is does not contain a ``"nominal"`` :py:class:`DatasetInfo` object, all *kwargs* are
+    used to create one. Otherwise, it should be a dictionary matching the format of the *info*
     mapping. *label* and *label_short* are forwarded to the :py:class:`LabelMixin`, *is_data* to the
     :py:class:`DataSourceMixin`, and *name*, *id* and *context* to the :py:class:`UniqueObject`
     constructor.
@@ -126,9 +127,15 @@ class Dataset(UniqueObject, DataSourceMixin, LabelMixin):
        The number of events of the *nominal* :py:class:`DatasetInfo` object.
     """
 
+    # attributes for copying
+    copy_attrs = ["info", "is_data"]
+    copy_ref_attrs = ["campaign"]
+    copy_private_attrs = ["label", "label_short"]
+
     def __init__(self, name, id, campaign=None, info=None, label=None, label_short=None,
                  is_data=False, context=None, **kwargs):
         UniqueObject.__init__(self, name, id, context=context)
+        CopyMixin.__init__(self)
         DataSourceMixin.__init__(self, is_data=is_data)
         LabelMixin.__init__(self, label=label, label_short=label_short)
 
@@ -141,7 +148,7 @@ class Dataset(UniqueObject, DataSourceMixin, LabelMixin):
             self.campaign = campaign
         if info is not None:
             self.info = info
-        elif kwargs:
+        if kwargs and Shift.NOMINAL not in self.info:
             self.info = {Shift.NOMINAL: kwargs}
 
     def __getitem__(self, name):
@@ -228,7 +235,7 @@ class Dataset(UniqueObject, DataSourceMixin, LabelMixin):
         return self.info["nominal"].n_events
 
 
-class DatasetInfo(object):
+class DatasetInfo(CopyMixin):
     """
     Container class holding information on particular dataset variations. Instances of *this* class
     are typically used in :py:class:`Dataset` objects to store shift-dependent information, such as
@@ -258,8 +265,10 @@ class DatasetInfo(object):
        The number of events.
     """
 
+    copy_attrs = ["keys", "gen_eff", "n_files", "n_events"]
+
     def __init__(self, keys=None, gen_eff=1., n_files=-1, n_events=-1):
-        object.__init__(self)
+        CopyMixin.__init__(self)
 
         # instance members
         self._keys = []

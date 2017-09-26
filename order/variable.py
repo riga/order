@@ -118,6 +118,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
        The bin width, evaluated from *binning*.
     """
 
+    # attributes for copying
     copy_attrs = ["expression", "binning", "x_title", "x_title_short", "y_title", "y_title_short",
                   "log_x", "log_y", "unit", "selection", "selection_mode", "tags", "aux"]
 
@@ -126,6 +127,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
                  log_y=False, unit="1", selection=None, selection_mode=None, tags=None, aux=None,
                  context=None):
         UniqueObject.__init__(self, name, id, context=context)
+        CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)
         SelectionMixin.__init__(self, selection=selection, selection_mode=selection_mode)

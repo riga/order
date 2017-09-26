@@ -47,3 +47,13 @@ class ProcessTest(unittest.TestCase):
         p.xsecs = {14: 7}
         self.assertNotIn(13, p.xsecs)
         self.assertEqual(p.get_xsec(14).n, 7.)
+
+    def test_copy(self):
+        p = Process("ttVV", 7, xsecs={13: 5}, color=(0.3, 0.4, 0.5), is_data=False, aux={1: 2})
+        p2 = p.copy(name="ttVVV", id=8, aux={3: 4}, skip_attrs=["color"])
+
+        self.assertEqual(p2.name, "ttVVV")
+        self.assertEqual(p2.id, 8)
+        self.assertEqual(p2.get_xsec(13), 5)
+        self.assertEqual(p2.color, (0., 0., 0.))
+        self.assertEqual(list(p2.aux.keys())[0], 3)

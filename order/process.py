@@ -11,12 +11,12 @@ __all__ = ["Process"]
 from scinum import Number
 
 from .unique import UniqueObject, unique_tree
-from .mixins import AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixin
+from .mixins import CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixin
 from .util import typed
 
 
 @unique_tree(plural="processes")
-class Process(UniqueObject, AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixin):
+class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixin):
     """ __init__(name, id, xsecs=None, color=None, label=None, label_short=None, is_data=False, aux=None, context=None)
     Definition of a phyiscs process.
 
@@ -26,7 +26,8 @@ class Process(UniqueObject, AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixi
     :py:class:`AuxDataMixin`, and *name*, *id* and *context* to the :py:class:`UniqueObject`
     constructor.
 
-    A process can have parent-child relations to other processes.
+    A process can have parent-child relations to other processes. When copied via :py:meth:`copy`
+    these relations are lost.
 
     .. code-block:: python
 
@@ -62,9 +63,14 @@ class Process(UniqueObject, AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixi
        Cross sections mapped to a center-of-mass energy with arbitrary units.
     """
 
+    # attributes for copying
+    copy_attrs = ["xsecs", "color", "is_data", "aux"]
+    copy_private_attrs = ["label", "label_short"]
+
     def __init__(self, name, id, xsecs=None, color=None, label=None, label_short=None,
                  is_data=False, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
+        CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
         DataSourceMixin.__init__(self, is_data=is_data)
         LabelMixin.__init__(self, label=label, label_short=label_short)

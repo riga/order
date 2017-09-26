@@ -5,7 +5,7 @@ Classes that define unique objects and the index to store them.
 """
 
 
-__all__ = ["UniqueObject", "UniqueObjectIndex", "current_uniqueness_context", "unique_tree"]
+__all__ = ["UniqueObject", "UniqueObjectIndex", "uniqueness_context", "unique_tree"]
 
 
 import collections
@@ -51,8 +51,8 @@ class UniqueObject(object):
 
     Both, *name* and *id* should have unique values on their own per *uniqueness context*
     separately. If *context* is *None*, either the current one as defined with
-    :py:func:`current_uniqueness_context` or, when empty, the class member
-    *default_uniqueness_context* is used. Examples:
+    :py:func:`uniqueness_context` or, when empty, the class member *default_uniqueness_context* is
+    used. Examples:
 
     .. code-block:: python
 
@@ -495,7 +495,7 @@ class UniqueObjectIndex(object):
 
 
 @contextlib.contextmanager
-def current_uniqueness_context(context):
+def uniqueness_context(context):
     """
     Adds the uniqueness *context* on top of the list of the *current context* which is priotized in
     the :py:class:`UniqueObject` constructor when no context is given.
@@ -507,7 +507,7 @@ def current_uniqueness_context(context):
         obj.uniqueness_context
         # -> "myContext"
 
-        with current_uniqueness_context("otherContext"):
+        with uniqueness_context("otherContext"):
             obj2 = UniqueObject("otherObj", 2)
 
         obj2.uniqueness_context

@@ -226,7 +226,7 @@ Helper classes and mixins
 Functions
 ^^^^^^^^^
 
-.. autofunction:: order.current_uniqueness_context
+.. autofunction:: order.uniqueness_context
 
 .. autofunction:: order.util.make_list
 

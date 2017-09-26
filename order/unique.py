@@ -497,7 +497,7 @@ class UniqueObjectIndex(object):
 @contextlib.contextmanager
 def uniqueness_context(context):
     """
-    Adds the uniqueness *context* on top of the list of the *current context* which is priotized in
+    Adds the uniqueness *context* on top of the list of the *current contexts* which is priotized in
     the :py:class:`UniqueObject` constructor when no context is given.
 
     .. code-block:: python

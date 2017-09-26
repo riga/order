@@ -6,7 +6,7 @@ __all__ = ["ChannelTest", "CategoryTest"]
 
 import unittest
 
-from order import Channel, Category
+from order import Channel, Category, uniqueness_context
 
 
 class ChannelTest(unittest.TestCase):
@@ -71,7 +71,7 @@ class CategoryTest(unittest.TestCase):
         self.assertEqual(c.label_short, c.name)
 
     def test_channel(self):
-        SL = Channel("SL", 1, context="category")
+        SL = Channel("SL", 1, context="category_test_channel")
         c = Category("eq4j", channel=SL, label=r"$\eq$ 4 jets")
 
         c2 = c.add_category("eq4j_eq2b")
@@ -83,10 +83,11 @@ class CategoryTest(unittest.TestCase):
         self.assertEqual(c.full_label(root=True), "SL, #eq 4 jets")
 
     def test_copy(self):
-        SL = Channel("SL", 1, context="test_category_copy")
-        c = Category("eq4j", channel=SL, context="test_category_copy")
-        c.add_category("eq4j_eq2b", context="test_category_copy")
-        c2 = c.copy(name="SL2", context="test_category_copy")
+        with uniqueness_context("category_test_copy"):
+            SL = Channel("SL", 1)
+            c = Category("eq4j", channel=SL)
+            c.add_category("eq4j_eq2b")
+            c2 = c.copy(name="SL2")
 
         self.assertEqual(len(c.categories), 1)
         self.assertEqual(len(c2.categories), 0)

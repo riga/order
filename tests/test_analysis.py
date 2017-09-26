@@ -6,16 +6,17 @@ __all__ = ["AnalysisTest"]
 
 import unittest
 
-from order import Analysis, Campaign, Config
+from order import Analysis, Campaign, Config, uniqueness_context
 
 
 class AnalysisTest(unittest.TestCase):
 
     def test_configs(self):
-        ca = Campaign("2017A", 1, context="test_configs")
-        cf = Config(ca)
-        p = cf.add_process("ttH_bb", 1, context="test_configs")
-        an = Analysis("ttH_cbb", 1)
+        with uniqueness_context("analysis_test_configs"):
+            ca = Campaign("2017A", 1)
+            cf = Config(ca)
+            p = cf.add_process("ttH_bb", 1)
+            an = Analysis("ttH_cbb", 1)
 
         an.add_config(cf)
 

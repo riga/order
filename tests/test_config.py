@@ -6,7 +6,7 @@ __all__ = ["CampaignTest", "ConfigTest"]
 
 import unittest
 
-from order import Campaign, Config, Dataset
+from order import Campaign, Config, Dataset, uniqueness_context
 
 
 class CampaignTest(unittest.TestCase):
@@ -24,10 +24,10 @@ class CampaignTest(unittest.TestCase):
             c.bx = "foo"
 
     def test_datasets(self):
-        a = Campaign("2017A", 1, context="test_datasets")
-        b = Campaign("2017B", 2, context="test_datasets")
-
-        d = Dataset("ttH", 1, campaign=a, context="test_datasets")
+        with uniqueness_context("campaign_test_datasets"):
+            a = Campaign("2017A", 1)
+            b = Campaign("2017B", 2)
+            d = Dataset("ttH", 1, campaign=a)
 
         self.assertEqual(d.campaign, "2017A")
         self.assertIn(d, a.datasets)
@@ -56,7 +56,7 @@ class CampaignTest(unittest.TestCase):
 class ConfigTest(unittest.TestCase):
 
     def test_constructor(self):
-        a = Campaign("2017A", 1, context="test_config_constructor")
+        a = Campaign("2017A", 1, context="config_test_constructor")
         c = Config(a)
 
         self.assertEqual(c.campaign, a)

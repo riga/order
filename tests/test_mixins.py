@@ -41,11 +41,28 @@ class CopyMixinTest(unittest.TestCase):
         self.assertEqual(b.name, "foo")
         self.assertEqual(b.id, 1)
 
-    def test_attrs(self):
+    def test_copy_attrs(self):
         C = self.make_class()
         a = C("foo", 1)
 
-        b = a.copy(attrs=["name"], callbacks=[])
+        b = a.copy(copy_attrs=["name"], callbacks=[])
+        self.assertIsInstance(b, C)
+        self.assertEqual(b.name, "foo")
+        self.assertEqual(b.id, 0)
+
+    def test_ref_attrs(self):
+        C = self.make_class()
+        a = C(object(), 1)
+
+        b = a.copy(copy_attrs=[], ref_attrs=["name"], callbacks=[])
+        self.assertIsInstance(b, C)
+        self.assertEqual(b.name, a.name)
+
+    def test_skip_attrs(self):
+        C = self.make_class()
+        a = C("foo", 1)
+
+        b = a.copy(skip_attrs=["id"], callbacks=[])
         self.assertIsInstance(b, C)
         self.assertEqual(b.name, "foo")
         self.assertEqual(b.id, 0)

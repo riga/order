@@ -53,6 +53,13 @@ class CopyMixin(object):
 
        The default attributes to copy when *attrs* is *None* in the copy method.
 
+    .. :py:attribute:: copy_private_attrs
+       type: list
+       classmember
+
+       Same as *copy_attrs* but attributes in this list are prefixed with an underscore for reading
+       the value to copy.
+
     .. :py:attribute:: copy_skip_attrs
        type: list
        classmember
@@ -67,33 +74,52 @@ class CopyMixin(object):
     """
 
     copy_attrs = []
+    copy_ref_attrs = []
+    copy_private_attrs = []
     copy_skip_attrs = []
     copy_callbacks = []
 
-    def copy(self, cls=None, attrs=None, skip_attrs=None, callbacks=None, **kwargs):
+    def copy(self, cls=None, copy_attrs=None, ref_attrs=None, skip_attrs=None, callbacks=None,
+             **kwargs):
         """
-        Returns a copy of this instance via copying attributes defined in *attrs* which default to
-        *copy_attrs*. *kwargs* overwrite copied attributes. *cls* is the class of the returned
-        instance . When *None*, *this* class is used. *callbacks* can be a list of functions that
-        receive the instance to copy and the attributes in a dict, so they can be updated *before*
-        the actual copy is created.
+        Returns a copy of this instance via copying (*copy_attrs*) or re-referencing attributes
+        (*ref_attrs*). When *None*, they default to the *copy_\** classmembers. *skip_attrs* defines
+        attributes to skip, e.g., when *copy_attrs* is *None* and the default attributes are used.
+        *kwargs* overwrite attributes. *cls* is the class of the returned instance. When *None*,
+        *this* class is used. *callbacks* can be a list of functions that receive the instance to
+        copy and the attributes in a dict, so they can be updated *before* the actual copy is
+        created.
         """
         # default args
         if cls is None:
             cls = self.__class__
-        if attrs is None:
-            attrs = self.copy_attrs
+        if copy_attrs is None:
+            copy_attrs = self.copy_attrs
+        if ref_attrs is None:
+            ref_attrs = self.copy_ref_attrs
         if skip_attrs is None:
             skip_attrs = self.copy_skip_attrs
         if callbacks is None:
             callbacks = self.copy_callbacks
 
+        # copy helper
+        def do_copy(src_attr, dst_attr, ref):
+            if dst_attr not in kwargs and dst_attr not in skip_attrs:
+                obj = getattr(self, src_attr)
+                if ref:
+                    kwargs[dst_attr] = obj
+                elif isinstance(obj, CopyMixin):
+                    kwargs[dst_attr] = obj.copy()
+                else:
+                    kwargs[dst_attr] = copy.deepcopy(obj)
+
         # copy attributes
-        for attr in attrs:
-            if attr not in kwargs and attr not in skip_attrs:
-                obj = getattr(self, attr)
-                # when obj is also a CopyMixin instance, call copy, otherwise use deepcopy
-                kwargs[attr] = obj.copy if isinstance(obj, CopyMixin) else copy.deepcopy(obj)
+        for attr in copy_attrs:
+            do_copy(attr, attr, False)
+        for attr in ref_attrs:
+            do_copy(attr, attr, True)
+        for attr in self.copy_private_attrs:
+            do_copy("_" + attr, attr, False)
 
         # invoke callbacks
         for callback in callbacks:
@@ -103,6 +129,10 @@ class CopyMixin(object):
                 getattr(self, str(callback))(self, kwargs)
             else:
                 raise TypeError("invalid callback type: %s" % (callback,))
+
+        # manually remove attributes to skip, probably passed via kwargs or added via callbacks
+        for attr in skip_attrs:
+            kwargs.pop(attr, None)
 
         return cls(**kwargs)
 

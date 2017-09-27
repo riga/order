@@ -69,10 +69,10 @@ class UniqueObject(object):
        # -> TypeError: invalid id: mystring
 
        bar = UniqueObject("foo", 2)
-       # -> ValueError: duplicate name in uniqueness context 'default': foo
+       # -> ValueError: duplicate name in uniqueness context 'uniqueobject': foo
 
        bar = UniqueObject("bar", 1)
-       # -> ValueError: duplicate id in uniqueness context 'default': 1
+       # -> ValueError: duplicate id in uniqueness context 'uniqueobject': 1
 
        bar = UniqueObject("bar", 1, context="myNewContext")
        # works!
@@ -92,8 +92,7 @@ class UniqueObject(object):
 
        The default context of uniqueness when none is given in the instance constructor. Two
        instances are only allowed to have the same name *or* the same id if their classes have
-       different contexts. Defaults to the lower-case name of the inheriting class When not set
-       during class creation.
+       different contexts. This member is not inherited when creating a sub-class.
 
     .. py:attribute:: uniqueness_context
        type: arbitrary (hashable)
@@ -118,6 +117,13 @@ class UniqueObject(object):
     _instances = {}
 
     @classmethod
+    def get_default_context(cls):
+        if _uniqueness_context_stack:
+            return _uniqueness_context_stack[-1]
+        else:
+            return cls.default_uniqueness_context
+
+    @classmethod
     def get_instance(cls, obj, default=_no_default, context=None):
         """ get_instance(obj, [default], context=None)
         Returns an object that was instantiated in this class before. *obj* might be a *name*, *id*,
@@ -126,7 +132,7 @@ class UniqueObject(object):
         :py:attr:`default_uniqueness_context` if this class.
         """
         if context is None:
-            context = cls.default_uniqueness_context
+            context = cls.get_default_context()
 
         if context not in cls._instances:
             if default != _no_default:
@@ -157,10 +163,7 @@ class UniqueObject(object):
 
         # set the context
         if context is None:
-            if _uniqueness_context_stack:
-                context = _uniqueness_context_stack[-1]
-            else:
-                context = self.default_uniqueness_context
+            context = self.get_default_context()
         self._uniqueness_context = context
 
         # register an instance cache if it does not exist yet

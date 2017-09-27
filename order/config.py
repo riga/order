@@ -137,16 +137,10 @@ class Config(UniqueObject, AuxDataMixin):
         analysis = Analysis("ttH", 1, ...)
         campaign = Campaign("2017B", 1, ...)
 
-        c = Config("2017B", analysis="ttH")
+        c = Config(campaign, analysis)
 
         c.name, c.id
         # -> "2017B", 1
-
-        c.analysis == analysis
-        # -> True
-
-        c.campaign == campaign
-        # -> True
 
         # start configuration
         c.add_dataset(campaign.get_dataset("ttH_bb"))
@@ -174,7 +168,7 @@ class Config(UniqueObject, AuxDataMixin):
     def __init__(self, campaign, name=None, id=None, analysis=None, aux=None, context=None):
         # parse campaign
         if not isinstance(campaign, Campaign):
-            campaign = Campaign.get_instance(campaign)
+            raise TypeError("invalid campaign type: %s" % (campaign,))
 
         # default name and id
         if name is None:
@@ -209,10 +203,7 @@ class Config(UniqueObject, AuxDataMixin):
     def analysis(self, analysis):
         # analysis setter
         if analysis is not None and not isinstance(analysis, Analysis):
-            try:
-                analysis = Analysis.get_instance(analysis)
-            except:
-                raise TypeError("invalid analysis type: %s" % (analysis,))
+            raise TypeError("invalid analysis type: %s" % (analysis,))
 
         # remove this config from the current analysis' config index
         if self._analysis:

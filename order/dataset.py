@@ -49,8 +49,10 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
 
     .. code-block:: python
 
+        campaign = Campaign("2017B", 1, ...)
+
         d = Dataset("ttH_bb", 1,
-            campaign = "2017B",
+            campaign = campaign,
             keys     = ["/ttHTobb_M125.../.../..."],
             n_files  = 123,
             n_events = 456789
@@ -68,7 +70,7 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
         # set explicit info objects
 
         d = Dataset("ttH_bb", 1,
-            campaign = "2017B",
+            campaign = campaign,
             info     = {
                 "nominal": {
                     "keys"    : ["/ttHTobb_M125.../.../..."],
@@ -166,10 +168,7 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
     def campaign(self, campaign):
         # campaign setter
         if campaign is not None and not isinstance(campaign, Campaign):
-            try:
-                campaign = Campaign.get_instance(campaign)
-            except:
-                raise TypeError("invalid campaign type: %s" % (campaign,))
+            raise TypeError("invalid campaign type: %s" % (campaign,))
 
         # remove this dataset from the current campaign's dataset index
         if self._campaign:

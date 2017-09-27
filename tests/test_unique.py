@@ -47,6 +47,15 @@ class UniqueObjectTest(unittest.TestCase):
         del(foo)
         C("foo", 2)
 
+    def test_get_instance(self):
+        C = self.make_class()
+        c = C("foo", 1)
+
+        self.assertEqual(C.get_instance(c), c)
+        self.assertEqual(C.get_instance("foo"), c)
+        self.assertEqual(C.get_instance(1), c)
+        self.assertEqual(C.get_instance("bar", default=c), c)
+
     def test_context(self):
         C = self.make_class()
 

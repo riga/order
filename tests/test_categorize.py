@@ -76,9 +76,7 @@ class CategoryTest(unittest.TestCase):
 
         c2 = c.add_category("eq4j_eq2b")
 
-        self.assertIsNone(c2.channel)
-        self.assertEqual(c2.parent_channel, SL)
-
+        self.assertIsNone(c2.channel, SL)
         self.assertEqual(c.full_label(), r"SL, $\eq$ 4 jets")
         self.assertEqual(c.full_label(root=True), "SL, #eq 4 jets")
 

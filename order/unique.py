@@ -521,7 +521,7 @@ def uniqueness_context(context):
 
 
 def unique_tree(**kwargs):
-    """ unique_tree(cls=None, singular=None, plural=None, parents=True, skip=None)
+    """ unique_tree(cls=None, singular=None, plural=None, parents=True, skip=None, transfer=None)
     Decorator that adds attributes and methods to the decorated class to provide tree features,
     i.e., *parent-child* relations. Example:
 
@@ -559,7 +559,9 @@ def unique_tree(**kwargs):
     additional features are reduced to provide only child relations. When *parents* is an integer,
     it is interpreted as the maximim number of parents a child can have. Additional convenience
     methods are added when *parents* is exactly 1. When *skip* is a sequence, it can contain names
-    of attributes to skip that would normally be created.
+    of attributes to skip that would normally be created. When *transfer* is a sequence, it can
+    contain names of attributes that are transferred in the *add_\** function when the added object
+    has to be generated (see :py:meth:`UniqueObject.add`).
 
     A class can be decorated multiple times. Internally, the objects are stored in a
     :py:class:`UniqueObjectIndex` per added tree functionality.
@@ -574,6 +576,7 @@ def unique_tree(**kwargs):
         plural = kwargs.get("plural", singular + "s").lower()
         parents = kwargs.get("parents", True)
         skip = make_list(kwargs.get("skip", None) or [])
+        transfer = make_list(kwargs.get("transfer", None) or [])
 
         # decorator for registering new instance methods with proper name and doc string
         def patch(name=None, **kwargs):
@@ -591,6 +594,12 @@ def unique_tree(**kwargs):
                     setattr(unique_cls, _name, f)
                 return f
             return decorator
+
+        # attribute transfer helper
+        def do_transfer(inst, kwargs):
+            for attr in transfer:
+                if attr not in kwargs:
+                    kwargs[attr] = getattr(inst, attr)
 
         # patch the init method
         orig_init = unique_cls.__init__
@@ -664,25 +673,24 @@ def unique_tree(**kwargs):
             else:
                 raise ValueError("unknown %s: %s" % (singular, obj))
 
+        # walk children method
+        @patch("walk_" + plural)
+        def walk(self):
+            """
+            Walks through the child {plural} and per iteration yields a child {singular}, its depth
+            relative to *this* {singular}, and its child {plural} in a list that can be modified to
+            alter the walking.
+            """
+            lookup = [(obj, 1) for obj in getattr(self, plural).values()]
+            while lookup:
+                obj, depth = lookup.pop(0)
+                objs = list(getattr(obj, plural).values())
+
+                yield (obj, depth, objs)
+
+                lookup.extend((obj, depth + 1) for obj in objs)
 
         if unique_cls == cls:
-
-            # walk children method
-            @patch("walk_" + plural)
-            def walk(self):
-                """
-                Walks through the child {plural} and per iteration yields a child {singular}, its depth
-                relative to *this* {singular}, and its child {plural} in a list that can be modified to
-                alter the walking.
-                """
-                lookup = [(obj, 1) for obj in getattr(self, plural).values()]
-                while lookup:
-                    obj, depth = lookup.pop(0)
-                    objs = list(getattr(obj, plural).values())
-
-                    yield (obj, depth, objs)
-
-                    lookup.extend((obj, depth + 1) for obj in objs)
 
             # is leaf method
             @patch("is_leaf_" + singular)
@@ -704,6 +712,7 @@ def unique_tree(**kwargs):
                 """
                 Adds a child {singular}. See :py:meth:`UniqueObjectIndex.add` for more info. 
                 """
+                do_transfer(self, kwargs)
                 return getattr(self, plural).add(*args, **kwargs)
 
             # remove child method
@@ -745,6 +754,7 @@ def unique_tree(**kwargs):
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
                     added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info. 
                     """
+                    do_transfer(self, kwargs)
                     obj = getattr(self, plural).add(*args, **kwargs)
                     getattr(obj, "parent_" + plural).add(self)
                     return obj
@@ -763,6 +773,7 @@ def unique_tree(**kwargs):
                     added {singular}. An exception is raised when the number of allowed parents is
                     exceeded. See :py:meth:`UniqueObjectIndex.add` for more info. 
                     """
+                    do_transfer(self, kwargs)
                     index = getattr(self, plural)
                     obj = index.add(*args, **kwargs)
                     parent_index = getattr(obj, "parent_" + plural)
@@ -825,24 +836,24 @@ def unique_tree(**kwargs):
                 getattr(obj, plural).remove(self)
                 return obj
 
+            # walk parents method
+            @patch("walk_parent_" + plural)
+            def walk(self):
+                """
+                Walks through the parent {plural} and per iteration yields a parent {singular},
+                its depth relative to *this* {singular}, and its parent {plural} in a list that
+                can be modified to alter the walking.
+                """
+                lookup = [(obj, 1) for obj in getattr(self, "parent_" + plural).values()]
+                while lookup:
+                    obj, depth = lookup.pop(0)
+                    objs = list(getattr(obj, "parent_" + plural).values())
+
+                    yield (obj, depth, objs)
+
+                    lookup.extend((obj, depth + 1) for obj in objs)
+
             if unique_cls == cls:
-
-                # walk parents method
-                @patch("walk_parent_" + plural)
-                def walk(self):
-                    """
-                    Walks through the parent {plural} and per iteration yields a parent {singular},
-                    its depth relative to *this* {singular}, and its parent {plural} in a list that
-                    can be modified to alter the walking.
-                    """
-                    lookup = [(obj, 1) for obj in getattr(self, "parent_" + plural).values()]
-                    while lookup:
-                        obj, depth = lookup.pop(0)
-                        objs = list(getattr(obj, "parent_" + plural).values())
-
-                        yield (obj, depth, objs)
-
-                        lookup.extend((obj, depth + 1) for obj in objs)
 
                 # is_root method
                 @patch("is_root_" + singular)
@@ -865,6 +876,7 @@ def unique_tree(**kwargs):
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
                     added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info. 
                     """
+                    do_transfer(self, kwargs)
                     obj = getattr(self, "parent_" + plural).add(*args, **kwargs)
                     getattr(obj, plural).add(self)
                     return obj
@@ -882,6 +894,7 @@ def unique_tree(**kwargs):
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
                     added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info. 
                     """
+                    do_transfer(self, kwargs)
                     parent_index = getattr(self, "parent_" + plural)
                     if len(parent_index) >= parents:
                         raise Exception("number of parents exceeded: %i" % (parents,))

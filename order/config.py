@@ -117,7 +117,6 @@ class Campaign(UniqueObject, AuxDataMixin):
 @unique_tree(cls=Dataset, parents=False)
 @unique_tree(cls=Process, plural="processes", parents=False)
 @unique_tree(cls=Channel, parents=False)
-@unique_tree(cls=Category, plural="categories", parents=False)
 @unique_tree(cls=Variable, parents=False)
 @unique_tree(cls=Shift, parents=False)
 class Config(UniqueObject, AuxDataMixin):
@@ -125,12 +124,12 @@ class Config(UniqueObject, AuxDataMixin):
     Class holding analysis information that is related to a :py:class:`Campaign` instance. Most of
     the analysis configuration happens here.
 
-    It stores analysis *datasets*, *processes*, *channels*, *categories*, *variables*, and *shifts*
-    as well as references to the :py:class:`Analysis` and :py:class:`Campaign` instances it belongs
-    to. *name*, *id* and *context* are forwarded to the :py:class:`UniqueObject` constructor and
-    default to the values of the *campaign* instance (*context* only if it is not the default
-    uniqueness context of the :py:class:`Campaign` class). Specialized data such as integrated
-    luminosities, triggers, or statistical models can be stored as auxiliary data.
+    It stores analysis *datasets*, *processes*, *channels*, *variables*, and *shifts* as well as
+    references to the :py:class:`Analysis` and :py:class:`Campaign` instances it belongs to. *name*,
+    *id* and *context* are forwarded to the :py:class:`UniqueObject` constructor and default to the
+    values of the *campaign* instance (*context* only if it is not the default uniqueness context of
+    the :py:class:`Campaign` class). Specialized data such as integrated luminosities, triggers, or
+    statistical models can be stored as auxiliary data.
 
     .. code-block:: python
 
@@ -146,7 +145,7 @@ class Config(UniqueObject, AuxDataMixin):
         c.add_dataset(campaign.get_dataset("ttH_bb"))
         c.add_process("ttH_bb", 1, xsecs={13: 0.5071})
         bb = c.add_channel("bb", 1)
-        c.add_category("eq6j_eq4b", channel=bb)
+        bb.add_category("eq6j_eq4b")
         c.add_variable("jet1_px", expression="jet1_pt * cos(jet1_phi)")
         c.add_shift("pdf_up", type=Shift.SHAPE)
         ...

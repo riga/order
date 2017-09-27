@@ -515,7 +515,7 @@ def uniqueness_context(context):
     """
     try:
         _uniqueness_context_stack.append(context)
-        yield
+        yield context
     finally:
         _uniqueness_context_stack.pop()
 
@@ -641,23 +641,6 @@ def unique_tree(**kwargs):
             """
             return getattr(self, plural).has(*args, **kwargs)
 
-        # walk children method
-        @patch("walk_" + plural)
-        def walk(self):
-            """
-            Walks through the child {plural} and per iteration yields a child {singular}, its depth
-            relative to *this* {singular}, and its child {plural} in a list that can be modified to
-            alter the walking.
-            """
-            lookup = [(obj, 1) for obj in getattr(self, plural).values()]
-            while lookup:
-                obj, depth = lookup.pop(0)
-                objs = list(getattr(obj, plural).values())
-
-                yield (obj, depth, objs)
-
-                lookup.extend((obj, depth + 1) for obj in objs)
-
         # get child method
         @patch("get_" + singular)
         def get(self, obj, deep=True, silent=False):
@@ -681,7 +664,25 @@ def unique_tree(**kwargs):
             else:
                 raise ValueError("unknown %s: %s" % (singular, obj))
 
+
         if unique_cls == cls:
+
+            # walk children method
+            @patch("walk_" + plural)
+            def walk(self):
+                """
+                Walks through the child {plural} and per iteration yields a child {singular}, its depth
+                relative to *this* {singular}, and its child {plural} in a list that can be modified to
+                alter the walking.
+                """
+                lookup = [(obj, 1) for obj in getattr(self, plural).values()]
+                while lookup:
+                    obj, depth = lookup.pop(0)
+                    objs = list(getattr(obj, plural).values())
+
+                    yield (obj, depth, objs)
+
+                    lookup.extend((obj, depth + 1) for obj in objs)
 
             # is leaf method
             @patch("is_leaf_" + singular)
@@ -790,23 +791,6 @@ def unique_tree(**kwargs):
                 """
                 return getattr(self, "parent_" + plural).has(*args, **kwargs)
 
-            # walk parents method
-            @patch("walk_parent_" + plural)
-            def walk(self):
-                """
-                Walks through the parent {plural} and per iteration yields a parent {singular},
-                its depth relative to *this* {singular}, and its parent {plural} in a list that
-                can be modified to alter the walking.
-                """
-                lookup = [(obj, 1) for obj in getattr(self, "parent_" + plural).values()]
-                while lookup:
-                    obj, depth = lookup.pop(0)
-                    objs = list(getattr(obj, "parent_" + plural).values())
-
-                    yield (obj, depth, objs)
-
-                    lookup.extend((obj, depth + 1) for obj in objs)
-
             # get parent method
             @patch("get_parent_" + singular)
             def get(self, obj, deep=True, silent=False):
@@ -842,6 +826,23 @@ def unique_tree(**kwargs):
                 return obj
 
             if unique_cls == cls:
+
+                # walk parents method
+                @patch("walk_parent_" + plural)
+                def walk(self):
+                    """
+                    Walks through the parent {plural} and per iteration yields a parent {singular},
+                    its depth relative to *this* {singular}, and its parent {plural} in a list that
+                    can be modified to alter the walking.
+                    """
+                    lookup = [(obj, 1) for obj in getattr(self, "parent_" + plural).values()]
+                    while lookup:
+                        obj, depth = lookup.pop(0)
+                        objs = list(getattr(obj, "parent_" + plural).values())
+
+                        yield (obj, depth, objs)
+
+                        lookup.extend((obj, depth + 1) for obj in objs)
 
                 # is_root method
                 @patch("is_root_" + singular)

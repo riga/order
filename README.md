@@ -17,7 +17,7 @@ If you're designing a high-energy physics analysis (e.g. with data recorded with
 
 ### Getting started
 
-See the [intro.ipynb](examples/intro.ipynb) notebook for an introduction to the most important classes and an example setup of a small analysis.
+See the [intro.ipynb](https://github.com/riga/order/blob/master/examples/intro.ipynb) notebook for an introduction to the most important classes and an example setup of a small analysis.
 
 You can find the full [API documentation on readthedocs.](http://python-order.readthedocs.io).
 

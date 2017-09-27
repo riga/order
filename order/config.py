@@ -120,7 +120,7 @@ class Campaign(UniqueObject, AuxDataMixin):
 @unique_tree(cls=Variable, parents=False)
 @unique_tree(cls=Shift, parents=False)
 class Config(UniqueObject, AuxDataMixin):
-    """
+    """ __init__(self, campaign, name=None, id=None, analysis=None, aux=None, context=None)
     Class holding analysis information that is related to a :py:class:`Campaign` instance. Most of
     the analysis configuration happens here.
 

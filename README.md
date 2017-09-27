@@ -3,9 +3,6 @@
 [![Build Status](https://travis-ci.org/riga/order.svg?branch=master)](https://travis-ci.org/riga/order) [![Documentation Status](https://readthedocs.org/projects/python-order/badge/?version=latest)](http://python-order.readthedocs.org/en/latest/?badge=latest) [![Package Status](https://badge.fury.io/py/order.svg)](https://badge.fury.io/py/order)
 
 
-> ### This project is currently under development.
-
-
 If you're designing a high-energy physics analysis (e.g. with data recorded with an [LHC](https://home.cern/topics/large-hadron-collider) experiment at [CERN](http://home.cern)), manual bookkeeping of external data can get complicated quite fast. *order* provides a Python class collection that helps you structuring
 
 - analyses,
@@ -16,6 +13,13 @@ If you're designing a high-energy physics analysis (e.g. with data recorded with
 - categories,
 - systematics, and
 - models for statistical inference.
+
+
+### Getting started
+
+See the [intro.ipynb](examples/intro.ipynb) notebook for an introduction to the most important classes and an example setup of a small analysis.
+
+You can find the full [API documentation on readthedocs.](http://python-order.readthedocs.io).
 
 
 ### Installation and dependencies
@@ -55,7 +59,8 @@ To run tests in a docker container, do:
 git clone https://github.com/riga/order.git
 cd order
 
-docker run --rm -v `pwd`:/root/order -w /root/order python:3.6 /bin/bash -c "pip install -r requirements.txt; python -m unittest tests"
+docker run --rm -v `pwd`:/root/order -w /root/order python:3.6 /bin/bash -c "\
+	pip install -r requirements.txt; python -m unittest tests"
 ```
 
 

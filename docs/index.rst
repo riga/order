@@ -1,8 +1,6 @@
 order
 =====
 
-.. note:: This project is currently under development.
-
 .. centered:: This page contains only API docs. For more info, visit `order on GitHub <https://github.com/riga/order>`_.
 
 

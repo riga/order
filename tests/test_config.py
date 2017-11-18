@@ -62,7 +62,6 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(c.campaign, a)
         self.assertEqual(c.name, a.name)
         self.assertEqual(c.id, a.id)
-        self.assertEqual(c.uniqueness_context, a.uniqueness_context)
 
         a = Campaign("2017D", 4)
         c = Config(a, name="otherName", id=3)

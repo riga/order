@@ -15,7 +15,7 @@ from .mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixi
 from .util import typed, to_root_latex
 
 
-@unique_tree(plural="categories")
+@unique_tree(plural="categories", deep_children=True, deep_parents=True)
 class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin):
     """ __init__(name, id="+", channel=None, label=None, label_short=None, context=None, selection=None, selection_mode=None, aux=None, tags=None)
     Class that describes an analysis category. This is not to be confused with an analysis
@@ -93,8 +93,8 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
         return to_root_latex(label) if root else label
 
 
-@unique_tree(parents=1)
-@unique_tree(cls=Category, plural="categories", parents=False)
+@unique_tree(parents=1, deep_children=True, deep_parents=True)
+@unique_tree(cls=Category, plural="categories", parents=False, deep_children=True)
 class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
     """ __init__(name, id, label=None, label_short=None, aux=None, context=None)
     An object that descibes an analysis channel, often defined by a particular decay *channel* that

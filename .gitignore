@@ -5,6 +5,7 @@
 *.DS_Store
 *.pkl
 *.egg-info
+.ipynb_checkpoints
 MANIFEST
 __pycache__
 dist

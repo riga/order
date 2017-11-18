@@ -115,28 +115,27 @@ class Campaign(UniqueObject, AuxDataMixin):
 
 
 @unique_tree(cls=Dataset, parents=False)
-@unique_tree(cls=Process, plural="processes", parents=False)
-@unique_tree(cls=Channel, parents=False)
+@unique_tree(cls=Process, plural="processes", parents=False, deep_children=True)
+@unique_tree(cls=Channel, parents=False, deep_children=True)
 @unique_tree(cls=Variable, parents=False)
 @unique_tree(cls=Shift, parents=False)
 class Config(UniqueObject, AuxDataMixin):
-    """ __init__(self, campaign, name=None, id=None, analysis=None, aux=None, context=None)
+    """ __init__(campaign, name=None, id=None, analysis=None, aux=None, context=None)
     Class holding analysis information that is related to a :py:class:`Campaign` instance. Most of
     the analysis configuration happens here.
 
     It stores analysis *datasets*, *processes*, *channels*, *variables*, and *shifts* as well as
     references to the :py:class:`Analysis` and :py:class:`Campaign` instances it belongs to. *name*,
-    *id* and *context* are forwarded to the :py:class:`UniqueObject` constructor and default to the
-    values of the *campaign* instance (*context* only if it is not the default uniqueness context of
-    the :py:class:`Campaign` class). Specialized data such as integrated luminosities, triggers, or
-    statistical models can be stored as auxiliary data.
+    *id* and *context* are forwarded to the :py:class:`UniqueObject` constructor. *name* and *id*
+    default to the values of the *campaign* instance, Specialized data such as integrated
+    luminosities, triggers, or statistical models can be stored as auxiliary data.
 
     .. code-block:: python
 
         analysis = Analysis("ttH", 1, ...)
         campaign = Campaign("2017B", 1, ...)
 
-        c = Config(campaign, analysis)
+        c = analysis.add_config(campaign)
 
         c.name, c.id
         # -> "2017B", 1
@@ -174,8 +173,6 @@ class Config(UniqueObject, AuxDataMixin):
             name = campaign.name
         if id is None:
             id = campaign.id
-        if context is None and campaign.uniqueness_context != campaign.default_uniqueness_context:
-            context = campaign.uniqueness_context
 
         UniqueObject.__init__(self, name=name, id=id, context=context)
         AuxDataMixin.__init__(self, aux=aux)

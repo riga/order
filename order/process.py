@@ -15,7 +15,7 @@ from .mixins import CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin, ColorM
 from .util import typed
 
 
-@unique_tree(plural="processes")
+@unique_tree(plural="processes", deep_children=True, deep_parents=True)
 class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixin):
     """ __init__(name, id, xsecs=None, color=None, label=None, label_short=None, is_data=False, aux=None, context=None)
     Definition of a phyiscs process.

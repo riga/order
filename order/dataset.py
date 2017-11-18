@@ -20,7 +20,7 @@ from .shift import Shift
 from .util import typed, make_list
 
 
-@unique_tree(cls=Process, plural="processes", parents=False)
+@unique_tree(cls=Process, plural="processes", parents=False, deep_children=True)
 class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
     """ __init__(name, id, campaign=None, info=None, label=None, label_short=None, is_data=False, context=None, **kwargs)
     Dataset definition providing two kinds of information:

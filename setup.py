@@ -39,10 +39,6 @@ classifiers = [
     "Intended Audience :: Information Technology"
 ]
 
-install_requires = []
-with open(os.path.join(thisdir, "requirements.txt"), "r") as f:
-    install_requires.extend(line.strip() for line in f.readlines() if line.strip())
-
 setup(
     name             = od.__name__,
     version          = od.__version__,
@@ -54,8 +50,7 @@ setup(
     keywords         = keywords,
     classifiers      = classifiers,
     long_description = long_description,
-    install_requires = install_requires,
     zip_safe         = False,
-    packages         = ["order"],
+    packages         = ["order", "order.cms"],
     package_data     = {"": ["LICENSE", "requirements.txt", "README.md"]}
 )

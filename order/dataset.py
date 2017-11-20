@@ -13,11 +13,11 @@ import types
 import six
 from scinum import Number
 
-from .unique import UniqueObject, unique_tree
-from .mixins import CopyMixin, DataSourceMixin, LabelMixin
-from .process import Process
-from .shift import Shift
-from .util import typed, make_list
+from order.unique import UniqueObject, unique_tree
+from order.mixins import CopyMixin, DataSourceMixin, LabelMixin
+from order.process import Process
+from order.shift import Shift
+from order.util import typed, make_list
 
 
 @unique_tree(cls=Process, plural="processes", parents=False, deep_children=True)

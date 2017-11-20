@@ -10,9 +10,9 @@ __all__ = ["Process"]
 
 from scinum import Number
 
-from .unique import UniqueObject, unique_tree
-from .mixins import CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixin
-from .util import typed
+from order.unique import UniqueObject, unique_tree
+from order.mixins import CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixin
+from order.util import typed
 
 
 @unique_tree(plural="processes", deep_children=True, deep_parents=True)

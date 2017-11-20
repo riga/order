@@ -10,9 +10,9 @@ __all__ = ["Channel", "Category"]
 
 import six
 
-from .unique import UniqueObject, unique_tree
-from .mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin
-from .util import typed, to_root_latex
+from order.unique import UniqueObject, unique_tree
+from order.mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin
+from order.util import typed, to_root_latex
 
 
 @unique_tree(plural="categories", deep_children=True, deep_parents=True)

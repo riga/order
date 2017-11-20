@@ -14,7 +14,7 @@ import collections
 
 import six
 
-from .util import typed, make_list, multi_match, join_root_selection, join_numexpr_selection, \
+from order.util import typed, make_list, multi_match, join_root_selection, join_numexpr_selection, \
     to_root_latex
 
 

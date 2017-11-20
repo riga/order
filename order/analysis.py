@@ -8,9 +8,9 @@ Definition of the central analysis class.
 __all__ = ["Analysis"]
 
 
-from .unique import UniqueObject, unique_tree
-from .mixins import AuxDataMixin
-from .config import Config
+from order.unique import UniqueObject, unique_tree
+from order.mixins import AuxDataMixin
+from order.config import Config
 
 
 @unique_tree(cls=Config, parents=False)

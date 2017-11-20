@@ -11,9 +11,9 @@ __all__ = ["Shift"]
 import six
 import scinum as sn
 
-from .unique import UniqueObject
-from .mixins import CopyMixin, LabelMixin
-from .util import typed, to_root_latex
+from order.unique import UniqueObject
+from order.mixins import CopyMixin, LabelMixin
+from order.util import typed, to_root_latex
 
 
 class Shift(UniqueObject, CopyMixin, LabelMixin):

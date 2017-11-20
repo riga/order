@@ -12,7 +12,7 @@ __credits__    = ["Marcel Rieger"]
 __contact__    = "https://github.com/riga/order"
 __license__    = "MIT"
 __status__     = "Development"
-__version__    = "0.1.8"
+__version__    = "0.1.9"
 
 __all__ = ["UniqueObject", "UniqueObjectIndex", "uniqueness_context", "CopyMixin", "AuxDataMixin",
            "TagMixin", "DataSourceMixin", "SelectionMixin", "LabelMixin", "ColorMixin", "Channel",
@@ -21,19 +21,19 @@ __all__ = ["UniqueObject", "UniqueObjectIndex", "uniqueness_context", "CopyMixin
 
 
 # provisioning imports
-from .unique import UniqueObject, UniqueObjectIndex, uniqueness_context
-from .mixins import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, \
+from order.unique import UniqueObject, UniqueObjectIndex, uniqueness_context
+from order.mixins import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, \
     LabelMixin, ColorMixin
-from .categorize import Channel, Category
-from .variable import Variable
-from .shift import Shift
-from .process import Process
-from .dataset import Dataset, DatasetInfo
-from .config import Campaign, Config
-from .analysis import Analysis
+from order.categorize import Channel, Category
+from order.variable import Variable
+from order.shift import Shift
+from order.process import Process
+from order.dataset import Dataset, DatasetInfo
+from order.config import Campaign, Config
+from order.analysis import Analysis
 
 # submodules
-from . import cms
+from order import cms
 
 
 # LumiList

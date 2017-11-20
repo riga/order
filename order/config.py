@@ -9,14 +9,14 @@ config.
 __all__ = ["Campaign", "Config"]
 
 
-from .unique import UniqueObject, unique_tree
-from .mixins import AuxDataMixin
-from .shift import Shift
-from .dataset import Dataset
-from .process import Process
-from .categorize import Channel, Category
-from .variable import Variable
-from .util import typed
+from order.unique import UniqueObject, unique_tree
+from order.mixins import AuxDataMixin
+from order.shift import Shift
+from order.dataset import Dataset
+from order.process import Process
+from order.categorize import Channel, Category
+from order.variable import Variable
+from order.util import typed
 
 
 @unique_tree(cls=Dataset, parents=False)

@@ -10,9 +10,9 @@ __all__ = ["Variable"]
 
 import six
 
-from .unique import UniqueObject
-from .mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin
-from .util import typed, to_root_latex
+from order.unique import UniqueObject
+from order.mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin
+from order.util import typed, to_root_latex
 
 
 class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):

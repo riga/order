@@ -45,6 +45,12 @@ class VariableTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             v.binning = (10, 0.)
 
+        self.assertEqual(v.n_bins, 10)
+        self.assertEqual(v.x_min, 0.)
+        self.assertEqual(v.x_max, 1.)
+        self.assertEqual(v.bin_width, 0.1)
+        self.assertEqual(len(v.bin_edges), v.n_bins + 1)
+
         v.x_title = "foo"
         self.assertEqual(v.x_title, "foo")
         with self.assertRaises(TypeError):

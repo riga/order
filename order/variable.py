@@ -111,11 +111,35 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
        Whether or not the y-axis should be drawn logarithmically.
 
+    .. py:attribute:: n_bins
+       type: int
+       read-only
+
+       The number of bins.
+
+    .. py:attribute:: x_min
+       type: float
+       read-only
+
+       The minimum value of the x-axis.
+
+    .. py:attribute:: x_max
+       type: float
+       read-only
+
+       The maximum value of the x-axis.
+
     .. py:attribute:: bin_width
        type: float
        read-only
 
-       The bin width, evaluated from *binning*.
+       The width of a bin.
+
+    .. py:attribute:: bin_edges
+       type: list
+       read-only
+
+       A list of the *n_bins* + 1 bin edges.
     """
 
     # attributes for copying
@@ -279,8 +303,25 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
             raise TypeError("invalid unit type: %s" % (unit,))
 
     @property
+    def n_bins(self):
+        return self.binning[0]
+
+    @property
+    def x_min(self):
+        return self.binning[1]
+
+    @property
+    def x_max(self):
+        return self.binning[2]
+
+    @property
     def bin_width(self):
-        return (self.binning[2] - self.binning[1]) / float(self.binning[0])
+        return (self.x_max - self.x_min) / float(self.n_bins)
+
+    @property
+    def bin_edges(self):
+        bin_width = self.bin_width
+        return [self.x_min + i * bin_width for i in range(self.n_bins + 1)]
 
     def full_x_title(self, short=False, root=False):
         """

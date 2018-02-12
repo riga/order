@@ -12,7 +12,7 @@ import six
 
 from order.unique import UniqueObject
 from order.mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin
-from order.util import typed, to_root_latex
+from order.util import typed, to_root_latex, make_list
 
 
 class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
@@ -29,11 +29,11 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     .. code-block:: python
 
         v = Variable("myVar",
-            expression = "myBranchA * myBranchB",
-            selection = "myBranchC > 0",
-            binning   = (20, 0., 10.),
-            x_title   = r"$\mu p_{T}$",
-            unit      = "GeV"
+            expression="myBranchA * myBranchB",
+            selection="myBranchC > 0",
+            binning=(20, 0., 10.),
+            x_title=r"$\mu p_{T}$",
+            unit="GeV",
         )
 
         v.x_title_root
@@ -140,13 +140,6 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
        read-only
 
        A list of the *n_bins* + 1 bin edges.
-
-    .. py:attribute:: mpl_data
-       type: dict
-       read-only
-
-       A dictionary containing information on binning, label and log scale, that can be passed to
-       `matplotlib histograms <https://matplotlib.org/api/_as_gen/matplotlib.pyplot.hist.html>`_.
     """
 
     # attributes for copying
@@ -380,9 +373,26 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
         return ";".join([name, x_title, y_title])
 
-    @property
-    def mpl_data(self):
+    def mpl_data(self, update=None, skip=None):
+        """
+        Returns a dictionary containing information on binning, label and log scale, that can be
+        passed to matplotlib histograms
+        <https://matplotlib.org/api/_as_gen/matplotlib.pyplot.hist.html>`_. When *update* is set, it
+        the returned dict is updated with *update*. When *skip* is set, it can be a single key or a
+        sequence of keys that will not be added.
+        """
         data = {"bins": self.n_bins, "range": (self.x_min, self.x_max), "label": self.name}
         if self.log_x:
             data["log"] = True
+
+        # update?
+        if update:
+            data.update(update)
+
+        # skip some values?
+        if skip:
+            for key in make_list(skip):
+                if key in data:
+                    del data[key]
+
         return data

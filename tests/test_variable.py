@@ -94,11 +94,11 @@ class VariableTest(unittest.TestCase):
 
     def test_titles(self):
         v = self.make_var("foo",
-            x_title       = "Muon transverse momentum",
-            x_title_short = r"$\mu p_{T}$",
-            y_title       = "Entries",
-            y_title_short = "N",
-            binning = (40, 0., 10.),
+            x_title="Muon transverse momentum",
+            x_title_short=r"$\mu p_{T}$",
+            y_title="Entries",
+            y_title_short="N",
+            binning=(40, 0., 10.),
         )
 
         self.assertEqual(v.full_x_title(), "Muon transverse momentum [GeV]")
@@ -116,3 +116,22 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(v.name, "otherVar")
         self.assertEqual(v.expression, "otherExpression")
         self.assertEqual(v.selection, "(myBranchC > 0)")
+
+    def test_mpl_data(self):
+        v = self.make_var("mpl_hist",
+            binning=(40, 0., 10.),
+            log_x=True,
+        )
+
+        data = v.mpl_data()
+        self.assertEqual(data["bins"], 40)
+        self.assertEqual(data["range"], (0., 10.))
+        self.assertEqual(data["label"], "mpl_hist")
+        self.assertTrue(data["log"])
+
+        data = v.mpl_data(update={"color": "red", "label": "bar"}, skip="log")
+        self.assertEqual(data["bins"], 40)
+        self.assertEqual(data["range"], (0., 10.))
+        self.assertEqual(data["label"], "bar")
+        self.assertEqual(data["color"], "red")
+        self.assertTrue("log" not in data)

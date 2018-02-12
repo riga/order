@@ -140,6 +140,13 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
        read-only
 
        A list of the *n_bins* + 1 bin edges.
+
+    .. py:attribute:: mpl_data
+       type: dict
+       read-only
+
+       A dictionary containing information on binning, label and log scale, that can be passed to
+       `matplotlib histograms <https://matplotlib.org/api/_as_gen/matplotlib.pyplot.hist.html>`_.
     """
 
     # attributes for copying
@@ -147,9 +154,8 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
                   "log_x", "log_y", "unit", "selection", "selection_mode", "tags", "aux"]
 
     def __init__(self, name, id="+", expression=None, binning=(1, 0., 1.), x_title="",
-                 x_title_short=None, y_title="Entries", y_title_short=None, log_x=False,
-                 log_y=False, unit="1", selection=None, selection_mode=None, tags=None, aux=None,
-                 context=None):
+            x_title_short=None, y_title="Entries", y_title_short=None, log_x=False, log_y=False,
+            unit="1", selection=None, selection_mode=None, tags=None, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
@@ -355,7 +361,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         return to_root_latex(title) if root else title
 
     def full_title(self, name=None, short=False, short_x=None, short_y=None, root=True,
-                   bin_width=None):
+            bin_width=None):
         """
         Returns the full combined title that is compliant with ROOT's TH1 classes. *short_x*
         (*short_y*) is passed to :py:meth:`full_x_title` (:py:meth:`full_y_title`). Both values
@@ -373,3 +379,10 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         y_title = self.full_y_title(bin_width=bin_width, short=short_y, root=root)
 
         return ";".join([name, x_title, y_title])
+
+    @property
+    def mpl_data(self):
+        data = {"bins": self.n_bins, "range": (self.x_min, self.x_max), "label": self.name}
+        if self.log_x:
+            data["log"] = True
+        return data

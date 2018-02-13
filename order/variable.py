@@ -373,13 +373,13 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
         return ";".join([name, x_title, y_title])
 
-    def mpl_data(self, update=None, skip=None):
+    def mpl_hist_data(self, update=None, skip=None):
         """
-        Returns a dictionary containing information on binning, label and log scale, that can be
-        passed to matplotlib histograms
-        <https://matplotlib.org/api/_as_gen/matplotlib.pyplot.hist.html>`_. When *update* is set, it
+        Returns a dictionary containing information on *bins*, *range*, *label*, and *log*, that can
+        be passed to `matplotlib histograms
+        <https://matplotlib.org/api/_as_gen/matplotlib.pyplot.hist.html>`_. When *update* is set,
         the returned dict is updated with *update*. When *skip* is set, it can be a single key or a
-        sequence of keys that will not be added.
+        sequence of keys that will not be added to the returned dictionary.
         """
         data = {"bins": self.n_bins, "range": (self.x_min, self.x_max), "label": self.name}
         if self.log_x:

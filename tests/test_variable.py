@@ -123,13 +123,13 @@ class VariableTest(unittest.TestCase):
             log_x=True,
         )
 
-        data = v.mpl_data()
+        data = v.mpl_hist_data()
         self.assertEqual(data["bins"], 40)
         self.assertEqual(data["range"], (0., 10.))
         self.assertEqual(data["label"], "mpl_hist")
         self.assertTrue(data["log"])
 
-        data = v.mpl_data(update={"color": "red", "label": "bar"}, skip="log")
+        data = v.mpl_hist_data(update={"color": "red", "label": "bar"}, skip="log")
         self.assertEqual(data["bins"], 40)
         self.assertEqual(data["range"], (0., 10.))
         self.assertEqual(data["label"], "bar")

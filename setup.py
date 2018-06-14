@@ -2,29 +2,14 @@
 
 
 import os
-import sys
-from subprocess import Popen, PIPE
 from setuptools import setup
 
-import order as od
 
-
-thisdir = os.path.dirname(os.path.abspath(__file__))
-
-readme = os.path.join(thisdir, "README.md")
-if os.path.isfile(readme) and "sdist" in sys.argv:
-    cmd = "pandoc --from=markdown --to=rst " + readme
-    p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
-    out, err = p.communicate()
-    if p.returncode != 0:
-        raise Exception("pandoc conversion failed: " + err)
-    long_description = out
-else:
-    long_description = ""
+this_dir = os.path.dirname(os.path.abspath(__file__))
 
 keywords = [
     "physics", "analysis", "experiment", "order", "structure", "database", "lhc", "cms", "atlas",
-    "alice", "lhcb"
+    "alice", "lhcb",
 ]
 
 classifiers = [
@@ -39,18 +24,33 @@ classifiers = [
     "Intended Audience :: Information Technology"
 ]
 
+# read the readme file
+with open(os.path.join(this_dir, "README.md"), "r") as f:
+    long_description = f.read()
+
+# load installation requirements
+with open(os.path.join(this_dir, "requirements.txt"), "r") as f:
+    install_requires = [line.strip() for line in f.readlines() if line.strip()]
+
+# load package infos
+pkg = {}
+with open(os.path.join(this_dir, "order", "__version__.py"), "r") as f:
+    exec(f.read(), pkg)
+
 setup(
-    name             = od.__name__,
-    version          = od.__version__,
-    author           = od.__author__,
-    author_email     = od.__email__,
-    description      = od.__doc__.strip(),
-    license          = od.__license__,
-    url              = od.__contact__,
-    keywords         = keywords,
-    classifiers      = classifiers,
-    long_description = long_description,
-    zip_safe         = False,
-    packages         = ["order", "order.cms"],
-    package_data     = {"": ["LICENSE", "requirements.txt", "README.md"]}
+    name="order",
+    version=pkg["__version__"],
+    author=pkg["__author__"],
+    author_email=pkg["__email__"],
+    description=pkg["__doc__.strip()"],
+    license=pkg["__license__"],
+    url=pkg["__contact__"],
+    keywords=keywords,
+    classifiers=classifiers,
+    long_description=long_description,
+    install_requires=install_requires,
+    python_requires=">=2.7",
+    zip_safe=False,
+    packages=["order", "order.cms"],
+    package_data={"": ["LICENSE", "requirements.txt", "README.md"]},
 )

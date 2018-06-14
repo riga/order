@@ -1,23 +1,20 @@
 # -*- coding: utf-8 -*-
-
-"""
-Pythonic class collection that helps you structure external data from LHC / HEP experiments.
-"""
+# flake8: noqa
 
 
-__author__     = "Marcel Rieger"
-__email__      = "python-order@googlegroups.com"
-__copyright__  = "Copyright 2017, Marcel Rieger"
-__credits__    = ["Marcel Rieger"]
-__contact__    = "https://github.com/riga/order"
-__license__    = "MIT"
-__status__     = "Development"
-__version__    = "0.1.10"
+__all__ = [
+    "UniqueObject", "UniqueObjectIndex", "uniqueness_context", "CopyMixin", "AuxDataMixin",
+    "TagMixin", "DataSourceMixin", "SelectionMixin", "LabelMixin", "ColorMixin", "Channel",
+    "Category", "Variable", "Shift", "Process", "Dataset", "DatasetInfo", "Campaign", "Config",
+    "Analysis", "cms",
+]
 
-__all__ = ["UniqueObject", "UniqueObjectIndex", "uniqueness_context", "CopyMixin", "AuxDataMixin",
-           "TagMixin", "DataSourceMixin", "SelectionMixin", "LabelMixin", "ColorMixin", "Channel",
-           "Category", "Variable", "Shift", "Process", "Dataset", "DatasetInfo", "Campaign",
-           "Config", "Analysis", "cms"]
+
+# package infos
+from order.__version__ import (
+    __doc__, __author__, __email__, __copyright__, __credits__, __contact__, __license__,
+    __status__, __version__,
+)
 
 
 # provisioning imports

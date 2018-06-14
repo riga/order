@@ -1,0 +1,4 @@
+exclude *
+recursive-exclude . *
+recursive-include order *
+include setup.py requirements.txt README.md LICENSE

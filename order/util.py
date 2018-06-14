@@ -183,6 +183,20 @@ def _parse_selection(*selection):
     return _selection
 
 
+def _bracket(s, force=False):
+    embed = force or not s.startswith("(") or not s.endswith(")")
+    if not embed:
+        # outer brace characters might not be the enclosing brace, e.g. "(foo) && (bar)"
+        balance = 0
+        diffs = {"(": 1, ")": -1}
+        for i, c in enumerate(s):
+            balance += diffs.get(c, 0)
+            if balance == 0 and i < len(s) - 1:
+                embed = True
+                break
+    return "({})".format(s) if embed else s
+
+
 def join_root_selection(*selection, **kwargs):
     """ join_root_selection(*selection, op="&&", bracket=False)
     Returns a concatenation of root *selection* strings, which is done by default via logical *AND*.
@@ -199,17 +213,9 @@ def join_root_selection(*selection, **kwargs):
     op = kwargs.get("op", "&&")
     op = " %s " % op.strip()
 
-    def bracket(s, force=False):
-        if force or not s.startswith("("):
-            s = "(" + s
-        if force or not s.endswith(")"):
-            s += ")"
-        return s
-
-    joined = op.join(bracket(s) for s in selection)
-
+    joined = op.join(_bracket(s) for s in selection)
     if kwargs.get("bracket", False):
-        return bracket(joined, force=True)
+        return _bracket(joined, force=True)
     else:
         return joined
 
@@ -230,16 +236,8 @@ def join_numexpr_selection(*selection, **kwargs):
     op = kwargs.get("op", "&")
     op = " %s " % op.strip()
 
-    def bracket(s, force=False):
-        if force or not s.startswith("("):
-            s = "(" + s
-        if force or not s.endswith(")"):
-            s += ")"
-        return s
-
-    joined = op.join(bracket(s) for s in selection)
-
+    joined = op.join(_bracket(s) for s in selection)
     if kwargs.get("bracket", False):
-        return bracket(joined, force=True)
+        return _bracket(joined, force=True)
     else:
         return joined

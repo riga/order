@@ -42,7 +42,7 @@ setup(
     version=pkg["__version__"],
     author=pkg["__author__"],
     author_email=pkg["__email__"],
-    description=pkg["__doc__.strip()"],
+    description=pkg["__doc__"].strip(),
     license=pkg["__license__"],
     url=pkg["__contact__"],
     keywords=keywords,

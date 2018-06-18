@@ -80,7 +80,8 @@ class CopyMixinTest(unittest.TestCase):
         C = self.make_class()
         a = C("foo", 1)
 
-        class D(C): pass
+        class D(C):
+            pass
 
         b = a.copy(cls=D)
         self.assertIsInstance(b, D)
@@ -203,7 +204,7 @@ class SelectionMixinTest(unittest.TestCase):
         self.assertEqual(s.selection, "((myBranchC > 0) && (myBranchD < 100))")
 
         s.add_selection("myWeight", op="*")
-        self.assertEqual(s.selection, "((myBranchC > 0) && (myBranchD < 100)) * (myWeight)")
+        self.assertEqual(s.selection, "(((myBranchC > 0) && (myBranchD < 100)) * (myWeight))")
 
     def test_constructor_numexpr(self):
         s = SelectionMixin("myBranchC > 0", "numexpr")
@@ -213,7 +214,7 @@ class SelectionMixinTest(unittest.TestCase):
         self.assertEqual(s.selection, "((myBranchC > 0) & (myBranchD < 100))")
 
         s.add_selection("myWeight", op="*")
-        self.assertEqual(s.selection, "((myBranchC > 0) & (myBranchD < 100)) * (myWeight)")
+        self.assertEqual(s.selection, "(((myBranchC > 0) & (myBranchD < 100)) * (myWeight))")
 
 
 class LabelMixinTest(unittest.TestCase):

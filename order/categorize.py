@@ -19,7 +19,7 @@ from order.util import typed, to_root_latex
 class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin):
     """ __init__(name, id="+", channel=None, label=None, label_short=None, context=None, selection=None, selection_mode=None, aux=None, tags=None)
     Class that describes an analysis category. This is not to be confused with an analysis
-    :py:class:`Channel`. While the definition of a channel is somewaht fixed by the final state of
+    :py:class:`Channel`. While the definition of a channel is somewhat fixed by the final state of
     an event, a category describes an arbitrary sub phase-space. Therefore, a category can be
     uniquely assigned to a channel - it *has* a channel.
 

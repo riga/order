@@ -8,12 +8,11 @@ Classes and helpers to describe and work with systematic shifts.
 __all__ = ["Shift"]
 
 
-import six
 import scinum as sn
 
 from order.unique import UniqueObject
 from order.mixins import CopyMixin, LabelMixin
-from order.util import typed, to_root_latex
+from order.util import typed
 
 
 class Shift(UniqueObject, CopyMixin, LabelMixin):

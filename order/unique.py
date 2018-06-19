@@ -49,12 +49,11 @@ class UniqueObject(object):
     simple interface for objects that are
 
     1. used programatically and should therefore have a unique, human-readable name, and
-    2. have a unique identifier that can be saved to files, such as (e.g.) ROOT trees. 
+    2. have a unique identifier that can be saved to files, such as (e.g.) ROOT trees.
 
-    Both, *name* and *id* should have unique values on their own per *uniqueness context*
-    separately. If *context* is *None*, either the current one as defined with
-    :py:func:`uniqueness_context` or, when empty, the class member *default_uniqueness_context* is
-    used. Examples:
+    Both, *name* and *id* should have unique values on their *uniqueness context* If *context* is
+    *None*, either the current one is used as defined in :py:func:`uniqueness_context` or, when
+    empty, the class member *default_uniqueness_context* is used instead. Examples:
 
     .. code-block:: python
 
@@ -128,9 +127,9 @@ class UniqueObject(object):
     @classmethod
     def get_instance(cls, obj, default=_no_default, context=None):
         """ get_instance(obj, [default], context=None)
-        Returns an object that was instantiated in this class before. *obj* might be a *name*, *id*,
+        Returns an object that was instantiated by this class before. *obj* might be a *name*, *id*,
         or an instance of *cls*. If *default* is given, it is used as the default return value if no
-        such object was be found. Otherwise, an error is raised. *context* defaults to the
+        such object was found. Otherwise, an error is raised. *context* defaults to the
         :py:attr:`default_uniqueness_context` if this class.
         """
         if context is None:
@@ -140,7 +139,7 @@ class UniqueObject(object):
             if default != _no_default:
                 return default
             else:
-                raise ValueError("unknown context: %s" % (context,))
+                raise ValueError("unknown context: {}".format(context))
 
         return cls._instances[context].get(obj, default=default)
 
@@ -148,7 +147,7 @@ class UniqueObject(object):
     def auto_id(cls, name, context):
         """
         Method to create an automatic id for instances that are created with ``id="+"``. The default
-        procedure is ``max(ids) + 1``.
+        recipe is ``max(ids) + 1``.
         """
         if context not in cls._instances or len(cls._instances[context]) == 0:
             return 1
@@ -176,8 +175,8 @@ class UniqueObject(object):
         # use the typed parser to check the passed name, check for duplicates and store it
         name = self.__class__.name.fparse(self, name)
         if name in cache.names():
-            raise ValueError("duplicate name '%s' in uniqueness context '%s'" \
-                % (name, self.uniqueness_context))
+            raise ValueError("duplicate name '{}' in uniqueness context '{}'".format(
+                name, self.uniqueness_context))
         self._name = name
 
         # check for auto_id
@@ -187,8 +186,8 @@ class UniqueObject(object):
         # use the typed parser to check the passed id, check for duplicates and store it
         id = self.__class__.id.fparse(self, id)
         if id in cache.ids():
-            raise ValueError("duplicate id '%s' in uniqueness context '%s'" \
-                % (id, self.uniqueness_context))
+            raise ValueError("duplicate id '{}' in uniqueness context '{}'".format(
+                id, self.uniqueness_context))
         self._id = id
 
         # add the instance to the cache
@@ -205,14 +204,13 @@ class UniqueObject(object):
         """
         Returns the unique string representation of the unique object.
         """
-        tpl = (self.__class__.__name__, self, hex(id(self)))
-        return "<%s '%s' at %s>" % tpl
+        return "<{} '{}' at {}>".format(self.__class__.__name__, self, hex(id(self)))
 
     def __str__(self):
         """
         Return a readable string representiation of the unique object.
         """
-        return "%s:%s__%s" % (self.uniqueness_context, self.name, self.id)
+        return "{}:{}__{}".format(self.uniqueness_context, self.name, self.id)
 
     def __eq__(self, other):
         """
@@ -250,7 +248,7 @@ class UniqueObject(object):
     def uniqueness_context(self, uniqueness_context):
         # uniqueness_context parser
         if uniqueness_context is None:
-            raise TypeError("invalid uniqueness_context type: %s" % (uniqueness_context,))
+            raise TypeError("invalid uniqueness_context type: {}".format(uniqueness_context))
 
         return uniqueness_context
 
@@ -258,7 +256,7 @@ class UniqueObject(object):
     def name(self, name):
         # name parser
         if not isinstance(name, six.string_types):
-            raise TypeError("invalid name type: %s" % (name,))
+            raise TypeError("invalid name type: {}".format(name))
 
         return str(name)
 
@@ -266,7 +264,7 @@ class UniqueObject(object):
     def id(self, id):
         # id parser
         if not isinstance(id, six.integer_types):
-            raise TypeError("invalid id type: %s" % (id,))
+            raise TypeError("invalid id type: {}".format(id))
 
         return int(id)
 
@@ -337,14 +335,14 @@ class UniqueObjectIndex(object):
         """
         Returns the unique string representation of the object index.
         """
-        tpl = (self.__class__.__name__, self.cls.__name__, len(self), hex(id(self)))
-        return "<%s '%s' len=%i at %s>" % tpl
+        return "<{} '{}' len={} at {}>".format(self.__class__.__name__, self.cls.__name__,
+            len(self), hex(id(self)))
 
     def __str__(self):
         """
         Return a readable string representiation of the object index.
         """
-        s = "%s (%i)" % (self.__class__.__name__, len(self))
+        s = "{} ({})".format(self.__class__.__name__, len(self))
         if len(self) > 0:
             s += "\n" + "\n".join(str(v) for v in self)
         return s
@@ -378,7 +376,7 @@ class UniqueObjectIndex(object):
     def cls(self, cls):
         # cls parser
         if not issubclass(cls, UniqueObject):
-            raise ValueError("not a sublcass of UniqueObject: %s" % (cls,))
+            raise ValueError("not a sublcass of UniqueObject: {}".format(cls))
 
         return cls
 
@@ -428,7 +426,7 @@ class UniqueObjectIndex(object):
         # before adding the object to the index check for duplicate name or id
         # which might happen when instances of the same class have different uniqueness contexts
         if self.get(obj, _not_found) != _not_found:
-            raise ValueError("duplicate object in index: %s" % (obj,))
+            raise ValueError("duplicate object in index: {}".format(obj))
 
         # add to indexes
         self._name_index[obj.name] = obj
@@ -449,7 +447,7 @@ class UniqueObjectIndex(object):
             elif default != _no_default:
                 return default
             else:
-                raise ValueError("object not known to index: %s" % (obj,))
+                raise ValueError("object not known to index: {}".format(obj))
         else:
             # name?
             try:
@@ -466,7 +464,7 @@ class UniqueObjectIndex(object):
             if default != _no_default:
                 return default
             else:
-                raise ValueError("object not known to index: %s" % (obj,))
+                raise ValueError("object not known to index: {}".format(obj))
 
     def has(self, obj):
         """
@@ -489,7 +487,7 @@ class UniqueObjectIndex(object):
         elif silent:
             return None
         else:
-            raise ValueError("object not known to index: %s" % (obj,))
+            raise ValueError("object not known to index: {}".format(obj))
 
     def flush(self):
         """
@@ -574,7 +572,7 @@ def unique_tree(**kwargs):
     """
     def decorator(unique_cls):
         if not issubclass(unique_cls, UniqueObject):
-            raise TypeError("decorated class must inherit from UniqueObject: %s" % (unique_cls,))
+            raise TypeError("decorated class must inherit from UniqueObject: {}".format(unique_cls))
 
         # determine configuration defaults
         cls = kwargs.get("cls", unique_cls)
@@ -673,7 +671,7 @@ def unique_tree(**kwargs):
                 elif silent:
                     return None
                 else:
-                    raise ValueError("unknown %s: %s" % (singular, obj))
+                    raise ValueError("unknown {}: {}".format(singular, obj))
 
         else:
 
@@ -707,7 +705,7 @@ def unique_tree(**kwargs):
                 if silent:
                     return None
                 else:
-                    raise ValueError("unknown %s: %s" % (singular, obj))
+                    raise ValueError("unknown {}: {}".format(singular, obj))
 
             # walk children method
             @patch("walk_" + plural)
@@ -746,7 +744,7 @@ def unique_tree(**kwargs):
             @patch("add_" + singular)
             def add(self, *args, **kwargs):
                 """
-                Adds a child {singular}. See :py:meth:`UniqueObjectIndex.add` for more info. 
+                Adds a child {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
                 """
                 do_transfer(self, kwargs)
                 return getattr(self, plural).add(*args, **kwargs)
@@ -792,7 +790,7 @@ def unique_tree(**kwargs):
                 def add(self, *args, **kwargs):
                     """
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
-                    added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info. 
+                    added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
                     """
                     do_transfer(self, kwargs)
                     obj = getattr(self, plural).add(*args, **kwargs)
@@ -811,7 +809,7 @@ def unique_tree(**kwargs):
                     """
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
                     added {singular}. An exception is raised when the number of allowed parents is
-                    exceeded. See :py:meth:`UniqueObjectIndex.add` for more info. 
+                    exceeded. See :py:meth:`UniqueObjectIndex.add` for more info.
                     """
                     do_transfer(self, kwargs)
                     index = getattr(self, plural)
@@ -819,7 +817,7 @@ def unique_tree(**kwargs):
                     parent_index = getattr(obj, "parent_" + plural)
                     if len(parent_index) >= parents:
                         index.remove(obj)
-                        raise Exception("number of parents exceeded: %i" % (parents,))
+                        raise Exception("number of parents exceeded: {}".format(parents))
                     parent_index.add(self)
                     return obj
 
@@ -828,13 +826,13 @@ def unique_tree(**kwargs):
         #
 
             # direct parent index access
-            @patch()
+            @patch()  # noqa: F811
             @typed(setter=False, name="parent_" + plural)
             def get_index(self):
                 pass
 
             # remove parent method
-            @patch("remove_parent_" + singular)
+            @patch("remove_parent_" + singular)  # noqa: F811
             def remove(self, obj, silent=False):
                 """
                 Removes a parent {singular} *obj* which might be a *name*, *id*, or an instance.
@@ -849,7 +847,7 @@ def unique_tree(**kwargs):
 
             if not deep_parents:
 
-                @patch("has_parent_" + singular)
+                @patch("has_parent_" + singular)  # noqa: F811
                 def has(self, obj):
                     """
                     Checks if the parent {plural} index contains an *obj* which might be a *name*,
@@ -858,7 +856,7 @@ def unique_tree(**kwargs):
                     return getattr(self, "parent_" + plural).has(obj)
 
                 # get child method
-                @patch("get_parent_" + singular)
+                @patch("get_parent_" + singular)  # noqa: F811
                 def get(self, obj, silent=False):
                     """
                     Returns a parent {singular} given by *obj*, which might be a *name*, *id*, or an
@@ -872,7 +870,7 @@ def unique_tree(**kwargs):
                     elif silent:
                         return None
                     else:
-                        raise ValueError("unknown %s: %s" % (singular, obj))
+                        raise ValueError("unknown {}: {}".format(singular, obj))
 
             else:
 
@@ -907,10 +905,10 @@ def unique_tree(**kwargs):
                     if silent:
                         return None
                     else:
-                        raise ValueError("unknown %s: %s" % (singular, obj))
+                        raise ValueError("unknown {}: {}".format(singular, obj))
 
                 # walk parents method
-                @patch("walk_parent_" + plural)
+                @patch("walk_parent_" + plural)  # noqa: F811
                 def walk(self):
                     """
                     Walks through the parent {plural} and per iteration yields a parent {singular},
@@ -944,11 +942,11 @@ def unique_tree(**kwargs):
             if not isinstance(parents, six.integer_types):
 
                 # add parent method with inf number of parents
-                @patch("add_parent_" + singular)
+                @patch("add_parent_" + singular)  # noqa: F811
                 def add(self, *args, **kwargs):
                     """
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
-                    added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info. 
+                    added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
                     """
                     do_transfer(self, kwargs)
                     obj = getattr(self, "parent_" + plural).add(*args, **kwargs)
@@ -966,12 +964,12 @@ def unique_tree(**kwargs):
                 def add(self, *args, **kwargs):
                     """
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
-                    added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info. 
+                    added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
                     """
                     do_transfer(self, kwargs)
                     parent_index = getattr(self, "parent_" + plural)
                     if len(parent_index) >= parents:
-                        raise Exception("number of parents exceeded: %i" % (parents,))
+                        raise Exception("number of parents exceeded: {}".format(parents))
                     obj = parent_index.add(*args, **kwargs)
                     getattr(obj, plural).add(self)
                     return obj

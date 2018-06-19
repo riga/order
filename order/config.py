@@ -14,7 +14,7 @@ from order.mixins import AuxDataMixin
 from order.shift import Shift
 from order.dataset import Dataset
 from order.process import Process
-from order.categorize import Channel, Category
+from order.categorize import Channel
 from order.variable import Variable
 from order.util import typed
 
@@ -89,8 +89,8 @@ class Campaign(UniqueObject, AuxDataMixin):
 
     def add_dataset(self, *args, **kwargs):
         """
-        Adds a child dataset. See :py:meth:`UniqueObjectIndex.add` for more info. Also sets the
-        campaign of the added dataset to *this* instance.
+        Adds a child dataset and returns it. See :py:meth:`UniqueObjectIndex.add` for more info.
+        Also sets the campaign of the added dataset to *this* instance.
         """
         dataset = self.datasets.add(*args, **kwargs)
 

@@ -8,10 +8,7 @@ Classes to define datasets.
 __all__ = ["Dataset", "DatasetInfo"]
 
 
-import types
-
 import six
-from scinum import Number
 
 from order.unique import UniqueObject, unique_tree
 from order.mixins import CopyMixin, DataSourceMixin, LabelMixin

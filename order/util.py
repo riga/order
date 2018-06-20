@@ -174,8 +174,8 @@ def _parse_selection(*selection):
             if s == 1:
                 continue
         elif isinstance(s, six.string_types):
-            # special case: skip empty strings and ones
-            if s in ("", "1.", "1"):
+            # special case: skip empty strings
+            if not s.strip():
                 continue
         else:
             raise Exception("invalid selection string: %s" % (s,))

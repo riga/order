@@ -79,7 +79,7 @@ docker run --rm -v `pwd`:/root/order -w /root/order python:3.6 /bin/bash -c "\
 
 The MIT License (MIT)
 
-Copyright (c) 2017 Marcel R.
+Copyright (c) 2018 Marcel R.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

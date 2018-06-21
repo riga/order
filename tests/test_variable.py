@@ -38,6 +38,14 @@ class VariableTest(unittest.TestCase):
         v.selection = "foo"
         self.assertEqual(v.selection, "(foo)")
 
+        v.binning = [1, 2, 3, 4, 5]
+        self.assertEqual(tuple(v.binning), (1, 2, 3, 4, 5))
+        self.assertEqual(v.n_bins, 4)
+        self.assertEqual(v.x_min, 1)
+        self.assertEqual(v.x_max, 5)
+        with self.assertRaises(ValueError):
+            v.binning = [1]
+
         v.binning = (10, 0., 1.)
         self.assertEqual(v.binning, (10, 0., 1.))
         with self.assertRaises(TypeError):

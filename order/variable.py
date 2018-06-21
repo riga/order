@@ -48,9 +48,16 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
        The expression of this variable. Defaults to name if *None*.
 
     .. py:attribute:: binning
-       type: tuple
+       type: tuple, list
 
-       Number of bins, minimum bin and maximum bin.
+       Descibes the bin edges when given a list, or number of bins, minimum bin and maximum bin when
+       passed a 3-tuple.
+
+    .. py:attribute:: has_even_binning
+       type: bool
+       read-only
+
+       Whether or not the binning is even.
 
     .. py:attribute:: x_title
        type: string
@@ -203,12 +210,20 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     @typed
     def binning(self, binning):
         # binning parser
-        if not isinstance(binning, (list, tuple)):
+        if isinstance(binning, list):
+            if len(binning) < 2:
+                raise ValueError("minimum number of bin edges is 2: %s" % (binning,))
+        elif isinstance(binning, tuple):
+            if len(binning) != 3:
+                raise ValueError("even binning must have length 3: %s" % (binning,))
+        else:
             raise TypeError("invalid binning type: %s" % (binning,))
-        elif len(binning) != 3:
-            raise ValueError("binning must have length 3: %s" % (binning,))
 
-        return tuple(binning)
+        return binning
+
+    @property
+    def has_even_binning(self):
+        return isinstance(self.binning, tuple)
 
     @typed
     def x_title(self, x_title):
@@ -303,24 +318,30 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
     @property
     def n_bins(self):
-        return self.binning[0]
+        return self.binning[0] if self.has_even_binning else (len(self.binning) - 1)
 
     @property
     def x_min(self):
-        return self.binning[1]
+        return self.binning[1 if self.has_even_binning else 0]
 
     @property
     def x_max(self):
-        return self.binning[2]
+        return self.binning[2 if self.has_even_binning else -1]
 
     @property
     def bin_width(self):
+        if not self.has_even_binning:
+            raise Exception("bin_width is not defined when binning is not even")
+
         return (self.x_max - self.x_min) / float(self.n_bins)
 
     @property
     def bin_edges(self):
-        bin_width = self.bin_width
-        return [self.x_min + i * bin_width for i in range(self.n_bins + 1)]
+        if not self.has_even_binning:
+            return self.binning
+        else:
+            bin_width = self.bin_width
+            return [self.x_min + i * bin_width for i in range(self.n_bins + 1)]
 
     def full_x_title(self, short=False, root=False):
         """
@@ -338,15 +359,16 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     def full_y_title(self, bin_width=None, short=False, root=False):
         """
         Returns the full title (i.e. with bin width and unit string) of the y-axis. When not *None*,
-        the value *bin_width* instead of the one evaluated from *binning*. When *short* is *True*,
-        the short version is returned. When *root* is *True*, the title is converted to *proper*
-        ROOT latex.
+        the value *bin_width* instead of the one evaluated from *binning* when even. When *short* is
+        *True*, the short version is returned. When *root* is *True*, the title is converted to
+        *proper* ROOT latex.
         """
         title = self.y_title_short if short else self.y_title
 
-        if bin_width is None:
+        if bin_width is None and self.has_even_binning:
             bin_width = round(self.bin_width, 2)
-        title += " / %s" % bin_width
+        if bin_width:
+            title += " / %s" % bin_width
 
         if self.unit not in (None, "1"):
             title += " %s" % self.unit

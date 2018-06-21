@@ -14,7 +14,7 @@ from order.mixins import AuxDataMixin
 from order.shift import Shift
 from order.dataset import Dataset
 from order.process import Process
-from order.categorize import Channel
+from order.categorize import Channel, Category
 from order.variable import Variable
 from order.util import typed
 
@@ -117,6 +117,7 @@ class Campaign(UniqueObject, AuxDataMixin):
 @unique_tree(cls=Dataset, parents=False)
 @unique_tree(cls=Process, plural="processes", parents=False, deep_children=True)
 @unique_tree(cls=Channel, parents=False, deep_children=True)
+@unique_tree(cls=Category, plural="categories", parents=False, deep_children=True)
 @unique_tree(cls=Variable, parents=False)
 @unique_tree(cls=Shift, parents=False)
 class Config(UniqueObject, AuxDataMixin):
@@ -124,10 +125,10 @@ class Config(UniqueObject, AuxDataMixin):
     Class holding analysis information that is related to a :py:class:`Campaign` instance. Most of
     the analysis configuration happens here.
 
-    It stores analysis *datasets*, *processes*, *channels*, *variables*, and *shifts* as well as
-    references to the :py:class:`Analysis` and :py:class:`Campaign` instances it belongs to. *name*,
-    *id* and *context* are forwarded to the :py:class:`UniqueObject` constructor. *name* and *id*
-    default to the values of the *campaign* instance, Specialized data such as integrated
+    It stores analysis *datasets*, *processes*, *channels*, *categories*, *variables*, and *shifts*
+    as well as references to the :py:class:`Analysis` and :py:class:`Campaign` instances it belongs
+    to. *name*, *id* and *context* are forwarded to the :py:class:`UniqueObject` constructor. *name*
+    and *id* default to the values of the *campaign* instance, Specialized data such as integrated
     luminosities, triggers, or statistical models can be stored as auxiliary data.
 
     .. code-block:: python

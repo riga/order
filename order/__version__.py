@@ -11,4 +11,4 @@ __credits__ = ["Marcel Rieger"]
 __contact__ = "https://github.com/riga/order"
 __license__ = "MIT"
 __status__ = "Development"
-__version__ = "0.1.16"
+__version__ = "0.1.17"

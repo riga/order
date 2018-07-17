@@ -208,9 +208,15 @@ class UniqueObject(object):
 
     def __str__(self):
         """
-        Return a readable string representiation of the unique object.
+        Returns a readable string representiation of the unique object.
         """
         return "{}:{}__{}".format(self.uniqueness_context, self.name, self.id)
+
+    def __hash__(self):
+        """
+        Returns the unique hash of the unique object.
+        """
+        return hash(self.__class__.__name__ + str(self))
 
     def __eq__(self, other):
         """

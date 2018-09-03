@@ -11,6 +11,7 @@ If you're designing a high-energy physics analysis (e.g. with data recorded with
 - cross sections,
 - channels,
 - categories,
+- variables,
 - systematics, and
 - models for statistical inference.
 
@@ -19,7 +20,7 @@ If you're designing a high-energy physics analysis (e.g. with data recorded with
 
 See the [intro.ipynb](https://github.com/riga/order/blob/master/examples/intro.ipynb) notebook for an introduction to the most important classes and an example setup of a small analysis.
 
-You can find the full [API documentation on readthedocs.](http://python-order.readthedocs.io).
+You can find the full [API documentation on readthedocs](http://python-order.readthedocs.io).
 
 
 ### Installation and dependencies

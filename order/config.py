@@ -128,7 +128,7 @@ class Config(UniqueObject, AuxDataMixin):
     It stores analysis *datasets*, *processes*, *channels*, *categories*, *variables*, and *shifts*
     as well as references to the :py:class:`Analysis` and :py:class:`Campaign` instances it belongs
     to. *name*, *id* and *context* are forwarded to the :py:class:`UniqueObject` constructor. *name*
-    and *id* default to the values of the *campaign* instance, Specialized data such as integrated
+    and *id* default to the values of the *campaign* instance. Specialized data such as integrated
     luminosities, triggers, or statistical models can be stored as auxiliary data.
 
     .. code-block:: python
@@ -148,6 +148,11 @@ class Config(UniqueObject, AuxDataMixin):
         bb.add_category("eq6j_eq4b")
         c.add_variable("jet1_px", expression="jet1_pt * cos(jet1_phi)")
         c.add_shift("pdf_up", type=Shift.SHAPE)
+        ...
+
+        # at some point you might want to create a second config
+        # with other values for that campaign, e.g. for sub-measurements
+        c2 = analysis.add_config(campaign, name="sf_meausurement", id=2)
         ...
 
     .. py:attribute:: campaign

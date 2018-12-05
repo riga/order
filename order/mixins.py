@@ -81,7 +81,7 @@ class CopyMixin(object):
 
     def copy(self, cls=None, copy_attrs=None, ref_attrs=None, skip_attrs=None, callbacks=None,
              **kwargs):
-        """
+        r"""
         Returns a copy of this instance via copying (*copy_attrs*) or re-referencing attributes
         (*ref_attrs*). When *None*, they default to the *copy_\** classmembers. *skip_attrs* defines
         attributes to skip, e.g., when *copy_attrs* is *None* and the default attributes are used.
@@ -471,7 +471,7 @@ class SelectionMixin(object):
 
 
 class LabelMixin(object):
-    """
+    r"""
     Mixin-class that provides a label, a short version of that label, and some convenience
     attributes.
 

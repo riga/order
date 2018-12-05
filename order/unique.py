@@ -530,7 +530,7 @@ def uniqueness_context(context):
 
 
 def unique_tree(**kwargs):
-    """ unique_tree(cls=None, singular=None, plural=None, parents=True, deep_chilren=False, deep_parents=False, skip=None, transfer=None)
+    r""" unique_tree(cls=None, singular=None, plural=None, parents=True, deep_chilren=False, deep_parents=False, skip=None, transfer=None)
     Decorator that adds attributes and methods to the decorated class to provide tree features,
     i.e., *parent-child* relations. Example:
 

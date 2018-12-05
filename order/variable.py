@@ -16,7 +16,7 @@ from order.util import typed, to_root_latex, make_list
 
 
 class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
-    """
+    r"""
     Class that provides simplified access to plotting variables.
 
     *expression* and *selection* can be used for projection statements. When empty, *expression*

@@ -165,7 +165,7 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
     def campaign(self, campaign):
         # campaign setter
         if campaign is not None and not isinstance(campaign, Campaign):
-            raise TypeError("invalid campaign type: %s" % (campaign,))
+            raise TypeError("invalid campaign type: {}".format(campaign))
 
         # remove this dataset from the current campaign's dataset index
         if self._campaign:
@@ -183,7 +183,7 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
         try:
             info = dict(info)
         except:
-            raise TypeError("invalid info type: %s" % (info,))
+            raise TypeError("invalid info type: {}".format(info))
 
         _info = {}
         for name, obj in info.items():
@@ -191,7 +191,7 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
             if isinstance(obj, dict):
                 obj = DatasetInfo(**obj)
             elif not isinstance(obj, DatasetInfo):
-                raise TypeError("invalid info value type: %s" % (obj,))
+                raise TypeError("invalid info value type: {}".format(obj))
             _info[str(name)] = obj
 
         return _info
@@ -288,7 +288,7 @@ class DatasetInfo(CopyMixin):
         _keys = []
         for key in make_list(keys):
             if not isinstance(key, six.string_types):
-                raise TypeError("invalid key type: %s" % (key,))
+                raise TypeError("invalid key type: {}".format(key))
             _keys.append(str(key))
 
         return _keys
@@ -299,10 +299,10 @@ class DatasetInfo(CopyMixin):
         if isinstance(gen_eff, six.integer_types):
             gen_eff = float(gen_eff)
         elif not isinstance(gen_eff, float):
-            raise TypeError("invalid gen_eff type: %s" % (gen_eff,))
+            raise TypeError("invalid gen_eff type: {}".format(gen_eff))
 
         if not (0. <= gen_eff <= 1.):
-            raise ValueError("invalid gen_eff value: %s" % (gen_eff,))
+            raise ValueError("invalid gen_eff value: {}".format(gen_eff))
 
         return gen_eff
 
@@ -312,7 +312,7 @@ class DatasetInfo(CopyMixin):
         if isinstance(n_files, float):
             n_files = int(n_files)
         elif not isinstance(n_files, six.integer_types):
-            raise TypeError("invalid n_files type: %s" % (n_files,))
+            raise TypeError("invalid n_files type: {}".format(n_files))
 
         return n_files
 
@@ -322,7 +322,7 @@ class DatasetInfo(CopyMixin):
         if isinstance(n_events, float):
             n_events = int(n_events)
         elif not isinstance(n_events, six.integer_types):
-            raise TypeError("invalid n_events type: %s" % (n_events,))
+            raise TypeError("invalid n_events type: {}".format(n_events))
 
         return n_events
 

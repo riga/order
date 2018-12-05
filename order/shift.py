@@ -148,13 +148,13 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
         elif "_" in name:
             source, direction = tuple(name.rsplit("_", 1))
             if source == cls.NOMINAL:
-                raise ValueError("pointless nominal shift name: %s" % (name,))
+                raise ValueError("pointless nominal shift name: {}".format(name))
             elif direction not in (cls.UP, cls.DOWN):
-                raise ValueError("invalid shift direction: %s" % (direction,))
+                raise ValueError("invalid shift direction: {}".format(direction))
             else:
                 return (source, direction)
         else:
-            raise ValueError("invalid shift name format: %s" % (name,))
+            raise ValueError("invalid shift name format: {}".format(name))
 
     @classmethod
     def join_name(cls, source, direction):
@@ -173,13 +173,13 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
         """
         if source == cls.NOMINAL:
             if direction != cls.NOMINAL:
-                raise ValueError("pointless nominal shift direction: %s" % (direction,))
+                raise ValueError("pointless nominal shift direction: {}".format(direction))
             else:
                 return cls.NOMINAL
         elif direction in (cls.UP, cls.DOWN):
-            return "%s_%s" % (source, direction)
+            return "{}_{}".format(source, direction)
         else:
-            raise ValueError("unknown shift direction: %s" % (direction,))
+            raise ValueError("unknown shift direction: {}".format(direction))
 
     def __init__(self, name, id="+", type=None, label=None, label_short=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
@@ -210,7 +210,7 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
     def type(self, type):
         # type parser
         if type not in (self.UNKNOWN, self.RATE, self.SHAPE):
-            raise ValueError("unknown type: %s" % (type,))
+            raise ValueError("unknown type: {}".format(type))
 
         return type
 

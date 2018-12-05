@@ -75,7 +75,7 @@ class Campaign(UniqueObject, AuxDataMixin):
     def ecm(self, ecm):
         # ecm parser
         if not isinstance(ecm, (int, float)):
-            raise TypeError("invalid ecm type: %s" % (ecm,))
+            raise TypeError("invalid ecm type: {}".format(ecm))
 
         return float(ecm)
 
@@ -83,7 +83,7 @@ class Campaign(UniqueObject, AuxDataMixin):
     def bx(self, bx):
         # bx
         if not isinstance(bx, (int, float)):
-            raise TypeError("invalid bx type: %s" % (bx,))
+            raise TypeError("invalid bx type: {}".format(bx))
 
         return float(bx)
 
@@ -172,7 +172,7 @@ class Config(UniqueObject, AuxDataMixin):
     def __init__(self, campaign, name=None, id=None, analysis=None, aux=None, context=None):
         # parse campaign
         if not isinstance(campaign, Campaign):
-            raise TypeError("invalid campaign type: %s" % (campaign,))
+            raise TypeError("invalid campaign type: {}".format(campaign))
 
         # default name and id
         if name is None:
@@ -205,7 +205,7 @@ class Config(UniqueObject, AuxDataMixin):
     def analysis(self, analysis):
         # analysis setter
         if analysis is not None and not isinstance(analysis, Analysis):
-            raise TypeError("invalid analysis type: %s" % (analysis,))
+            raise TypeError("invalid analysis type: {}".format(analysis))
 
         # remove this config from the current analysis' config index
         if self._analysis:

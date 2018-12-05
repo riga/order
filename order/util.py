@@ -127,7 +127,7 @@ def multi_match(name, patterns, mode=any, func="fnmatch", *args, **kwargs):
         _func = getattr(fnmatch, func)
         return mode(_func(name, pattern, *args, **kwargs) for pattern in patterns)
     else:
-        raise ValueError("unknown matching function: %s" % (func,))
+        raise ValueError("unknown matching function: {}".format(func))
 
 
 def flatten(struct, depth=-1):
@@ -178,7 +178,7 @@ def _parse_selection(*selection):
             if not s.strip():
                 continue
         else:
-            raise Exception("invalid selection string: %s" % (s,))
+            raise Exception("invalid selection string: {}".format(s))
         _selection.append(str(s))
     return _selection
 
@@ -211,7 +211,7 @@ def join_root_selection(*selection, **kwargs):
 
     # prepare the concatenation op
     op = kwargs.get("op", "&&")
-    op = " %s " % op.strip()
+    op = " {} ".format(op.strip())
 
     joined = op.join(_bracket(s) for s in selection)
     if kwargs.get("bracket", False):
@@ -234,7 +234,7 @@ def join_numexpr_selection(*selection, **kwargs):
 
     # prepare the concatenation op
     op = kwargs.get("op", "&")
-    op = " %s " % op.strip()
+    op = " {} ".format(op.strip())
 
     joined = op.join(_bracket(s) for s in selection)
     if kwargs.get("bracket", False):

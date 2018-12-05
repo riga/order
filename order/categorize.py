@@ -65,7 +65,7 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
     def channel(self, channel):
         # channel setter
         if channel is not None and not isinstance(channel, Channel):
-            raise TypeError("invalid channel type: %s" % (channel,))
+            raise TypeError("invalid channel type: {}".format(channel))
 
         # remove this category from the current channels' categories index
         if self._channel:
@@ -86,7 +86,7 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
         label = self.label_short if short else self.label
 
         if self.channel:
-            label = "%s, %s" % (self.channel.label, label)
+            label = "{}, {}".format(self.channel.label, label)
 
         return to_root_latex(label) if root else label
 

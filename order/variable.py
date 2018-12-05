@@ -201,7 +201,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
             return
 
         if not isinstance(expression, six.string_types):
-            raise TypeError("invalid expression type: %s" % (expression,))
+            raise TypeError("invalid expression type: {}".format(expression))
         elif not expression:
             raise ValueError("expression must not be empty")
 
@@ -212,12 +212,12 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         # binning parser
         if isinstance(binning, list):
             if len(binning) < 2:
-                raise ValueError("minimum number of bin edges is 2: %s" % (binning,))
+                raise ValueError("minimum number of bin edges is 2: {}".format(binning))
         elif isinstance(binning, tuple):
             if len(binning) != 3:
-                raise ValueError("even binning must have length 3: %s" % (binning,))
+                raise ValueError("even binning must have length 3: {}".format(binning))
         else:
-            raise TypeError("invalid binning type: %s" % (binning,))
+            raise TypeError("invalid binning type: {}".format(binning))
 
         return binning
 
@@ -229,7 +229,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     def x_title(self, x_title):
         # x_title parser
         if not isinstance(x_title, six.string_types):
-            raise TypeError("invalid x_title type: %s" % (x_title,))
+            raise TypeError("invalid x_title type: {}".format(x_title))
 
         return str(x_title)
 
@@ -251,7 +251,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         elif isinstance(x_title_short, six.string_types):
             self._x_title_short = str(x_title_short)
         else:
-            raise TypeError("invalid x_title_short type: %s" % (x_title_short,))
+            raise TypeError("invalid x_title_short type: {}".format(x_title_short))
 
     @property
     def x_title_short_root(self):
@@ -262,7 +262,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     def y_title(self, y_title):
         # y_title parser
         if not isinstance(y_title, six.string_types):
-            raise TypeError("invalid y_title type: %s" % (y_title,))
+            raise TypeError("invalid y_title type: {}".format(y_title))
 
         return str(y_title)
 
@@ -284,7 +284,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         elif isinstance(y_title_short, six.string_types):
             self._y_title_short = str(y_title_short)
         else:
-            raise TypeError("invalid y_title_short type: %s" % (y_title_short,))
+            raise TypeError("invalid y_title_short type: {}".format(y_title_short))
 
     @property
     def y_title_short_root(self):
@@ -295,7 +295,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     def log_x(self, log_x):
         # log_x parser
         if not isinstance(log_x, bool):
-            raise TypeError("invalid log_x type: %s" % (log_x,))
+            raise TypeError("invalid log_x type: {}".format(log_x))
 
         return log_x
 
@@ -303,7 +303,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     def log_y(self, log_y):
         # log_y parser
         if not isinstance(log_y, bool):
-            raise TypeError("invalid log_y type: %s" % (log_y,))
+            raise TypeError("invalid log_y type: {}".format(log_y))
 
         return log_y
 
@@ -314,7 +314,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         elif isinstance(unit, six.string_types):
             return str(unit)
         else:
-            raise TypeError("invalid unit type: %s" % (unit,))
+            raise TypeError("invalid unit type: {}".format(unit))
 
     @property
     def n_bins(self):

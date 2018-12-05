@@ -89,18 +89,18 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
         try:
             xsecs = dict(xsecs)
         except:
-            raise TypeError("invalid xsecs type: %s" % xsecs)
+            raise TypeError("invalid xsecs type: {}".format(xsecs))
 
         # parse particular values
         _xsecs = {}
         for ecm, xsec in xsecs.items():
             if not isinstance(ecm, (int, float)):
-                raise TypeError("invalid xsec energy type: %s" % ecm)
+                raise TypeError("invalid xsec energy type: {}".format(ecm))
             elif not isinstance(xsec, Number):
                 try:
                     xsec = Number(xsec)
                 except:
-                    raise TypeError("invalid xsec value type: %s" % xsec)
+                    raise TypeError("invalid xsec value type: {}".format(xsec))
             _xsecs[float(ecm)] = xsec
 
         return _xsecs

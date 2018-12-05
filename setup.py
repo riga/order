@@ -21,7 +21,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "Intended Audience :: Information Technology"
+    "Intended Audience :: Information Technology",
 ]
 
 # read the readme file

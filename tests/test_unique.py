@@ -185,11 +185,11 @@ class UniqueObjectIndexTest(unittest.TestCase):
 
         self.assertIsNone(idx.remove("baz", silent=True))
 
-    def test_flush(self):
+    def test_clear(self):
         C, idx = self.make_index()
         self.assertEqual(len(idx), 2)
 
-        idx.flush()
+        idx.clear()
         self.assertEqual(len(idx), 0)
         self.assertFalse(idx)
 

@@ -495,9 +495,9 @@ class UniqueObjectIndex(object):
         else:
             raise ValueError("object not known to index: {}".format(obj))
 
-    def flush(self):
+    def clear(self):
         """
-        Flushes the index.
+        Clears the index by removing all elements.
         """
         self._name_index.clear()
         self._id_index.clear()

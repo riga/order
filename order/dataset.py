@@ -19,7 +19,7 @@ from order.util import typed, make_list
 
 @unique_tree(cls=Process, plural="processes", parents=False, deep_children=True)
 class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
-    """ __init__(name, id, campaign=None, info=None, label=None, label_short=None, is_data=False, context=None, **kwargs)
+    """ __init__(name, id, campaign=None, info=None, processes=None, label=None, label_short=None, is_data=False, context=None, **kwargs)
     Dataset definition providing two kinds of information:
 
     1. (systematic) shift-dependent, and
@@ -28,14 +28,14 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
     Independent is e.g. whether or not it contains real data, whereas shift-dependent information is
     e.g. the number of events in the *nominal* or a *shifted* variation. Latter information is
     contained in :py:class:`DatasetInfo` objects that are stored in *this* class and mapped to
-    string that fulfill the format rules of :py:meth:`Shift.split_name`. Those info objects can be
+    string that fulfill the format rules of :py:meth:`Shift.split_name`. These info objects can be
     accessed via :py:meth:`get_info` or via items (*__getitem__*) However, for convenience, some of
     the properties of the *nominal* :py:class:`DatasetInfo` are accessible on this class via
     forwarding.
 
     A dataset is always measured in (real data) / created for (MC) a dedicated *campaign*, therefore
-    it *belongs* to a :py:class:`Campaign` object. In addition, physics processes can be *linked* to
-    a dataset, therefore it *has* :py:class:`Process` objects. When copied via :py:meth:`copy`
+    it *belongs* to a :py:class:`Campaign` object. In addition, physics *processes* can be *linked*
+    to a dataset, therefore it *has* :py:class:`Process` objects. When copied via :py:meth:`copy`
     the *campaign* reference is kept while the process relations are lost.
 
     When *info* is does not contain a ``"nominal"`` :py:class:`DatasetInfo` object, all *kwargs* are
@@ -131,8 +131,8 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
     copy_ref_attrs = ["campaign"]
     copy_private_attrs = ["label", "label_short"]
 
-    def __init__(self, name, id, campaign=None, info=None, label=None, label_short=None,
-                 is_data=False, context=None, **kwargs):
+    def __init__(self, name, id, campaign=None, info=None, processes=None, label=None,
+            label_short=None, is_data=False, context=None, **kwargs):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
         DataSourceMixin.__init__(self, is_data=is_data)
@@ -149,6 +149,10 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
             self.info = info
         if kwargs and Shift.NOMINAL not in self.info:
             self.info = {Shift.NOMINAL: kwargs}
+
+        # set initial processes
+        if processes is not None:
+            self.processes.add_many(processes)
 
     def __getitem__(self, name):
         """

@@ -16,9 +16,7 @@ class AnalysisTest(unittest.TestCase):
             ca = Campaign("2017A", 1)
             cf = Config(ca)
             p = cf.add_process("ttH_bb", 1)
-            an = Analysis("ttH_cbb", 1)
-
-        an.add_config(cf)
+            an = Analysis("ttH_cbb", 1, configs=[cf])
 
         self.assertEqual(an.get_config("2017A"), cf)
         self.assertEqual(len(an.get_processes(1)), 1)

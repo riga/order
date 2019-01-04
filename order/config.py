@@ -121,15 +121,16 @@ class Campaign(UniqueObject, AuxDataMixin):
 @unique_tree(cls=Variable, parents=False)
 @unique_tree(cls=Shift, parents=False)
 class Config(UniqueObject, AuxDataMixin):
-    """ __init__(campaign, name=None, id=None, analysis=None, aux=None, context=None)
+    """ __init__(campaign, name=None, id=None, analysis=None, datasets=None, processes=None, channels=None, categories=None, variables=None, shifts=None, aux=None, context=None)
     Class holding analysis information that is related to a :py:class:`Campaign` instance. Most of
     the analysis configuration happens here.
 
     It stores analysis *datasets*, *processes*, *channels*, *categories*, *variables*, and *shifts*
-    as well as references to the :py:class:`Analysis` and :py:class:`Campaign` instances it belongs
-    to. *name*, *id* and *context* are forwarded to the :py:class:`UniqueObject` constructor. *name*
-    and *id* default to the values of the *campaign* instance. Specialized data such as integrated
-    luminosities, triggers, or statistical models can be stored as auxiliary data.
+    which are initialized from constructor arguments, as well as references to the
+    :py:class:`Analysis` and :py:class:`Campaign` instances it belongs to. *name*, *id* and
+    *context* are forwarded to the :py:class:`UniqueObject` constructor. *name* and *id* default to
+    the values of the *campaign* instance. Specialized data such as integrated luminosities,
+    triggers, or statistical models can be stored as auxiliary data.
 
     .. code-block:: python
 
@@ -169,7 +170,8 @@ class Config(UniqueObject, AuxDataMixin):
        to the index of configs of the analysis object.
     """
 
-    def __init__(self, campaign, name=None, id=None, analysis=None, aux=None, context=None):
+    def __init__(self, campaign, name=None, id=None, analysis=None, datasets=None, processes=None,
+            channels=None, categories=None, variables=None, shifts=None, aux=None, context=None):
         # parse campaign
         if not isinstance(campaign, Campaign):
             raise TypeError("invalid campaign type: {}".format(campaign))
@@ -190,6 +192,24 @@ class Config(UniqueObject, AuxDataMixin):
         # set initial values
         if analysis is not None:
             self.analysis = analysis
+
+        if datasets is not None:
+            self.datasets = datasets
+
+        if processes is not None:
+            self.processes = processes
+
+        if channels is not None:
+            self.channels = channels
+
+        if categories is not None:
+            self.categories = categories
+
+        if variables is not None:
+            self.variables = variables
+
+        if shifts is not None:
+            self.shifts = shifts
 
     @property
     def campaign(self):

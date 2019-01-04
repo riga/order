@@ -12,11 +12,12 @@ from order import Channel, Category, uniqueness_context
 class ChannelTest(unittest.TestCase):
 
     def test_constructor(self):
-        c = Channel("test", 8, label="TEST")
+        c = Channel("test", 8, categories=["test_test"], label="TEST")
 
         self.assertEqual(Channel.default_uniqueness_context, "channel")
         self.assertEqual(c.name, "test")
         self.assertEqual(c.id, 8)
+        self.assertEqual(len(c.categories), 1)
         self.assertEqual(c.label, "TEST")
 
     def test_nesting(self):
@@ -62,10 +63,12 @@ class ChannelTest(unittest.TestCase):
 class CategoryTest(unittest.TestCase):
 
     def test_constructor(self):
-        c = Category("eq3j", label=r"$\eq$ 3 jets")
+        c = Category("eq3j", categories=["eq3j_2b"], label=r"$\eq$ 3 jets")
 
         self.assertEqual(c.name, "eq3j")
         self.assertEqual(c.label, r"$\eq$ 3 jets")
+
+        self.assertEqual(len(c.categories), 1)
 
         c.label = None
         self.assertEqual(c.label_short, c.name)

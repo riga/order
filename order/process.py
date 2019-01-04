@@ -17,7 +17,7 @@ from order.util import typed
 
 @unique_tree(plural="processes", deep_children=True, deep_parents=True)
 class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixin):
-    """ __init__(name, id, xsecs=None, color=None, label=None, label_short=None, is_data=False, aux=None, context=None)
+    """ __init__(name, id, xsecs=None, processes=None, color=None, label=None, label_short=None, is_data=False, aux=None, context=None)
     Definition of a phyiscs process.
 
     *xsecs* should be a mapping of center-of-mass energy to cross section (a *scinum.Number*
@@ -26,8 +26,8 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
     :py:class:`AuxDataMixin`, and *name*, *id* and *context* to the :py:class:`UniqueObject`
     constructor.
 
-    A process can have parent-child relations to other processes. When copied via :py:meth:`copy`
-    these relations are lost.
+    A process can have parent-child relations to other processes. Initial child processes are set
+    from *processes*. When copied via :py:meth:`copy` these relations are lost.
 
     .. code-block:: python
 
@@ -67,8 +67,8 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
     copy_attrs = ["xsecs", "color", "is_data", "aux"]
     copy_private_attrs = ["label", "label_short"]
 
-    def __init__(self, name, id, xsecs=None, color=None, label=None, label_short=None,
-                 is_data=False, aux=None, context=None):
+    def __init__(self, name, id, xsecs=None, processes=None, color=None, label=None,
+            label_short=None, is_data=False, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
@@ -82,6 +82,10 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
         # set initial values
         if xsecs is not None:
             self.xsecs = xsecs
+
+        # set initial child processes
+        if processes is not None:
+            self.processes.add_many(processes)
 
     @typed
     def xsecs(self, xsecs):

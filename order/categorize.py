@@ -15,7 +15,7 @@ from order.util import to_root_latex
 
 @unique_tree(plural="categories", deep_children=True, deep_parents=True)
 class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin):
-    """ __init__(name, id="+", channel=None, label=None, label_short=None, context=None, selection=None, selection_mode=None, aux=None, tags=None)
+    """ __init__(name, id="+", channel=None, categories=None, label=None, label_short=None, context=None, selection=None, selection_mode=None, aux=None, tags=None)
     Class that describes an analysis category. This is not to be confused with an analysis
     :py:class:`Channel`. While the definition of a channel is somewhat fixed by the final state of
     an event, a category describes an arbitrary sub phase-space. Therefore, a category can be
@@ -27,7 +27,7 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
     :py:class:`UniqueObject` constructor.
 
     A category can also have child and parent categories. When copied via :py:meth:`copy` these
-    relations are lost.
+    relations are lost. Initial child categories as set from *categories*.
 
     .. py:attribute:: channel
        type: Channel, None
@@ -40,8 +40,8 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
     copy_ref_attrs = ["channel"]
     copy_private_attrs = ["label", "label_short"]
 
-    def __init__(self, name, id="+", channel=None, label=None, label_short=None, selection=None,
-                 selection_mode=None, tags=None, aux=None, context=None):
+    def __init__(self, name, id="+", channel=None, categories=None, label=None, label_short=None,
+            selection=None, selection_mode=None, tags=None, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
@@ -55,6 +55,10 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
         # set initial values
         if channel is not None:
             self.channel = channel
+
+        # set initial child categories
+        if categories is not None:
+            self.categories.add_many(categories)
 
     @property
     def channel(self):
@@ -94,7 +98,7 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
 @unique_tree(parents=1, deep_children=True, deep_parents=True)
 @unique_tree(cls=Category, plural="categories", parents=False, deep_children=True)
 class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
-    """ __init__(name, id, label=None, label_short=None, aux=None, context=None)
+    """ __init__(name, id, categories=None, label=None, label_short=None, aux=None, context=None)
     An object that descibes an analysis channel, often defined by a particular decay *channel* that
     results in distinct final state objects.
 
@@ -103,7 +107,8 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
     constructor.
 
     A channel can have parent-child relations to other channels with one parent per child, and child
-    relations with categories. When copied via :py:meth:`copy` these relations are lost.
+    relations to categories, initialized from *categories*. When copied via :py:meth:`copy` these
+    relations are lost.
 
     .. code-block:: python
 
@@ -126,11 +131,16 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
     copy_attrs = ["aux"]
     copy_private_attrs = ["label", "label_short"]
 
-    def __init__(self, name, id, label=None, label_short=None, aux=None, context=None):
+    def __init__(self, name, id, categories=None, label=None, label_short=None, aux=None,
+            context=None):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
         LabelMixin.__init__(self, label=label, label_short=label_short)
+
+        # set initial categories
+        if categories is not None:
+            self.categories.add_many(categories)
 
     def add_category(self, *args, **kwargs):
         """

@@ -1,6 +1,6 @@
 <img src="https://raw.githubusercontent.com/riga/order/master/logo.png" alt="order logo" width="250"/>
 
-[![Build Status](https://travis-ci.org/riga/order.svg?branch=master)](https://travis-ci.org/riga/order) [![Documentation Status](https://readthedocs.org/projects/python-order/badge/?version=latest)](http://python-order.readthedocs.org/en/latest/?badge=latest) [![Package Status](https://badge.fury.io/py/order.svg)](https://badge.fury.io/py/order)
+[![Build Status](https://travis-ci.org/riga/order.svg?branch=master)](https://travis-ci.org/riga/order) [![Documentation Status](https://readthedocs.org/projects/python-order/badge/?version=latest)](http://python-order.readthedocs.org/en/latest/?badge=latest) [![Package Status](https://badge.fury.io/py/order.svg)](https://badge.fury.io/py/order) [![License](https://img.shields.io/github/license/riga/order.svg)](https://github.com/riga/order/blob/master/LICENSE)
 
 
 If you're designing a high-energy physics analysis (e.g. with data recorded with an [LHC](https://home.cern/topics/large-hadron-collider) experiment at [CERN](http://home.cern)), manual bookkeeping of external data can get complicated quite fast. *order* provides a Python class collection that helps you structuring

@@ -3,17 +3,16 @@
 
 import sys
 import os
-import shlex
-
 
 sys.path.insert(0, os.path.abspath(".."))
 import order as od
 
 
-project = "order"
+project = od.__name__
 author = od.__author__
 copyright = od.__copyright__
-version = od.__version__
+copyright = copyright[10:] if copyright.startswith("Copyright ") else copyright
+version = od.__version__[:od.__version__.index(".", 2)]
 release = od.__version__
 language = "en"
 

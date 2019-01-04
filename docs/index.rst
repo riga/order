@@ -10,11 +10,14 @@ order
 .. automodule:: order
 
 
-Simple installation via `pip <https://pypi.python.org/pypi/order>`_:
+Simple installation via `pip <https://pypi.python.org/pypi/order>`__:
 
 .. code-block:: bash
 
    pip install order
+
+
+See the `intro.ipynb <https://github.com/riga/order/blob/master/examples/intro.ipynb>`__ notebook for an introduction to the most important classes and an example setup of a small analysis.
 
 
 Main classes

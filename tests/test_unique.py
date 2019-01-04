@@ -154,6 +154,22 @@ class UniqueObjectIndexTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             idx.add("baz", 2)
 
+    def test_add_many(self):
+        C, idx = self.make_index()
+        self.assertEqual(len(idx), 2)
+
+        objs = idx.add_many([C("baz", 3), C("test", 4)])
+        self.assertEqual(len(idx), 4)
+
+        self.assertEqual(objs[0].name, "baz")
+        self.assertEqual(objs[1].id, 4)
+
+        objs = idx.add_many([dict(name="hep", id=5)])
+        self.assertEqual(len(idx), 5)
+
+        objs = idx.add_many([("ex", 6)])
+        self.assertEqual(len(idx), 6)
+
     def test_get(self):
         C, idx = self.make_index()
 

@@ -440,6 +440,25 @@ class UniqueObjectIndex(object):
 
         return obj
 
+    def add_many(self, objs):
+        """
+        Adds multiple new objects to the index. All elements of the sequence *objs* are forwarded to
+        :py:meth:`add` and the list of return values is returned. When an object is a dictionary or
+        a tuple, it is expanded for the invocation of :py:meth:`add`.
+        """
+        results = []
+
+        for obj in make_list(objs):
+            if isinstance(obj, dict):
+                obj = self.add(**obj)
+            elif isinstance(obj, tuple):
+                obj = self.add(*obj)
+            else:
+                obj = self.add(obj)
+            results.append(obj)
+
+        return results
+
     def get(self, obj, default=_no_default):
         """ get(obj, [default])
         Returns an object that is contained in the index. *obj* might be a *name*, *id*, or an

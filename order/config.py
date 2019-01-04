@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 
 """
 Definition of a data-taking campaign and the connection of its information to an analysis within a

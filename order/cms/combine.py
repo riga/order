@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 
 """
 Datacard and model definition for statistical inference with the CMS combine tool.

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 
 """
 Classes and helpers to describe and work with systematic shifts.

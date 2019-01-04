@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 
 
 import sys
@@ -29,15 +29,13 @@ html_theme = "alabaster"
 html_sidebars = {"**": [
     "about.html",
     "localtoc.html",
-    "searchbox.html"]
-}
+    "searchbox.html",
+]}
 html_theme_options = {
     "github_user": "riga",
     "github_repo": "order",
     "travis_button": True,
-    "fixed_sidebar": True
+    "fixed_sidebar": True,
 }
 
-extensions = [
-    "sphinx.ext.autodoc"
-]
+extensions = ["sphinx.ext.autodoc"]

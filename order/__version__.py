@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 
 """
 Pythonic class collection that helps you structure external data from LHC / HEP experiments.

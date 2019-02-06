@@ -36,9 +36,10 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
     """
 
     # attributes for copying
-    copy_attrs = ["selection", "selection_mode", "tags", "aux"]
+    copy_builtin = False
+    copy_attrs = ["categories", ("_label", "label"), ("_label_short", "label_short"), "selection",
+                  "selection_mode", "tags", "aux", "context"]
     copy_ref_attrs = ["channel"]
-    copy_private_attrs = ["label", "label_short"]
 
     def __init__(self, name, id="+", channel=None, categories=None, label=None, label_short=None,
             selection=None, selection_mode=None, tags=None, aux=None, context=None):
@@ -128,8 +129,9 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
     """
 
     # attributes for copying
-    copy_attrs = ["aux"]
-    copy_private_attrs = ["label", "label_short"]
+    copy_builtin = False
+    copy_attrs = ["categories", ("_label", "label"), ("_label_short", "label_short"), "aux",
+                  "context"]
 
     def __init__(self, name, id, categories=None, label=None, label_short=None, aux=None,
             context=None):

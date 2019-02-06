@@ -21,7 +21,7 @@ from order.__version__ import (
 from order.unique import UniqueObject, UniqueObjectIndex, uniqueness_context
 from order.mixins import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, \
     LabelMixin, ColorMixin
-from order.categorize import Channel, Category
+from order.category import Channel, Category
 from order.variable import Variable
 from order.shift import Shift
 from order.process import Process

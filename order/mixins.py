@@ -65,22 +65,17 @@ class CopyMixin(object):
        classmember
 
        The default attributes to skip from copying when *skip_attrs* is *None* in the copy method.
-
-    .. :py:attribute:: copy_callbacks
-       type: list
-       classmember
-
-       The default callbacks to call when *callbacks* is *None* in the copy method.
     """
 
+    copy_builtin = True
     copy_attrs = []
+    copy_shallow_attrs = []
     copy_ref_attrs = []
-    copy_private_attrs = []
     copy_skip_attrs = []
-    copy_callbacks = []
+    copy_as_setters = []
 
-    def copy(self, cls=None, copy_attrs=None, ref_attrs=None, skip_attrs=None, callbacks=None,
-             **kwargs):
+    def copy(self, cls=None, attrs=None, shallow_attrs=None, ref_attrs=None, skip_attrs=None,
+            as_setters=None, force_deep=False, force_shallow=False, **kwargs):
         r"""
         Returns a copy of this instance via copying (*copy_attrs*) or re-referencing attributes
         (*ref_attrs*). When *None*, they default to the *copy_\** classmembers. *skip_attrs* defines
@@ -93,48 +88,80 @@ class CopyMixin(object):
         # default args
         if cls is None:
             cls = self.__class__
-        if copy_attrs is None:
-            copy_attrs = self.copy_attrs
+        if attrs is None:
+            attrs = self.copy_attrs
+        if shallow_attrs is None:
+            shallow_attrs = self.copy_shallow_attrs
         if ref_attrs is None:
             ref_attrs = self.copy_ref_attrs
         if skip_attrs is None:
             skip_attrs = self.copy_skip_attrs
-        if callbacks is None:
-            callbacks = self.copy_callbacks
+        if as_setters is None:
+            as_setters = self.copy_as_setters
+
+        # handle lists of (default) deep and shallow attributes when a mode is forced
+        if force_deep:
+            attrs += shallow_attrs
+            shallow_attrs = []
+        elif force_shallow:
+            shallow_attrs += attrs
+            attrs = []
 
         # copy helper
-        def do_copy(src_attr, dst_attr, ref):
-            if dst_attr not in kwargs and dst_attr not in skip_attrs:
-                obj = getattr(self, src_attr)
+        def do_copy(src_dst, ref, shallow=False):
+            if isinstance(src_dst, (tuple, list)) and len(src_dst) == 2:
+                src, dst = src_dst
+            else:
+                src, dst = src_dst, src_dst
+
+            if dst not in kwargs and dst not in skip_attrs:
+                obj = getattr(self, src)
                 if ref:
-                    kwargs[dst_attr] = obj
-                elif isinstance(obj, CopyMixin):
-                    kwargs[dst_attr] = obj.copy()
+                    kwargs[dst] = obj
+                elif shallow:
+                    kwargs[dst] = copy.copy(obj)
                 else:
-                    kwargs[dst_attr] = copy.deepcopy(obj)
+                    kwargs[dst] = copy.deepcopy(obj)
 
         # copy attributes
-        for attr in copy_attrs:
-            do_copy(attr, attr, False)
+        for attr in attrs:
+            do_copy(attr, ref=False)
+        for attr in shallow_attrs:
+            do_copy(attr, ref=False, shallow=True)
         for attr in ref_attrs:
-            do_copy(attr, attr, True)
-        for attr in self.copy_private_attrs:
-            do_copy("_" + attr, attr, False)
+            do_copy(attr, ref=True)
 
-        # invoke callbacks
-        for callback in callbacks:
-            if callable(callback):
-                callback(self, kwargs)
-            elif isinstance(callback, six.string_types):
-                getattr(self, str(callback))(self, kwargs)
-            else:
-                raise TypeError("invalid callback type: %s" % (callback,))
-
-        # manually remove attributes to skip, probably passed via kwargs or added via callbacks
+        # manually remove attributes to skip
         for attr in skip_attrs:
             kwargs.pop(attr, None)
 
-        return cls(**kwargs)
+        # determine which attributes are not passed to the constructor, but set with plain setters
+        set_attrs = collections.OrderedDict()
+        for attr in as_setters:
+            # be graceful here
+            if attr in kwargs:
+                set_attrs[attr] = kwargs.pop(attr)
+
+        # create the instance
+        inst = cls(**kwargs)
+
+        # invoke setters
+        for attr, obj in six.iteritems(set_attrs):
+            setattr(inst, attr, obj)
+
+        return inst
+
+    def __copy__(self):
+        if self.copy_builtin:
+            return self.copy()
+        else:
+            return self
+
+    def __deepcopy__(self, memo):
+        if self.copy_builtin:
+            return self.copy(force_deep=True)
+        else:
+            return self
 
 
 class AuxDataMixin(object):

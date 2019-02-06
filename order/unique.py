@@ -13,6 +13,7 @@ import contextlib
 
 import six
 
+from order.mixins import CopyMixin
 from order.util import typed, make_list
 
 
@@ -258,6 +259,10 @@ class UniqueObject(object):
 
         return uniqueness_context
 
+    @property
+    def context(self):
+        return self.uniqueness_context
+
     @typed(setter=False)
     def name(self, name):
         # name parser
@@ -283,7 +288,7 @@ class UniqueObject(object):
         self._instances[self.uniqueness_context].remove(self)
 
 
-class UniqueObjectIndex(object):
+class UniqueObjectIndex(CopyMixin):
     """ __init__(cls=UniqueObject)
     Index of :py:class:`UniqueObject` instances for faster lookup by either name or id.
 
@@ -326,8 +331,12 @@ class UniqueObjectIndex(object):
        Class of objects hold by this index.
     """
 
+    copy_attrs = ["_name_index", "_id_index"]
+    copy_ref_attrs = ["cls"]
+    copy_as_setters = ["_name_index", "_id_index"]
+
     def __init__(self, cls=UniqueObject):
-        super(UniqueObjectIndex, self).__init__()
+        CopyMixin.__init__(self)
 
         # set the cls using the typed parser
         self._cls = None

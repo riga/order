@@ -126,8 +126,8 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
     SHAPE = "shape"
 
     # attributes for copying
-    copy_attrs = ["type"]
-    copy_private_attrs = ["label", "label_short"]
+    copy_builtin = False
+    copy_attrs = ["type", ("_label", "label"), ("_label_short", "label_short"), "context"]
 
     @classmethod
     def split_name(cls, name):

@@ -10,11 +10,11 @@ __all__ = ["Campaign", "Config"]
 
 
 from order.unique import UniqueObject, unique_tree
-from order.mixins import AuxDataMixin
+from order.mixins import CopyMixin, AuxDataMixin
 from order.shift import Shift
 from order.dataset import Dataset
 from order.process import Process
-from order.categorize import Channel, Category
+from order.category import Channel, Category
 from order.variable import Variable
 from order.util import typed
 
@@ -81,7 +81,7 @@ class Campaign(UniqueObject, AuxDataMixin):
 
     @typed
     def bx(self, bx):
-        # bx
+        # bx parser
         if not isinstance(bx, (int, float)):
             raise TypeError("invalid bx type: {}".format(bx))
 
@@ -120,7 +120,7 @@ class Campaign(UniqueObject, AuxDataMixin):
 @unique_tree(cls=Category, plural="categories", parents=False, deep_children=True)
 @unique_tree(cls=Variable, parents=False)
 @unique_tree(cls=Shift, parents=False)
-class Config(UniqueObject, AuxDataMixin):
+class Config(UniqueObject, CopyMixin, AuxDataMixin):
     """ __init__(campaign, name=None, id=None, analysis=None, datasets=None, processes=None, channels=None, categories=None, variables=None, shifts=None, aux=None, context=None)
     Class holding analysis information that is related to a :py:class:`Campaign` instance. Most of
     the analysis configuration happens here.
@@ -170,24 +170,32 @@ class Config(UniqueObject, AuxDataMixin):
        to the index of configs of the analysis object.
     """
 
-    def __init__(self, campaign, name=None, id=None, analysis=None, datasets=None, processes=None,
-            channels=None, categories=None, variables=None, shifts=None, aux=None, context=None):
-        # parse campaign
-        if not isinstance(campaign, Campaign):
-            raise TypeError("invalid campaign type: {}".format(campaign))
+    copy_builtin = False
+    copy_attrs = ["datasets", "processes", "channels", "categories", "variables", "shifts", "aux",
+                  "context"]
+    copy_ref_attrs = ["campaign", "analysis"]
 
-        # default name and id
+    def __init__(self, campaign=None, name=None, id=None, analysis=None, datasets=None,
+            processes=None, channels=None, categories=None, variables=None, shifts=None, aux=None,
+            context=None):
+        # instance members
+        self._campaign = None
+        self._analysis = None
+
+        # if name or id are None, campaign must be set
+        # use the campaign setter for type validation first
+        self.campaign = campaign
         if name is None:
-            name = campaign.name
+            if self.campaign is None:
+                raise ValueError("a name must be set when campaign is missing")
+            name = self.campaign.name
         if id is None:
-            id = campaign.id
+            if self.campaign is None:
+                raise ValueError("an id must be set when campaign is missing")
+            id = self.campaign.id
 
         UniqueObject.__init__(self, name=name, id=id, context=context)
         AuxDataMixin.__init__(self, aux=aux)
-
-        # instance members
-        self._campaign = campaign
-        self._analysis = None
 
         # set initial values
         if analysis is not None:
@@ -211,10 +219,13 @@ class Config(UniqueObject, AuxDataMixin):
         if shifts is not None:
             self.shifts = shifts
 
-    @property
-    def campaign(self):
-        # campaign getter
-        return self._campaign
+    @typed
+    def campaign(self, campaign):
+        # campaign parser
+        if not isinstance(campaign, Campaign) and campaign is not None:
+            raise TypeError("invalid campaign type: {}".format(campaign))
+
+        return campaign
 
     @property
     def analysis(self):

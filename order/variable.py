@@ -150,8 +150,10 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     """
 
     # attributes for copying
-    copy_attrs = ["expression", "binning", "x_title", "x_title_short", "y_title", "y_title_short",
-                  "log_x", "log_y", "unit", "selection", "selection_mode", "tags", "aux"]
+    copy_builtin = False
+    copy_attrs = ["expression", "binning", "x_title", ("_x_title_short", "x_title_short"),
+                  "y_title", ("_y_title_short", "y_title_short"),
+                  "log_x", "log_y", "unit", "aux", "tags", "selection", "selection_mode", "context"]
 
     def __init__(self, name, id="+", expression=None, binning=(1, 0., 1.), x_title="",
             x_title_short=None, y_title="Entries", y_title_short=None, log_x=False, log_y=False,

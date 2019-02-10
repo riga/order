@@ -10,6 +10,7 @@ __all__ = ["UniqueObject", "UniqueObjectIndex", "uniqueness_context", "unique_tr
 
 import collections
 import contextlib
+import warnings
 
 import six
 
@@ -449,7 +450,7 @@ class UniqueObjectIndex(CopyMixin):
 
         return obj
 
-    def add_many(self, objs):
+    def extend(self, objs):
         """
         Adds multiple new objects to the index. All elements of the sequence *objs* are forwarded to
         :py:meth:`add` and the list of return values is returned. When an object is a dictionary or
@@ -457,7 +458,8 @@ class UniqueObjectIndex(CopyMixin):
         """
         results = []
 
-        for obj in make_list(objs):
+        objs = objs.values() if isinstance(objs, UniqueObjectIndex) else make_list(objs)
+        for obj in objs:
             if isinstance(obj, dict):
                 obj = self.add(**obj)
             elif isinstance(obj, tuple):
@@ -467,6 +469,14 @@ class UniqueObjectIndex(CopyMixin):
             results.append(obj)
 
         return results
+
+    def add_many(self, objs):
+        """
+        This method is deprecated. :py:meth:`extend` is called internally.
+        """
+        warnings.warn("'{0}.add_many' is deprecated, use '{0}.extend' instead".format(
+            self.__class__.__name__), DeprecationWarning)
+        return self.extend(objs)
 
     def get(self, obj, default=_no_default):
         """ get(obj, [default])

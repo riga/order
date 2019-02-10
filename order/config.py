@@ -57,7 +57,7 @@ class Campaign(UniqueObject, AuxDataMixin):
        The bunch crossing in arbitrary units.
     """
 
-    def __init__(self, name, id, ecm=None, bx=None, aux=None, context=None):
+    def __init__(self, name, id, ecm=None, bx=None, datasets=None, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
         AuxDataMixin.__init__(self, aux=aux)
 
@@ -70,6 +70,9 @@ class Campaign(UniqueObject, AuxDataMixin):
             self.ecm = ecm
         if bx is not None:
             self.bx = bx
+
+        if datasets is not None:
+            self.datasets.extend(datasets)
 
     @typed
     def ecm(self, ecm):
@@ -202,22 +205,22 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin):
             self.analysis = analysis
 
         if datasets is not None:
-            self.datasets = datasets
+            self.datasets.extend(datasets)
 
         if processes is not None:
-            self.processes = processes
+            self.processes.extend(processes)
 
         if channels is not None:
-            self.channels = channels
+            self.channels.extend(channels)
 
         if categories is not None:
-            self.categories = categories
+            self.categories.extend(categories)
 
         if variables is not None:
-            self.variables = variables
+            self.variables.extend(variables)
 
         if shifts is not None:
-            self.shifts = shifts
+            self.shifts.extend(shifts)
 
     @typed
     def campaign(self, campaign):

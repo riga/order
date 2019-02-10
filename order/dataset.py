@@ -154,7 +154,7 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
 
         # set initial processes
         if processes is not None:
-            self.processes.add_many(processes)
+            self.processes.extend(processes)
 
     def __getitem__(self, name):
         """

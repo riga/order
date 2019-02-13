@@ -626,7 +626,20 @@ def unique_tree(**kwargs):
         deep_children = kwargs.get("deep_children", False)
         deep_parents = kwargs.get("deep_parents", False)
         skip = make_list(kwargs.get("skip", None) or [])
-        transfer = make_list(kwargs.get("transfer", None) or [])
+
+        # prepare dict (dst -> src) of attributes to transfer for objects created in "add()" methods
+        transfer = collections.OrderedDict()
+        _transfer = kwargs.get("transfer", None) or []
+        if isinstance(_transfer, dict):
+            _transfer = _transfer.items()
+        for attr in _transfer:
+            # attr can either be a string denoting both dst and src attribute
+            # or a sequence of two strings in case dst and src are different
+            if isinstance(attr, (tuple, list)) and len(attr) == 2:
+                dst, src = attr
+            else:
+                dst, src = attr, attr
+            transfer[dst] = src
 
         # decorator for registering new instance methods with proper name and doc string
         def patch(name=None, **kwargs):
@@ -645,22 +658,52 @@ def unique_tree(**kwargs):
                 return f
             return decorator
 
-        # attribute transfer helper
-        def do_transfer(inst, kwargs):
-            for attr in transfer:
-                if attr not in kwargs:
-                    kwargs[attr] = getattr(inst, attr)
-
         # patch the init method
         orig_init = unique_cls.__init__
         def __init__(self, *args, **kwargs):
             # register the child and parent indexes
-            setattr(self, "_" + plural, UniqueObjectIndex(cls=cls))
             if parents:
                 setattr(self, "_parent_" + plural, UniqueObjectIndex(cls=cls))
+            setattr(self, "_" + plural, UniqueObjectIndex(cls=cls))
+
+            # store attributes to transfer in "add()" methods
+            _transfer = collections.OrderedDict(transfer)
+            setattr(self, "_{}_transfer_attrs".format(singular), _transfer)
+
+            # store the set_<singular>_context kwargs
+            ctx = kwargs.pop("set_{}_context".format(singular), None)
+            setattr(self, "_set_{}_context".format(singular), ctx)
+
+            # check if the instance name should be used as the uniqueness context
+            # in unique objects that are created in "add()" methods
+            if ctx:
+                if isinstance(ctx, bool):
+                    _transfer["context"] = "name"
+                else:
+                    _transfer["context"] = "_set_{}_context".format(singular)
+
             orig_init(self, *args, **kwargs)
         unique_cls.__init__ = __init__
 
+        # method to extend kwargs by transfer attributes
+        def _extend_transfer_attrs(self, kwargs):
+            for dst, src in six.iteritems(getattr(self, "_{}_transfer_attrs".format(singular))):
+                # add the attribute to kwargs if it is not set yet
+                if src and dst not in kwargs:
+                    kwargs[dst] = getattr(self, src)
+            return kwargs
+
+        _extend_transfer_attrs.__name__ = "_extend_{}_transfer_attrs".format(singular)
+        setattr(unique_cls, _extend_transfer_attrs.__name__, _extend_transfer_attrs)
+
+        # if the class inherits from the CopyMixin, ammend attributes to copy
+        if issubclass(unique_cls, CopyMixin):
+            unique_cls.copy_attrs.append("_{}_transfer_attrs".format(singular))
+            unique_cls.copy_as_setters.append("_{}_transfer_attrs".format(singular))
+            unique_cls.copy_attrs.append("_set_{}_context".format(singular))
+            unique_cls.copy_as_setters.append("_set_{}_context".format(singular))
+
+        # add attribute docs
         if unique_cls.__doc__:
             unique_cls.__doc__ += """
     .. py:attribute:: {plural}
@@ -790,7 +833,7 @@ def unique_tree(**kwargs):
                 """
                 Adds a child {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
                 """
-                do_transfer(self, kwargs)
+                getattr(self, _extend_transfer_attrs.__name__)(kwargs)
                 return getattr(self, plural).add(*args, **kwargs)
 
             # remove child method
@@ -836,7 +879,7 @@ def unique_tree(**kwargs):
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
                     added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
                     """
-                    do_transfer(self, kwargs)
+                    getattr(self, _extend_transfer_attrs.__name__)(kwargs)
                     obj = getattr(self, plural).add(*args, **kwargs)
                     getattr(obj, "parent_" + plural).add(self)
                     return obj
@@ -855,7 +898,7 @@ def unique_tree(**kwargs):
                     added {singular}. An exception is raised when the number of allowed parents is
                     exceeded. See :py:meth:`UniqueObjectIndex.add` for more info.
                     """
-                    do_transfer(self, kwargs)
+                    getattr(self, _extend_transfer_attrs.__name__)(kwargs)
                     index = getattr(self, plural)
                     obj = index.add(*args, **kwargs)
                     parent_index = getattr(obj, "parent_" + plural)
@@ -992,7 +1035,7 @@ def unique_tree(**kwargs):
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
                     added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
                     """
-                    do_transfer(self, kwargs)
+                    getattr(self, _extend_transfer_attrs.__name__)(kwargs)
                     obj = getattr(self, "parent_" + plural).add(*args, **kwargs)
                     getattr(obj, plural).add(self)
                     return obj
@@ -1010,7 +1053,7 @@ def unique_tree(**kwargs):
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
                     added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
                     """
-                    do_transfer(self, kwargs)
+                    getattr(self, _extend_transfer_attrs.__name__)(kwargs)
                     parent_index = getattr(self, "parent_" + plural)
                     if len(parent_index) >= parents:
                         raise Exception("number of parents exceeded: {}".format(parents))

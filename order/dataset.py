@@ -19,7 +19,7 @@ from order.util import typed, make_list
 
 @unique_tree(cls=Process, plural="processes", parents=False, deep_children=True)
 class Dataset(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin):
-    """ __init__(name, id, campaign=None, info=None, processes=None, label=None, label_short=None, is_data=False, aux=None, context=None, **kwargs)
+    """ __init__(name, id, campaign=None, info=None, processes=None, label=None, label_short=None, is_data=False, aux=None, context=None, set_process_context=None, **kwargs)
     Dataset definition providing two kinds of information:
 
     1. (systematic) shift-dependent, and

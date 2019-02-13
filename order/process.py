@@ -17,7 +17,7 @@ from order.util import typed
 
 @unique_tree(plural="processes", deep_children=True, deep_parents=True)
 class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixin):
-    """ __init__(name, id, xsecs=None, processes=None, color=None, label=None, label_short=None, is_data=False, aux=None, context=None)
+    """ __init__(name, id, xsecs=None, processes=None, color=None, label=None, label_short=None, is_data=False, aux=None, context=None, set_process_context=None)
     Definition of a phyiscs process.
 
     *xsecs* should be a mapping of center-of-mass energy to cross section (a *scinum.Number*

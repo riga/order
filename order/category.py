@@ -15,7 +15,7 @@ from order.util import to_root_latex
 
 @unique_tree(plural="categories", deep_children=True, deep_parents=True)
 class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin):
-    """ __init__(name, id="+", channel=None, categories=None, label=None, label_short=None, context=None, selection=None, selection_mode=None, aux=None, tags=None)
+    """ __init__(name, id="+", channel=None, categories=None, label=None, label_short=None, context=None, selection=None, selection_mode=None, aux=None, tags=None, set_category_context=None)
     Class that describes an analysis category. This is not to be confused with an analysis
     :py:class:`Channel`. While the definition of a channel is somewhat fixed by the final state of
     an event, a category describes an arbitrary sub phase-space. Therefore, a category can be
@@ -99,7 +99,7 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
 @unique_tree(parents=1, deep_children=True, deep_parents=True)
 @unique_tree(cls=Category, plural="categories", parents=False, deep_children=True)
 class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
-    """ __init__(name, id, categories=None, label=None, label_short=None, aux=None, context=None)
+    """ __init__(name, id, categories=None, label=None, label_short=None, aux=None, context=None, set_channel_context=None, set_category_context=None)
     An object that descibes an analysis channel, often defined by a particular decay *channel* that
     results in distinct final state objects.
 
@@ -149,6 +149,7 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
         Adds a child category. See :py:meth:`UniqueObjectIndex.add` for more info. Also sets the
         channel of the added category to *this* instance.
         """
+        self._extend_category_transfer_attrs(kwargs)
         category = self.categories.add(*args, **kwargs)
 
         # update the category's channel

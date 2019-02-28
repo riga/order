@@ -11,15 +11,15 @@ __all__ = ["Dataset", "DatasetInfo"]
 import six
 
 from order.unique import UniqueObject, unique_tree
-from order.mixins import CopyMixin, DataSourceMixin, LabelMixin
+from order.mixins import CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
 from order.process import Process
 from order.shift import Shift
 from order.util import typed, make_list
 
 
 @unique_tree(cls=Process, plural="processes", parents=False, deep_children=True)
-class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
-    """ __init__(name, id, campaign=None, info=None, processes=None, label=None, label_short=None, is_data=False, context=None, **kwargs)
+class Dataset(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin):
+    """ __init__(name, id, campaign=None, info=None, processes=None, label=None, label_short=None, is_data=False, aux=None, context=None, set_process_context=None, **kwargs)
     Dataset definition providing two kinds of information:
 
     1. (systematic) shift-dependent, and
@@ -127,14 +127,23 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
     """
 
     # attributes for copying
-    copy_attrs = ["info", "is_data"]
-    copy_ref_attrs = ["campaign"]
-    copy_private_attrs = ["label", "label_short"]
+    copy_builtin = False
+    copy_specs = [
+        {"attr": "campaign", "ref": True},
+        "processes",
+        "info",
+        "aux",
+        "is_data",
+        ("_label", "label"),
+        ("_label_short", "label_short"),
+        "context",
+    ]
 
     def __init__(self, name, id, campaign=None, info=None, processes=None, label=None,
-            label_short=None, is_data=False, context=None, **kwargs):
+            label_short=None, is_data=False, aux=None, context=None, **kwargs):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
+        AuxDataMixin.__init__(self, aux=aux)
         DataSourceMixin.__init__(self, is_data=is_data)
         LabelMixin.__init__(self, label=label, label_short=label_short)
 
@@ -152,7 +161,7 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
 
         # set initial processes
         if processes is not None:
-            self.processes.add_many(processes)
+            self.processes.extend(processes)
 
     def __getitem__(self, name):
         """

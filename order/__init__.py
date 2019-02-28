@@ -3,10 +3,11 @@
 
 
 __all__ = [
-    "UniqueObject", "UniqueObjectIndex", "uniqueness_context", "CopyMixin", "AuxDataMixin",
-    "TagMixin", "DataSourceMixin", "SelectionMixin", "LabelMixin", "ColorMixin", "Channel",
-    "Category", "Variable", "Shift", "Process", "Dataset", "DatasetInfo", "Campaign", "Config",
-    "Analysis", "cms",
+    "UniqueObject", "UniqueObjectIndex", "DuplicateObjectException", "DuplicateNameException",
+    "DuplicateIdException", "uniqueness_context", "CopyMixin", "AuxDataMixin", "TagMixin",
+    "DataSourceMixin", "SelectionMixin", "LabelMixin", "ColorMixin", "Channel", "Category",
+    "Variable", "Shift", "Process", "Dataset", "DatasetInfo", "Campaign", "Config", "Analysis",
+    "cms",
 ]
 
 
@@ -16,12 +17,15 @@ from order.__version__ import (
     __status__, __version__,
 )
 
-
 # provisioning imports
-from order.unique import UniqueObject, UniqueObjectIndex, uniqueness_context
-from order.mixins import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, \
-    LabelMixin, ColorMixin
-from order.categorize import Channel, Category
+from order.unique import (
+    UniqueObject, UniqueObjectIndex, DuplicateObjectException, DuplicateNameException,
+    DuplicateIdException, uniqueness_context,
+)
+from order.mixins import (
+    CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, LabelMixin, ColorMixin,
+)
+from order.category import Channel, Category
 from order.variable import Variable
 from order.shift import Shift
 from order.process import Process

@@ -113,8 +113,9 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
        Flag denoting if the shift type is shape-changing.
     """
 
-    # nominal keyword
+    # nominal keyword plus shorthand
     NOMINAL = sn.Number.NOMINAL
+    NOM = NOMINAL
 
     # shift directions
     UP = sn.Number.UP
@@ -126,8 +127,15 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
     SHAPE = "shape"
 
     # attributes for copying
-    copy_attrs = ["type"]
-    copy_private_attrs = ["label", "label_short"]
+    copy_builtin = False
+    copy_specs = [
+        "name",
+        "id",
+        "context",
+        ("_label", "label"),
+        ("_label_short", "label_short"),
+        "type",
+    ]
 
     @classmethod
     def split_name(cls, name):
@@ -181,7 +189,7 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
         else:
             raise ValueError("unknown shift direction: {}".format(direction))
 
-    def __init__(self, name, id="+", type=None, label=None, label_short=None, context=None):
+    def __init__(self, name, id, type=None, label=None, label_short=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
         LabelMixin.__init__(self, label=label, label_short=label_short)
@@ -195,6 +203,25 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
         self._source, self._direction = self.split_name(self.name)
         if type is not None:
             self.type = type
+
+    def _copy_ref(self, kwargs, cls):
+        # kwargs contains attributes before copying, i.e., changed values w.r.t. this instance
+
+
+
+
+        context = kwargs.get("context", cls.get_default_context())
+        if context == self.context:
+
+
+
+
+
+        # in case name, id and context are identical, return True to signify that a reference
+        data = (self.name, self.id, self.context)
+        copy_data = (kwargs.get("name", self.name), kwargs.get("id", self.id))
+        import pdb; pdb.set_trace()
+        pass
 
     @property
     def source(self):

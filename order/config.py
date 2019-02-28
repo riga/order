@@ -10,18 +10,18 @@ __all__ = ["Campaign", "Config"]
 
 
 from order.unique import UniqueObject, unique_tree
-from order.mixins import AuxDataMixin
+from order.mixins import CopyMixin, AuxDataMixin
 from order.shift import Shift
 from order.dataset import Dataset
 from order.process import Process
-from order.categorize import Channel, Category
+from order.category import Channel, Category
 from order.variable import Variable
 from order.util import typed
 
 
 @unique_tree(cls=Dataset, parents=False)
 class Campaign(UniqueObject, AuxDataMixin):
-    """ __init__(name, id, ecm=None, bx=None, aux=None, context=None)
+    """ __init__(name, id, ecm=None, bx=None, aux=None, context=None, set_dataset_context=None)
     Class that provides data that is subject to a campaign, i.e., a well-defined range of
     data-taking, detector alignment, MC production settings, datasets, etc. Common, generic
     information is available via dedicated attributes, specialized data can be stored as auxiliary
@@ -57,7 +57,16 @@ class Campaign(UniqueObject, AuxDataMixin):
        The bunch crossing in arbitrary units.
     """
 
-    def __init__(self, name, id, ecm=None, bx=None, aux=None, context=None):
+    copy_builtin = False
+    copy_specs = [
+        "ecm",
+        "bx",
+        "datasets",
+        "aux",
+        "context",
+    ]
+
+    def __init__(self, name, id, ecm=None, bx=None, datasets=None, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
         AuxDataMixin.__init__(self, aux=aux)
 
@@ -71,6 +80,9 @@ class Campaign(UniqueObject, AuxDataMixin):
         if bx is not None:
             self.bx = bx
 
+        if datasets is not None:
+            self.datasets.extend(datasets)
+
     @typed
     def ecm(self, ecm):
         # ecm parser
@@ -81,7 +93,7 @@ class Campaign(UniqueObject, AuxDataMixin):
 
     @typed
     def bx(self, bx):
-        # bx
+        # bx parser
         if not isinstance(bx, (int, float)):
             raise TypeError("invalid bx type: {}".format(bx))
 
@@ -120,8 +132,8 @@ class Campaign(UniqueObject, AuxDataMixin):
 @unique_tree(cls=Category, plural="categories", parents=False, deep_children=True)
 @unique_tree(cls=Variable, parents=False)
 @unique_tree(cls=Shift, parents=False)
-class Config(UniqueObject, AuxDataMixin):
-    """ __init__(campaign, name=None, id=None, analysis=None, datasets=None, processes=None, channels=None, categories=None, variables=None, shifts=None, aux=None, context=None)
+class Config(UniqueObject, CopyMixin, AuxDataMixin):
+    """ __init__(campaign, name=None, id=None, analysis=None, datasets=None, processes=None, channels=None, categories=None, variables=None, shifts=None, aux=None, context=None, set_dataset_context=None, set_process_context=None, set_channel_context=None, set_category_context=None, set_variable_context=None, set_shift_context=None)
     Class holding analysis information that is related to a :py:class:`Campaign` instance. Most of
     the analysis configuration happens here.
 
@@ -170,51 +182,71 @@ class Config(UniqueObject, AuxDataMixin):
        to the index of configs of the analysis object.
     """
 
-    def __init__(self, campaign, name=None, id=None, analysis=None, datasets=None, processes=None,
-            channels=None, categories=None, variables=None, shifts=None, aux=None, context=None):
-        # parse campaign
-        if not isinstance(campaign, Campaign):
-            raise TypeError("invalid campaign type: {}".format(campaign))
+    copy_builtin = False
+    copy_specs = [
+        {"attr": "campaign", "ref": True},
+        {"attr": "analysis", "ref": True},
+        "datasets",
+        "processes",
+        "channels",
+        "categories",
+        "variables",
+        "shifts",
+        "aux",
+        "context",
+    ]
 
-        # default name and id
+    def __init__(self, campaign=None, name=None, id=None, analysis=None, datasets=None,
+            processes=None, channels=None, categories=None, variables=None, shifts=None, aux=None,
+            context=None):
+        # instance members
+        self._campaign = None
+        self._analysis = None
+
+        # if name or id are None, campaign must be set
+        # use the campaign setter for type validation first
+        self.campaign = campaign
         if name is None:
-            name = campaign.name
+            if self.campaign is None:
+                raise ValueError("a name must be set when campaign is missing")
+            name = self.campaign.name
         if id is None:
-            id = campaign.id
+            if self.campaign is None:
+                raise ValueError("an id must be set when campaign is missing")
+            id = self.campaign.id
 
         UniqueObject.__init__(self, name=name, id=id, context=context)
         AuxDataMixin.__init__(self, aux=aux)
-
-        # instance members
-        self._campaign = campaign
-        self._analysis = None
 
         # set initial values
         if analysis is not None:
             self.analysis = analysis
 
         if datasets is not None:
-            self.datasets = datasets
+            self.datasets.extend(datasets)
 
         if processes is not None:
-            self.processes = processes
+            self.processes.extend(processes)
 
         if channels is not None:
-            self.channels = channels
+            self.channels.extend(channels)
 
         if categories is not None:
-            self.categories = categories
+            self.categories.extend(categories)
 
         if variables is not None:
-            self.variables = variables
+            self.variables.extend(variables)
 
         if shifts is not None:
-            self.shifts = shifts
+            self.shifts.extend(shifts)
 
-    @property
-    def campaign(self):
-        # campaign getter
-        return self._campaign
+    @typed
+    def campaign(self, campaign):
+        # campaign parser
+        if not isinstance(campaign, Campaign) and campaign is not None:
+            raise TypeError("invalid campaign type: {}".format(campaign))
+
+        return campaign
 
     @property
     def analysis(self):

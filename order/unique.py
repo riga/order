@@ -16,6 +16,7 @@ import contextlib
 
 import six
 
+from order.mixins import CopyMixin
 from order.util import typed, make_list
 
 
@@ -79,7 +80,7 @@ class UniqueObject(object):
     pass
 
 
-class UniqueObjectIndex(object):
+class UniqueObjectIndex(CopyMixin):
     """
     Index of :py:class:`UniqueObject` instances for faster lookup by either name or id.
 
@@ -124,8 +125,14 @@ class UniqueObjectIndex(object):
        Class of objects hold by this index.
     """
 
+    copy_specs = [
+        {"attr": "cls", "ref": True},
+        "default_index_context",
+        {"attr": "_indices", "use_setter": True},
+    ]
+
     def __init__(self, cls, default_index_context=None):
-        super(UniqueObjectIndex, self).__init__()
+        CopyMixin.__init__(self)
 
         # set the cls using the typed parser
         self._cls = None
@@ -506,7 +513,7 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
     def __del__(self):
         # remove from the instance cache
         try:
-            self.remove()
+            self._remove()
         except:
             pass
 
@@ -594,13 +601,13 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
 
         return int(id)
 
-    def remove(self):
+    def _remove(self):
         """
         Removes this instance from the instance cache. This happens automatically in the destructor,
         so in most cases one might not want to call this method manually. However, the destructor
         is triggered when the reference count becomes 0, and not necessarily when *del* is invoked.
         """
-        self._instances[self.context].remove(self)
+        self._instances.remove(self)
 
 
 @contextlib.contextmanager
@@ -716,6 +723,7 @@ def unique_tree(**kwargs):
             orig_init(self, *args, **kwargs)
         unique_cls.__init__ = __init__
 
+        # add attribute docs
         if unique_cls.__doc__:
             unique_cls.__doc__ += """
     .. py:attribute:: {plural}

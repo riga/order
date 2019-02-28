@@ -15,7 +15,7 @@ from order.config import Config
 
 @unique_tree(cls=Config, parents=False)
 class Analysis(UniqueObject, AuxDataMixin):
-    """ __init__(name, id, configs=None, aux=None, context=None)
+    """ __init__(name, id, configs=None, aux=None, context=None, set_config_context=None)
     The analysis class which represents the central object of a physics analysis. Yet, it is quite
     lightweight as it essentially only *has* :py:class:`Config` objects that provide information in
     the scope of a :py:class:`Campaign`, initially set with *configs*. In addition, it provides some
@@ -33,7 +33,7 @@ class Analysis(UniqueObject, AuxDataMixin):
 
         # set initial configs
         if configs is not None:
-            self.configs.add_many(configs)
+            self.configs.extend(configs)
 
     def get_channels(self, config):
         """

@@ -15,7 +15,7 @@ from order.util import to_root_latex
 
 @unique_tree(plural="categories", deep_children=True, deep_parents=True)
 class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin):
-    """ __init__(name, id="+", channel=None, categories=None, label=None, label_short=None, context=None, selection=None, selection_mode=None, aux=None, tags=None)
+    """ __init__(name, id="+", channel=None, categories=None, label=None, label_short=None, context=None, selection=None, selection_mode=None, aux=None, tags=None, set_category_context=None)
     Class that describes an analysis category. This is not to be confused with an analysis
     :py:class:`Channel`. While the definition of a channel is somewhat fixed by the final state of
     an event, a category describes an arbitrary sub phase-space. Therefore, a category can be
@@ -36,12 +36,22 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
     """
 
     # attributes for copying
-    copy_attrs = ["selection", "selection_mode", "tags", "aux"]
-    copy_ref_attrs = ["channel"]
-    copy_private_attrs = ["label", "label_short"]
+    copy_builtin = False
+    copy_specs = [
+        {"attr": "channel", "ref": True},
+        "categories",
+        ("_label", "label"),
+        ("_label_short", "label_short"),
+        "selection",
+        "selection_mode",
+        "tags",
+        "aux",
+        "context",
+    ]
 
-    def __init__(self, name, id="+", channel=None, categories=None, label=None, label_short=None,
-            selection=None, selection_mode=None, tags=None, aux=None, context=None):
+    def __init__(self, name, id=UniqueObject.AUTO_ID, channel=None, categories=None, label=None,
+            label_short=None, selection=None, selection_mode=None, tags=None, aux=None,
+            context=None):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
@@ -58,7 +68,7 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
 
         # set initial child categories
         if categories is not None:
-            self.categories.add_many(categories)
+            self.categories.extend(categories)
 
     @property
     def channel(self):
@@ -98,7 +108,7 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
 @unique_tree(parents=1, deep_children=True, deep_parents=True)
 @unique_tree(cls=Category, plural="categories", parents=False, deep_children=True)
 class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
-    """ __init__(name, id, categories=None, label=None, label_short=None, aux=None, context=None)
+    """ __init__(name, id, categories=None, label=None, label_short=None, aux=None, context=None, set_channel_context=None, set_category_context=None)
     An object that descibes an analysis channel, often defined by a particular decay *channel* that
     results in distinct final state objects.
 
@@ -128,8 +138,14 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
     """
 
     # attributes for copying
-    copy_attrs = ["aux"]
-    copy_private_attrs = ["label", "label_short"]
+    copy_builtin = False
+    copy_specs = [
+        "categories",
+        ("_label", "label"),
+        ("_label_short", "label_short"),
+        "aux",
+        "context",
+    ]
 
     def __init__(self, name, id, categories=None, label=None, label_short=None, aux=None,
             context=None):

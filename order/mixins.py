@@ -40,12 +40,9 @@ class CopyMixin(object):
         b.name
         # -> "foo"
 
-        def update_name(inst, kwargs):
-            kwargs["name"] += "_updated"
-
-        c = a.copy(callbacks=[update_name])
+        c = a.copy(name="bar")
         c.name
-        # -> "foo_updated"
+        # -> "bar"
 
     .. :py:attribute:: copy_attrs
        type: list
@@ -65,22 +62,64 @@ class CopyMixin(object):
        classmember
 
        The default attributes to skip from copying when *skip_attrs* is *None* in the copy method.
-
-    .. :py:attribute:: copy_callbacks
-       type: list
-       classmember
-
-       The default callbacks to call when *callbacks* is *None* in the copy method.
     """
 
-    copy_attrs = []
-    copy_ref_attrs = []
-    copy_private_attrs = []
-    copy_skip_attrs = []
-    copy_callbacks = []
+    copy_ref = False
+    copy_specs = []
 
-    def copy(self, cls=None, copy_attrs=None, ref_attrs=None, skip_attrs=None, callbacks=None,
-             **kwargs):
+    @classmethod
+    def _expand_copy_specs(cls, specs):
+        _specs = []
+        for spec in specs:
+            _spec = {"src": None, "dst": None, "ref": False, "shallow": False, "use_setter": False}
+            if isinstance(spec, six.string_types):
+                _spec["src"] = spec
+                _spec["dst"] = spec
+            elif isinstance(spec, (tuple, list)) and len(spec) == 2:
+                _spec["src"] = spec[0]
+                _spec["dst"] = spec[1]
+            elif isinstance(spec, dict):
+                _spec.update(spec)
+                if "attr" in _spec:
+                    if _spec["src"] is None:
+                        _spec["src"] = _spec["attr"]
+                    if _spec["dst"] is None:
+                        _spec["dst"] = _spec["attr"]
+            _specs.append(_spec)
+        return _specs
+
+    def _copy_ref(self, kwargs, cls):
+        return False
+
+    def _copy_kwargs(self, specs, kwargs, shallow=False, shallow_attrs=None, ref_attrs=None):
+        shallow_attrs = shallow_attrs or []
+        ref_attrs = ref_attrs or []
+
+        # work on a copy of kwargs
+        kwargs = kwargs.copy()
+
+        for spec in specs:
+            src = spec["src"]
+            dst = spec["dst"]
+
+            if dst in kwargs:
+                continue
+
+            obj = getattr(self, src)
+            if spec["ref"] or dst in ref_attrs:
+                kwargs[dst] = obj
+            elif spec["shallow"] or dst in shallow_attrs:
+                kwargs[dst] = copy.copy(obj)
+            else:
+                kwargs[dst] = copy.deepcopy(obj)
+
+        return kwargs
+
+    def _update_copy_kwargs(self, kwargs, cls):
+        return kwargs
+
+    def copy(self, kwargs=None, cls=None, specs=None, shallow=False, shallow_attrs=None,
+            ref_attrs=None, use_setters=None):
         r"""
         Returns a copy of this instance via copying (*copy_attrs*) or re-referencing attributes
         (*ref_attrs*). When *None*, they default to the *copy_\** classmembers. *skip_attrs* defines
@@ -91,50 +130,50 @@ class CopyMixin(object):
         created.
         """
         # default args
+        if kwargs is None:
+            kwargs = {}
         if cls is None:
             cls = self.__class__
-        if copy_attrs is None:
-            copy_attrs = self.copy_attrs
-        if ref_attrs is None:
-            ref_attrs = self.copy_ref_attrs
-        if skip_attrs is None:
-            skip_attrs = self.copy_skip_attrs
-        if callbacks is None:
-            callbacks = self.copy_callbacks
+        if specs is None:
+            specs = self.copy_specs
+        if use_setters is None:
+            use_setters = []
 
-        # copy helper
-        def do_copy(src_attr, dst_attr, ref):
-            if dst_attr not in kwargs and dst_attr not in skip_attrs:
-                obj = getattr(self, src_attr)
-                if ref:
-                    kwargs[dst_attr] = obj
-                elif isinstance(obj, CopyMixin):
-                    kwargs[dst_attr] = obj.copy()
-                else:
-                    kwargs[dst_attr] = copy.deepcopy(obj)
+        # check if a reference should be returned instead of a real copy
+        if self._copy_ref(kwargs, cls):
+            return self
 
-        # copy attributes
-        for attr in copy_attrs:
-            do_copy(attr, attr, False)
-        for attr in ref_attrs:
-            do_copy(attr, attr, True)
-        for attr in self.copy_private_attrs:
-            do_copy("_" + attr, attr, False)
+        # expand the copy specs
+        specs = self._expand_copy_specs(specs)
 
-        # invoke callbacks
-        for callback in callbacks:
-            if callable(callback):
-                callback(self, kwargs)
-            elif isinstance(callback, six.string_types):
-                getattr(self, str(callback))(self, kwargs)
-            else:
-                raise TypeError("invalid callback type: %s" % (callback,))
+        # actual attribute copying
+        kwargs = self._copy_kwargs(specs, kwargs, shallow=shallow, shallow_attrs=shallow_attrs,
+            ref_attrs=ref_attrs)
 
-        # manually remove attributes to skip, probably passed via kwargs or added via callbacks
-        for attr in skip_attrs:
-            kwargs.pop(attr, None)
+        # invoke the hook for updating kwargs
+        kwargs = self._update_copy_kwargs(kwargs, cls)
 
-        return cls(**kwargs)
+        # determine which attributes are not passed to the constructor, but set with plain setters
+        set_attrs = []
+        for spec in specs:
+            attr = spec["dst"]
+            if attr in kwargs and (spec["use_setter"] or attr in use_setters):
+                set_attrs.append((attr, kwargs.pop(attr)))
+
+        # create the instance
+        inst = cls(**kwargs)
+
+        # invoke setters
+        for attr, obj in set_attrs:
+            setattr(inst, attr, obj)
+
+        return inst
+
+    def __copy__(self):
+        return self.copy(shallow=True)
+
+    def __deepcopy__(self, memo):
+        return self.copy(shallow=False)
 
 
 class AuxDataMixin(object):

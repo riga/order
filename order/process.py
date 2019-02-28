@@ -17,7 +17,7 @@ from order.util import typed
 
 @unique_tree(plural="processes", deep_children=True, deep_parents=True)
 class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixin):
-    """ __init__(name, id, xsecs=None, processes=None, color=None, label=None, label_short=None, is_data=False, aux=None, context=None)
+    """ __init__(name, id, xsecs=None, processes=None, color=None, label=None, label_short=None, is_data=False, aux=None, context=None, set_process_context=None)
     Definition of a phyiscs process.
 
     *xsecs* should be a mapping of center-of-mass energy to cross section (a *scinum.Number*
@@ -64,8 +64,17 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
     """
 
     # attributes for copying
-    copy_attrs = ["xsecs", "color", "is_data", "aux"]
-    copy_private_attrs = ["label", "label_short"]
+    copy_builtin = False
+    copy_specs = [
+        "xsecs",
+        "processes",
+        ("_label", "label"),
+        ("_label_short", "label_short"),
+        "color",
+        "is_data",
+        "aux",
+        "context",
+    ]
 
     def __init__(self, name, id, xsecs=None, processes=None, color=None, label=None,
             label_short=None, is_data=False, aux=None, context=None):
@@ -85,7 +94,7 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
 
         # set initial child processes
         if processes is not None:
-            self.processes.add_many(processes)
+            self.processes.extend(processes)
 
     @typed
     def xsecs(self, xsecs):

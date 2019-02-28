@@ -65,8 +65,16 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
 
     # attributes for copying
     copy_builtin = False
-    copy_attrs = ["xsecs", "processes", ("_label", "label"), ("_label_short", "label_short"),
-                  "color", "is_data", "aux", "context"]
+    copy_specs = [
+        "xsecs",
+        "processes",
+        ("_label", "label"),
+        ("_label_short", "label_short"),
+        "color",
+        "is_data",
+        "aux",
+        "context",
+    ]
 
     def __init__(self, name, id, xsecs=None, processes=None, color=None, label=None,
             label_short=None, is_data=False, aux=None, context=None):

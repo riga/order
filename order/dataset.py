@@ -128,9 +128,16 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
 
     # attributes for copying
     copy_builtin = False
-    copy_attrs = ["processes", "info", "aux", "is_data", ("_label", "label"),
-                  ("_label_short", "label_short"), "context"]
-    copy_ref_attrs = ["campaign"]
+    copy_specs = [
+        {"attr": "campaign", "ref": True},
+        "processes",
+        "info",
+        "aux",
+        "is_data",
+        ("_label", "label"),
+        ("_label_short", "label_short"),
+        "context",
+    ]
 
     def __init__(self, name, id, campaign=None, info=None, processes=None, label=None,
             label_short=None, is_data=False, aux=None, context=None, **kwargs):

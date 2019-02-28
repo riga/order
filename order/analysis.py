@@ -82,7 +82,6 @@ class Analysis(UniqueObject, AuxDataMixin):
         Adds a child config. See :py:meth:`UniqueObjectIndex.add` for more info. Also sets the
         analysis of the added config to *this* instance.
         """
-        self._extend_config_transfer_attrs(kwargs)
         config = self.configs.add(*args, **kwargs)
 
         # update the config's analysis

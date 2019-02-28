@@ -57,6 +57,15 @@ class Campaign(UniqueObject, AuxDataMixin):
        The bunch crossing in arbitrary units.
     """
 
+    copy_builtin = False
+    copy_specs = [
+        "ecm",
+        "bx",
+        "datasets",
+        "aux",
+        "context",
+    ]
+
     def __init__(self, name, id, ecm=None, bx=None, datasets=None, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
         AuxDataMixin.__init__(self, aux=aux)
@@ -95,7 +104,6 @@ class Campaign(UniqueObject, AuxDataMixin):
         Adds a child dataset and returns it. See :py:meth:`UniqueObjectIndex.add` for more info.
         Also sets the campaign of the added dataset to *this* instance.
         """
-        self._extend_dataset_transfer_attrs(kwargs)
         dataset = self.datasets.add(*args, **kwargs)
 
         # update the dataset's campaign
@@ -175,9 +183,18 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin):
     """
 
     copy_builtin = False
-    copy_attrs = ["datasets", "processes", "channels", "categories", "variables", "shifts", "aux",
-                  "context"]
-    copy_ref_attrs = ["campaign", "analysis"]
+    copy_specs = [
+        {"attr": "campaign", "ref": True},
+        {"attr": "analysis", "ref": True},
+        "datasets",
+        "processes",
+        "channels",
+        "categories",
+        "variables",
+        "shifts",
+        "aux",
+        "context",
+    ]
 
     def __init__(self, campaign=None, name=None, id=None, analysis=None, datasets=None,
             processes=None, channels=None, categories=None, variables=None, shifts=None, aux=None,

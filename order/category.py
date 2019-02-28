@@ -37,12 +37,21 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
 
     # attributes for copying
     copy_builtin = False
-    copy_attrs = ["categories", ("_label", "label"), ("_label_short", "label_short"), "selection",
-                  "selection_mode", "tags", "aux", "context"]
-    copy_ref_attrs = ["channel"]
+    copy_specs = [
+        {"attr": "channel", "ref": True},
+        "categories",
+        ("_label", "label"),
+        ("_label_short", "label_short"),
+        "selection",
+        "selection_mode",
+        "tags",
+        "aux",
+        "context",
+    ]
 
-    def __init__(self, name, id="+", channel=None, categories=None, label=None, label_short=None,
-            selection=None, selection_mode=None, tags=None, aux=None, context=None):
+    def __init__(self, name, id=UniqueObject.AUTO_ID, channel=None, categories=None, label=None,
+            label_short=None, selection=None, selection_mode=None, tags=None, aux=None,
+            context=None):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
@@ -130,8 +139,13 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
 
     # attributes for copying
     copy_builtin = False
-    copy_attrs = ["categories", ("_label", "label"), ("_label_short", "label_short"), "aux",
-                  "context"]
+    copy_specs = [
+        "categories",
+        ("_label", "label"),
+        ("_label_short", "label_short"),
+        "aux",
+        "context",
+    ]
 
     def __init__(self, name, id, categories=None, label=None, label_short=None, aux=None,
             context=None):
@@ -149,7 +163,6 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
         Adds a child category. See :py:meth:`UniqueObjectIndex.add` for more info. Also sets the
         channel of the added category to *this* instance.
         """
-        self._extend_category_transfer_attrs(kwargs)
         category = self.categories.add(*args, **kwargs)
 
         # update the category's channel

@@ -5,7 +5,10 @@ Classes that define unique objects and the index to store them.
 """
 
 
-__all__ = ["UniqueObject", "UniqueObjectIndex", "uniqueness_context", "unique_tree"]
+__all__ = [
+    "UniqueObject", "UniqueObjectIndex", "DuplicateObjectException", "DuplicateNameException",
+    "DuplicateIdException", "uniqueness_context", "unique_tree",
+]
 
 
 import collections
@@ -20,7 +23,7 @@ _no_default = object()
 
 _not_found = object()
 
-_uniqueness_context_stack = []
+_context_stack = []
 
 
 class UniqueObjectMeta(type):
@@ -30,20 +33,345 @@ class UniqueObjectMeta(type):
     """
 
     def __new__(meta_cls, class_name, bases, class_dict):
-        # set default_uniqueness_context to the lower-case class name when not set
-        class_dict.setdefault("default_uniqueness_context", class_name.lower())
+        # set default_context to the lower-case class name when not set
+        class_dict.setdefault("default_context", class_name.lower())
 
         # create the class
         cls = super(UniqueObjectMeta, meta_cls).__new__(meta_cls, class_name, bases, class_dict)
 
-        # add an empty instance cache
-        cls._instances = {}
+        # add an unique object index as an instance cache
+        cls._instances = UniqueObjectIndex(cls=cls)
 
         return cls
 
 
-@six.add_metaclass(UniqueObjectMeta)
+class DuplicateObjectException(Exception):
+    """
+    Base class for exceptions that are raised when a unique object cannot be created due to
+    duplicate name or id in the same uniqueness context.
+    """
+
+
+class DuplicateNameException(DuplicateObjectException):
+    """
+    An exception which is raised when trying to create a unique object whose name is already used in
+    the same uniqueness context.
+    """
+    def __init__(self, name, context):
+        msg = "an object with name '{}' already exists in the uniqueness context '{}'".format(
+            name, context)
+        super(DuplicateNameException, self).__init__(msg)
+
+
+class DuplicateIdException(DuplicateObjectException):
+    """
+    An exception which is raised when trying to create a unique object whose id is already used in
+    the same uniqueness context.
+    """
+    def __init__(self, id, context):
+        msg = "an object with id '{}' already exists in the uniqueness context '{}'".format(
+            id, context)
+        super(DuplicateIdException, self).__init__(msg)
+
+
 class UniqueObject(object):
+    # forward declaration
+    pass
+
+
+class UniqueObjectIndex(object):
+    """
+    Index of :py:class:`UniqueObject` instances for faster lookup by either name or id.
+
+    *cls* must be a subclass of :py:class:`UniqueObject`, which is used for type validation when a
+    new object is added to the index. Examples:
+
+    .. code-block:: python
+
+        idx = UniqueObjectIndex()
+        foo = idx.add("foo", 1)
+        bar = idx.add("bar", 2)
+
+        len(idx)
+        # -> 2
+
+        idx.names()
+        # -> ["foo", "bar"]
+
+        idx.ids()
+        # -> [1, 2]
+
+        for obj in idx:
+            print(obj)
+        # -> "foo__1"
+        # -> "bar__2"
+
+        1 in idx
+        # -> True
+
+        idx.get(1) == foo
+        # -> True
+
+        idx.get("bar") == bar
+        # -> True
+
+        # TODO: multiple contexts
+
+    .. py:attribute:: cls
+       type: class
+       read-only
+
+       Class of objects hold by this index.
+    """
+
+    def __init__(self, cls, default_index_context=None):
+        super(UniqueObjectIndex, self).__init__()
+
+        # set the cls using the typed parser
+        self._cls = None
+        self._cls = self.__class__.cls.fparse(self, cls)
+
+        # store the default context of the cls
+        self._default_index_context = None
+        self.default_index_context = default_index_context or cls.get_default_context()
+
+        # seperate dicts to map names and ids to unique objects,
+        # stored in a dict mapped to contexts
+        self._indices = collections.defaultdict(lambda: {
+            "names": collections.OrderedDict(),
+            "ids": collections.OrderedDict(),
+        })
+
+        # register indices for the default context
+        self._indices[self.default_index_context]
+
+    def __repr__(self):
+        """
+        Returns the unique string representation of the object index.
+        """
+        return "<{}, cls={}, len={}, at {}>".format(self.__class__.__name__, self.cls.__name__,
+            len(self), hex(id(self)))
+
+    def __str__(self):
+        """
+        Return a readable string representiation of the object index.
+        """
+        return "{} (cls={}, len={})".format(self.__class__.__name__, self.cls.__name__, len(self))
+
+    def __len__(self):
+        """
+        Returns the number of objects in the index.
+        """
+        return sum(len(idx["ids"]) for idx in six.itervalues(self._indices))
+
+    def __contains__(self, obj):
+        """
+        Checks if an object is contained in the index. Forwarded to :py:meth:`has`.
+        """
+        return self.has(obj)
+
+    def __iter__(self):
+        """
+        Iterates through the indices and yields the contained objects (i.e. the *values*).
+        """
+        for index in six.itervalues(self._indices):
+            for obj in six.itervalues(index["ids"]):
+                yield obj
+
+    def __nonzero__(self):
+        """
+        Boolish conversion that depends on the number of objects in the index.
+        """
+        return len(self) > 0
+
+    @typed(setter=False)
+    def cls(self, cls):
+        # cls parser
+        if not issubclass(cls, UniqueObject):
+            raise ValueError("not a sublcass of UniqueObject: {}".format(cls))
+
+        return cls
+
+    @typed
+    def default_index_context(self, default_index_context):
+        # default_index_context parser
+        if default_index_context is None:
+            raise TypeError("invalid default_index_context type: {}".format(default_index_context))
+
+        return default_index_context
+
+    def names(self, context=None, all=False):
+        """
+        Returns the names of the contained objects in the index stored for *context*. When *None*,
+        the *default_index_context* is used. When *all* is *True*, the names of objects in all
+        indices are returned and therefore, they might contain duplicate values.
+        """
+        if not all:
+            return self._indices[context or self.default_index_context]["names"].keys()
+        else:
+            return sum((list(index["names"].keys()) for index in six.itervalues(self._indices)), [])
+
+    def ids(self, context=None, all=False):
+        """
+        Returns the names of the contained objects in the index stored for *context*. When *None*,
+        the *default_index_context* is used. When *all* is *True*, the ids of objects in all indices
+        are returned and therefore, they might contain duplicate values.
+        """
+        if not all:
+            return self._indices[context or self.default_index_context]["ids"].keys()
+        else:
+            return sum((list(index["ids"].keys()) for index in six.itervalues(self._indices)), [])
+
+    def keys(self, context=None, all=False):
+        """
+        Returns pairs containing *name* and *id* of the currently contained objects in the index
+        stored for *context*. When *None*, the *default_index_context* is used. When *all* is
+        *True*, tuples (*name*, *id*, *index*) are returned with objects from all indices.
+        """
+        if not all:
+            return zip(self.names(context=context), self.ids(context=context))
+        else:
+            keys = []
+            for context, index in six.iteritems(self._indices):
+                keys.extend([(name, id, context) for name, id in zip(index["names"], index["ids"])])
+            return keys
+
+    def values(self, context=None, all=False):
+        """
+        Returns all contained objects in the index stored for *context*. When *None*, the
+        *default_index_context* is used. When *all* is *True*, the objects of all indices are
+        returned.
+        """
+        if not all:
+            return list(self._indices[context or self.default_index_context]["ids"].values())
+        else:
+            return sum((list(index["ids"].values()) for index in six.itervalues(self._indices)), [])
+
+    def items(self, context=None, all=False):
+        """
+        Returns a list of pairs containing key and value of the objects in the index stored for
+        *context*. Both *context* and *all* are forwarded to :py:meth:`keys` and :py:meth:`values`.
+        """
+        return zip(self.keys(context=context, all=all), self.values(context=context, all=all))
+
+    def add(self, *args, **kwargs):
+        """
+        Adds a new object to the index. When the first *arg* is not an instance of *cls*, all *args*
+        and *kwargs* are passed to the *cls* constructor to create a new object. Otherwise, the
+        first *arg* is considered the object to add. In both cases the added object is returned.
+        """
+        # determine the object to add
+        if len(args) == 1 and isinstance(args[0], self.cls):
+            obj = args[0]
+        else:
+            obj = self.cls(*args, **kwargs)
+
+        # add to the index
+        self._indices[obj.context]["names"][obj.name] = obj
+        self._indices[obj.context]["ids"][obj.id] = obj
+
+        return obj
+
+    def extend(self, objs):
+        """
+        Adds multiple new objects to the index. All elements of the sequence *objs* are forwarded to
+        :py:meth:`add` and the list of return values is returned. When an object is a dictionary or
+        a tuple, it is expanded for the invocation of :py:meth:`add`.
+        """
+        results = []
+
+        objs = objs.values() if isinstance(objs, UniqueObjectIndex) else make_list(objs)
+        for obj in objs:
+            if isinstance(obj, dict):
+                obj = self.add(**obj)
+            elif isinstance(obj, tuple):
+                obj = self.add(*obj)
+            else:
+                obj = self.add(obj)
+            results.append(obj)
+
+        return results
+
+    def get(self, obj, default=_no_default, context=None):
+        """ get(obj, [default], [context])
+        Returns an object that is stored in the index for *context*. *obj* might be a *name*, *id*,
+        or an instance of *cls*. If *default* is given, it is used as the default return value if no
+        such object could be found. Otherwise, an error is raised. When *context* is *None*, the
+        *default_index_context* is used.
+        """
+        # when it's an object, fetch the object to compare names
+        if isinstance(obj, self._cls):
+            name_index = self._indices[obj.context]["names"]
+            if obj.name in name_index and obj == name_index[obj.name]:
+                return obj
+            elif default != _no_default:
+                return default
+            else:
+                raise ValueError("object '{}' not known to index '{}' for context '{}'".format(
+                    obj, self, obj.context))
+        else:
+            context = context or self.default_index_context
+            # name?
+            try:
+                return self._indices[context]["names"][self.cls.name.fparse(self, obj)]
+            except:
+                pass
+
+            # id?
+            try:
+                return self._indices[context]["ids"][self.cls.id.fparse(self, obj)]
+            except:
+                pass
+
+            if default != _no_default:
+                return default
+            else:
+                raise ValueError("object '{}' not known to index '{}' for context '{}'".format(
+                    obj, self, context))
+
+    def has(self, obj, context=None):
+        """
+        Checks if an object is contained in the index for *context*. *obj* might be a *name*, *id*,
+        or an instance of the wrapped *cls*. When *context* is *None*, the
+        *default_index_context* is used.
+        """
+        return self.get(obj, default=_not_found, context=context) != _not_found
+
+    def remove(self, obj, context=None, silent=False):
+        """
+        Removes an object from the index for *context*. *obj* might be a *name*, *id*, or an
+        instance of *cls*. Returns the removed object. Unless *silent* is *True*, an error is raised
+        if the object could not be found. When *context* is *None*, the *default_index_context* is
+        used.
+        """
+        obj = self.get(obj, default=_not_found, context=context)
+        if obj != _not_found:
+            del(self._indices[obj.context]["names"][obj.name])
+            del(self._indices[obj.context]["ids"][obj.id])
+            return obj
+        elif silent:
+            return None
+        else:
+            context = context or self.default_index_context
+            raise ValueError("object '{}' not known to index '{}' for context '{}'".format(
+                obj, self, context))
+
+    def clear(self, context=None, all=False):
+        """
+        Clears the index for *context* by removing all elements. When *None*, the
+        *default_index_context* is used. When *all* is *True*, the indices for all contexts are
+        cleared.
+        """
+        if not all:
+            self._indices[context or self.default_index_context]["names"].clear()
+            self._indices[context or self.default_index_context]["ids"].clear()
+        else:
+            for index in six.itervalues(self._indices):
+                index["names"].clear()
+                index["ids"].clear()
+
+
+class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
     """
     An unique object defined by a *name* and an *id*. The purpose of this class is to provide a
     simple interface for objects that are
@@ -51,9 +379,9 @@ class UniqueObject(object):
     1. used programatically and should therefore have a unique, human-readable name, and
     2. have a unique identifier that can be saved to files, such as (e.g.) ROOT trees.
 
-    Both, *name* and *id* should have unique values on their *uniqueness context* If *context* is
-    *None*, either the current one is used as defined in :py:func:`uniqueness_context` or, when
-    empty, the class member *default_uniqueness_context* is used instead. Examples:
+    Both, *name* and *id* should have unique values on their *uniqueness context*. If *context* is
+    *None*, either the current one is used as defined in :py:func:`context` or, when empty, the
+    class member *default_context* is used instead. Examples:
 
     .. code-block:: python
 
@@ -87,7 +415,7 @@ class UniqueObject(object):
        foo == bar
        # -> False
 
-    .. py:attribute:: default_uniqueness_context
+    .. py:attribute:: default_context
        type: arbitrary (hashable)
        classmember
 
@@ -95,7 +423,7 @@ class UniqueObject(object):
        instances are only allowed to have the same name *or* the same id if their classes have
        different contexts. This member is not inherited when creating a sub-class.
 
-    .. py:attribute:: uniqueness_context
+    .. py:attribute:: context
        type: arbitrary (hashable)
 
        The uniqueness context of this instance.
@@ -115,14 +443,12 @@ class UniqueObject(object):
 
     AUTO_ID = "+"
 
-    _instances = {}
-
     @classmethod
     def get_default_context(cls):
-        if _uniqueness_context_stack:
-            return _uniqueness_context_stack[-1]
+        if _context_stack:
+            return _context_stack[-1]
         else:
-            return cls.default_uniqueness_context
+            return cls.default_context
 
     @classmethod
     def get_instance(cls, obj, default=_no_default, context=None):
@@ -130,18 +456,9 @@ class UniqueObject(object):
         Returns an object that was instantiated by this class before. *obj* might be a *name*, *id*,
         or an instance of *cls*. If *default* is given, it is used as the default return value if no
         such object was found. Otherwise, an error is raised. *context* defaults to the
-        :py:attr:`default_uniqueness_context` if this class.
+        :py:attr:`default_context` of this class.
         """
-        if context is None:
-            context = cls.get_default_context()
-
-        if context not in cls._instances:
-            if default != _no_default:
-                return default
-            else:
-                raise ValueError("unknown context: {}".format(context))
-
-        return cls._instances[context].get(obj, default=default)
+        return cls._instances.get(obj, default=default, context=context)
 
     @classmethod
     def auto_id(cls, name, context):
@@ -152,46 +469,39 @@ class UniqueObject(object):
         if context not in cls._instances or len(cls._instances[context]) == 0:
             return 1
         else:
-            return max(cls._instances[context].ids()) + 1
+            return max(cls._instances.ids(context=context)) + 1
 
     def __init__(self, name, id, context=None):
         super(UniqueObject, self).__init__()
 
         # register empty attributes
-        self._uniqueness_context = None
+        self._context = None
         self._name = None
         self._id = None
 
         # set the context
         if context is None:
             context = self.get_default_context()
-        self._uniqueness_context = context
-
-        # register an instance cache if it does not exist yet
-        if self.uniqueness_context not in self._instances:
-            self._instances[self.uniqueness_context] = UniqueObjectIndex(cls=self.__class__)
-        cache = self._instances[self.uniqueness_context]
+        self._context = context
 
         # use the typed parser to check the passed name, check for duplicates and store it
         name = self.__class__.name.fparse(self, name)
-        if name in cache.names():
-            raise ValueError("duplicate name '{}' in uniqueness context '{}'".format(
-                name, self.uniqueness_context))
+        if name in self._instances.names(context=self.context):
+            raise DuplicateNameException(name, self.context)
         self._name = name
 
         # check for auto_id
         if id == self.AUTO_ID:
-            id = self.auto_id(self.name, self.uniqueness_context)
+            id = self.auto_id(self.name, self.context)
 
         # use the typed parser to check the passed id, check for duplicates and store it
         id = self.__class__.id.fparse(self, id)
-        if id in cache.ids():
-            raise ValueError("duplicate id '{}' in uniqueness context '{}'".format(
-                id, self.uniqueness_context))
+        if id in self._instances.ids(context=self.context):
+            raise DuplicateIdException(id, self.context)
         self._id = id
 
         # add the instance to the cache
-        cache.add(self)
+        self._instances.add(self)
 
     def __del__(self):
         # remove from the instance cache
@@ -200,17 +510,27 @@ class UniqueObject(object):
         except:
             pass
 
+    def _repr_parts(self):
+        return [
+            ("name", self.name),
+            ("id", self.id),
+            ("context", self.context),
+        ]
+
+    def _repr_info(self):
+        return ", ".join("{}={}".format(*pair) for pair in self._repr_parts())
+
     def __repr__(self):
         """
         Returns the unique string representation of the unique object.
         """
-        return "<{} '{}' at {}>".format(self.__class__.__name__, self, hex(id(self)))
+        return "<{}, {}, at {}>".format(self.__class__.__name__, self._repr_info(), hex(id(self)))
 
     def __str__(self):
         """
         Returns a readable string representiation of the unique object.
         """
-        return "{}:{}__{}".format(self.uniqueness_context, self.name, self.id)
+        return "{} ({})".format(self.__class__.__name__, self._repr_info())
 
     def __hash__(self):
         """
@@ -222,8 +542,8 @@ class UniqueObject(object):
         """
         Compares a value to this instance. When *other* is a string (integer), the comparison is
         *True* when it matches the *name* (*id*) if this instance. When *other* is a unique object
-        as well, the comparison is *True* when *__class__*, *uniqueness_context*, *name* and *id*
-        match. In all other cases, *False* is returned.
+        as well, the comparison is *True* when *__class__*, *context*, *name* and *id* match. In all
+        other cases, *False* is returned.
         """
         # name?
         try:
@@ -239,7 +559,7 @@ class UniqueObject(object):
 
         # unique object of same class?
         if isinstance(other, self.__class__):
-            return other.uniqueness_context == self.uniqueness_context and other.name == self.name \
+            return other.context == self.context and other.name == self.name \
                 and other.id == self.id
 
         return False
@@ -251,12 +571,12 @@ class UniqueObject(object):
         return not self.__eq__(other)
 
     @typed(setter=False)
-    def uniqueness_context(self, uniqueness_context):
-        # uniqueness_context parser
-        if uniqueness_context is None:
-            raise TypeError("invalid uniqueness_context type: {}".format(uniqueness_context))
+    def context(self, context):
+        # uniqueness context parser
+        if context is None:
+            raise TypeError("invalid context type: {}".format(context))
 
-        return uniqueness_context
+        return context
 
     @typed(setter=False)
     def name(self, name):
@@ -280,276 +600,37 @@ class UniqueObject(object):
         so in most cases one might not want to call this method manually. However, the destructor
         is triggered when the reference count becomes 0, and not necessarily when *del* is invoked.
         """
-        self._instances[self.uniqueness_context].remove(self)
-
-
-class UniqueObjectIndex(object):
-    """ __init__(cls=UniqueObject)
-    Index of :py:class:`UniqueObject` instances for faster lookup by either name or id.
-
-    *cls* must be a subclass of :py:class:`UniqueObject` which is used for type validation when a
-    new object is added to the index. Examples:
-
-    .. code-block:: python
-
-        idx = UniqueObjectIndex()
-        foo = idx.add("foo", 1)
-        bar = idx.add("bar", 2)
-
-        len(idx)
-        # -> 2
-
-        idx.names()
-        # -> ["foo", "bar"]
-
-        idx.ids()
-        # -> [1, 2]
-
-        for obj in idx:
-            print(obj)
-        # -> "foo__1"
-        # -> "bar__2"
-
-        1 in idx
-        # -> True
-
-        idx.get(1) == foo
-        # -> True
-
-        idx.get("bar") == bar
-        # -> True
-
-    .. py:attribute:: cls
-       type: class
-       read-only
-
-       Class of objects hold by this index.
-    """
-
-    def __init__(self, cls=UniqueObject):
-        super(UniqueObjectIndex, self).__init__()
-
-        # set the cls using the typed parser
-        self._cls = None
-        self._cls = self.__class__.cls.fparse(self, cls)
-
-        # seperate dicts to map names and ids to unique objects
-        self._name_index = collections.OrderedDict()
-        self._id_index = collections.OrderedDict()
-
-    def __repr__(self):
-        """
-        Returns the unique string representation of the object index.
-        """
-        return "<{} '{}' len={} at {}>".format(self.__class__.__name__, self.cls.__name__,
-            len(self), hex(id(self)))
-
-    def __str__(self):
-        """
-        Return a readable string representiation of the object index.
-        """
-        s = "{} ({})".format(self.__class__.__name__, len(self))
-        if len(self) > 0:
-            s += "\n" + "\n".join(str(v) for v in self)
-        return s
-
-    def __len__(self):
-        """
-        Returns the number of objects in the index.
-        """
-        return len(self._name_index)
-
-    def __contains__(self, obj):
-        """
-        Checks if an object is contained in the index. Forwarded to :py:meth:`has`.
-        """
-        return self.has(obj)
-
-    def __iter__(self):
-        """
-        Iterates through the index and yields the objects (i.e. the *values*) in the index.
-        """
-        for obj in self._name_index.values():
-            yield obj
-
-    def __nonzero__(self):
-        """
-        Boolish conversion that depends on the number of objects in the index.
-        """
-        return len(self) > 0
-
-    @typed(setter=False)
-    def cls(self, cls):
-        # cls parser
-        if not issubclass(cls, UniqueObject):
-            raise ValueError("not a sublcass of UniqueObject: {}".format(cls))
-
-        return cls
-
-    def names(self):
-        """
-        Returns the names of the currently contained objects.
-        """
-        return self._name_index.keys()
-
-    def ids(self):
-        """
-        Returns the ids of the currently contained objects.
-        """
-        return self._id_index.keys()
-
-    def keys(self):
-        """
-        Returns pairs containing *name* and *id* of the currently contained objects.
-        """
-        return zip(self.names(), self.ids())
-
-    def values(self):
-        """
-        Returns the currently contained objects.
-        """
-        return self._name_index.values()
-
-    def items(self):
-        """
-        Returns pairs containing key and value of the currently contained objets. For keys, see
-        :py:func:`keys`.
-        """
-        return zip(self.keys(), self.values())
-
-    def add(self, *args, **kwargs):
-        """
-        Adds a new object to the index. When the first *arg* is not an instance of *cls*, all *args*
-        and *kwargs* are passed to the *cls* constructor to create a new object. Otherwise, the
-        first *arg* is considered the object to add. In both cases the added object is returned.
-        """
-        # determine the object to add
-        if len(args) == 1 and isinstance(args[0], self.cls):
-            obj = args[0]
-        else:
-            obj = self.cls(*args, **kwargs)
-
-        # before adding the object to the index check for duplicate name or id
-        # which might happen when instances of the same class have different uniqueness contexts
-        if self.get(obj, _not_found) != _not_found:
-            raise ValueError("duplicate object in index: {}".format(obj))
-
-        # add to indexes
-        self._name_index[obj.name] = obj
-        self._id_index[obj.id] = obj
-
-        return obj
-
-    def add_many(self, objs):
-        """
-        Adds multiple new objects to the index. All elements of the sequence *objs* are forwarded to
-        :py:meth:`add` and the list of return values is returned. When an object is a dictionary or
-        a tuple, it is expanded for the invocation of :py:meth:`add`.
-        """
-        results = []
-
-        for obj in make_list(objs):
-            if isinstance(obj, dict):
-                obj = self.add(**obj)
-            elif isinstance(obj, tuple):
-                obj = self.add(*obj)
-            else:
-                obj = self.add(obj)
-            results.append(obj)
-
-        return results
-
-    def get(self, obj, default=_no_default):
-        """ get(obj, [default])
-        Returns an object that is contained in the index. *obj* might be a *name*, *id*, or an
-        instance of *cls*. If *default* is given, it is used as the default return value if no such
-        object was be found. Otherwise, an error is raised.
-        """
-        # when it's an object, fetch the object to compare against via name
-        if isinstance(obj, self._cls):
-            if obj.name in self._name_index and obj == self._name_index[obj.name]:
-                return obj
-            elif default != _no_default:
-                return default
-            else:
-                raise ValueError("object not known to index: {}".format(obj))
-        else:
-            # name?
-            try:
-                return self._name_index[self.cls.name.fparse(self, obj)]
-            except:
-                pass
-
-            # id?
-            try:
-                return self._id_index[self.cls.id.fparse(self, obj)]
-            except:
-                pass
-
-            if default != _no_default:
-                return default
-            else:
-                raise ValueError("object not known to index: {}".format(obj))
-
-    def has(self, obj):
-        """
-        Checks if an object is contained in the index. *obj* might be a *name*, *id*, or an instance
-        of the wrapped *cls*.
-        """
-        return self.get(obj, _not_found) != _not_found
-
-    def remove(self, obj, silent=False):
-        """
-        Removes an object that is contained in the index. *obj* might be a *name*, *id*, or an
-        instance of *cls*. Returns the removed object. Unless *silent* is *True*, an error is raised
-        if the object was not found.
-        """
-        obj = self.get(obj, _not_found)
-        if obj != _not_found:
-            del(self._name_index[obj.name])
-            del(self._id_index[obj.id])
-            return obj
-        elif silent:
-            return None
-        else:
-            raise ValueError("object not known to index: {}".format(obj))
-
-    def clear(self):
-        """
-        Clears the index by removing all elements.
-        """
-        self._name_index.clear()
-        self._id_index.clear()
+        self._instances[self.context].remove(self)
 
 
 @contextlib.contextmanager
 def uniqueness_context(context):
     """
-    Adds the uniqueness *context* on top of the list of the *current contexts* which is priotized in
-    the :py:class:`UniqueObject` constructor when no context is given.
+    Adds the uniqueness *context* on top of the list of the *current contexts*, which is priotized
+    in the :py:class:`UniqueObject` constructor when no context is given.
 
     .. code-block:: python
 
         obj = UniqueObject("myObj", 1, context="myContext")
 
-        obj.uniqueness_context
+        obj.context
         # -> "myContext"
 
         with uniqueness_context("otherContext"):
             obj2 = UniqueObject("otherObj", 2)
 
-        obj2.uniqueness_context
+        obj2.context
         # -> "otherContext"
     """
     try:
-        _uniqueness_context_stack.append(context)
+        _context_stack.append(context)
         yield context
     finally:
-        _uniqueness_context_stack.pop()
+        _context_stack.pop()
 
 
 def unique_tree(**kwargs):
-    r""" unique_tree(cls=None, singular=None, plural=None, parents=True, deep_chilren=False, deep_parents=False, skip=None, transfer=None)
+    r""" unique_tree(cls=None, singular=None, plural=None, parents=True, deep_chilren=False, deep_parents=False, skip=None)
     Decorator that adds attributes and methods to the decorated class to provide tree features,
     i.e., *parent-child* relations. Example:
 
@@ -557,7 +638,7 @@ def unique_tree(**kwargs):
 
         @unique_tree(singular="node")
         class MyNode(UniqueObject):
-            default_uniqueness_context = "myclass"
+            default_context = "myclass"
 
         # MyNode has now the following attributes and methods:
         # nodes,          parent_nodes
@@ -607,7 +688,6 @@ def unique_tree(**kwargs):
         deep_children = kwargs.get("deep_children", False)
         deep_parents = kwargs.get("deep_parents", False)
         skip = make_list(kwargs.get("skip", None) or [])
-        transfer = make_list(kwargs.get("transfer", None) or [])
 
         # decorator for registering new instance methods with proper name and doc string
         def patch(name=None, **kwargs):
@@ -625,12 +705,6 @@ def unique_tree(**kwargs):
                     setattr(unique_cls, _name, f)
                 return f
             return decorator
-
-        # attribute transfer helper
-        def do_transfer(inst, kwargs):
-            for attr in transfer:
-                if attr not in kwargs:
-                    kwargs[attr] = getattr(inst, attr)
 
         # patch the init method
         orig_init = unique_cls.__init__
@@ -771,7 +845,6 @@ def unique_tree(**kwargs):
                 """
                 Adds a child {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
                 """
-                do_transfer(self, kwargs)
                 return getattr(self, plural).add(*args, **kwargs)
 
             # remove child method
@@ -817,7 +890,6 @@ def unique_tree(**kwargs):
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
                     added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
                     """
-                    do_transfer(self, kwargs)
                     obj = getattr(self, plural).add(*args, **kwargs)
                     getattr(obj, "parent_" + plural).add(self)
                     return obj
@@ -836,7 +908,6 @@ def unique_tree(**kwargs):
                     added {singular}. An exception is raised when the number of allowed parents is
                     exceeded. See :py:meth:`UniqueObjectIndex.add` for more info.
                     """
-                    do_transfer(self, kwargs)
                     index = getattr(self, plural)
                     obj = index.add(*args, **kwargs)
                     parent_index = getattr(obj, "parent_" + plural)
@@ -973,7 +1044,6 @@ def unique_tree(**kwargs):
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
                     added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
                     """
-                    do_transfer(self, kwargs)
                     obj = getattr(self, "parent_" + plural).add(*args, **kwargs)
                     getattr(obj, plural).add(self)
                     return obj
@@ -991,7 +1061,6 @@ def unique_tree(**kwargs):
                     Adds a child {singular}. Also adds *this* {singular} to the parent index of the
                     added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
                     """
-                    do_transfer(self, kwargs)
                     parent_index = getattr(self, "parent_" + plural)
                     if len(parent_index) >= parents:
                         raise Exception("number of parents exceeded: {}".format(parents))

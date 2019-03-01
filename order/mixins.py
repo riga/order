@@ -114,12 +114,12 @@ class CopyMixin(object):
     copy_specs = []
 
     def _copy_attribute(self, obj, spec):
-            if spec.ref:
-                return obj
-            elif spec.shallow:
-                return copy.copy(obj)
-            else:
-                return copy.deepcopy(obj)
+        if spec.ref:
+            return obj
+        elif spec.shallow:
+            return copy.copy(obj)
+        else:
+            return copy.deepcopy(obj)
 
     def _copy_attribute_manual(self, inst, obj, spec):
         raise NotImplementedError()

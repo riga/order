@@ -137,9 +137,9 @@ class DatasetInfoTest(unittest.TestCase):
 
     def test_copy(self):
         d = DatasetInfo(keys="/ttH", gen_eff=0.99, n_files=100, n_events=10000)
-        d2 = d.copy(skip_attrs=["n_files"], keys="/ttH2")
+        d2 = d.copy(keys="/ttH2")
 
         self.assertEqual(d2.keys[0], "/ttH2")
         self.assertEqual(d2.gen_eff, 0.99)
-        self.assertEqual(d2.n_files, -1)
+        self.assertEqual(d2.n_files, 100)
         self.assertEqual(d2.n_events, 10000)

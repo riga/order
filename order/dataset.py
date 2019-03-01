@@ -19,7 +19,7 @@ from order.util import typed, make_list
 
 @unique_tree(cls=Process, plural="processes", parents=False, deep_children=True)
 class Dataset(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin):
-    """ __init__(name, id, campaign=None, info=None, processes=None, label=None, label_short=None, is_data=False, aux=None, context=None, set_process_context=None, **kwargs)
+    """ __init__(name, id, campaign=None, info=None, processes=None, label=None, label_short=None, is_data=False, aux=None, context=None, **kwargs)
     Dataset definition providing two kinds of information:
 
     1. (systematic) shift-dependent, and
@@ -127,15 +127,15 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
     """
 
     # attributes for copying
-    copy_builtin = False
     copy_specs = [
+        "name",
+        "id",
         {"attr": "campaign", "ref": True},
-        "processes",
         "info",
-        "aux",
+        ("label", "_label"),
+        ("label_short", "_label_short"),
         "is_data",
-        ("_label", "label"),
-        ("_label_short", "label_short"),
+        "aux",
         "context",
     ]
 
@@ -244,7 +244,7 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
         return self.info["nominal"].n_events
 
 
-class DatasetInfo(CopyMixin):
+class DatasetInfo(CopyMixin, AuxDataMixin):
     """
     Container class holding information on particular dataset variations. Instances of *this* class
     are typically used in :py:class:`Dataset` objects to store shift-dependent information, such as
@@ -274,10 +274,17 @@ class DatasetInfo(CopyMixin):
        The number of events.
     """
 
-    copy_attrs = ["keys", "gen_eff", "n_files", "n_events"]
+    copy_specs = [
+        "keys",
+        "gen_eff",
+        "n_files",
+        "n_events",
+        "aux",
+    ]
 
-    def __init__(self, keys=None, gen_eff=1., n_files=-1, n_events=-1):
+    def __init__(self, keys=None, gen_eff=1., n_files=-1, n_events=-1, aux=None):
         CopyMixin.__init__(self)
+        AuxDataMixin.__init__(self, aux=aux)
 
         # instance members
         self._keys = []

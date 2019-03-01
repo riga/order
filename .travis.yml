@@ -1,16 +1,29 @@
-sudo: required
+stages:
+  - lint
+  - test
 
-dist: stretch
+lint:
+  stage: lint
+  tags:
+    - docker
+  image: python:3.7
+  script:
+    - export PATH="$PATH:/root/.local/bin"
+    - pip install flake8 --user
+    - flake8 order
 
-language: python
+unittests_py2:
+  stage: test
+  tags:
+    - docker
+  image: python:2.7
+  script:
+    - python -m unittest test
 
-python:
-  - "2.7"
-  - "3.5"
-  - "3.6"
-
-install:
-  - pip install -r requirements.txt
-
-script:
-  - python -m unittest tests
+unittests_py3:
+  stage: test
+  tags:
+    - docker
+  image: python:2.7
+  script:
+    - python -m unittest test

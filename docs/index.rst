@@ -240,3 +240,5 @@ Functions
 .. autofunction:: order.util.join_root_selection
 
 .. autofunction:: order.util.join_numexpr_selection
+
+.. autofunction:: order.util.class_id

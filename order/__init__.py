@@ -4,10 +4,10 @@
 
 __all__ = [
     "UniqueObject", "UniqueObjectIndex", "DuplicateObjectException", "DuplicateNameException",
-    "DuplicateIdException", "uniqueness_context", "CopyMixin", "AuxDataMixin", "TagMixin",
-    "DataSourceMixin", "SelectionMixin", "LabelMixin", "ColorMixin", "Channel", "Category",
-    "Variable", "Shift", "Process", "Dataset", "DatasetInfo", "Campaign", "Config", "Analysis",
-    "cms",
+    "DuplicateIdException", "uniqueness_context", "unique_tree", "CopyMixin", "AuxDataMixin",
+    "TagMixin", "DataSourceMixin", "SelectionMixin", "LabelMixin", "ColorMixin", "CopySpec",
+    "Channel", "Category", "Variable", "Shift", "Process", "Dataset", "DatasetInfo", "Campaign",
+    "Config", "Analysis",
 ]
 
 
@@ -20,10 +20,11 @@ from order.__version__ import (
 # provisioning imports
 from order.unique import (
     UniqueObject, UniqueObjectIndex, DuplicateObjectException, DuplicateNameException,
-    DuplicateIdException, uniqueness_context,
+    DuplicateIdException, uniqueness_context, unique_tree,
 )
 from order.mixins import (
     CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, LabelMixin, ColorMixin,
+    CopySpec,
 )
 from order.category import Channel, Category
 from order.variable import Variable
@@ -32,6 +33,3 @@ from order.process import Process
 from order.dataset import Dataset, DatasetInfo
 from order.config import Campaign, Config
 from order.analysis import Analysis
-
-# submodules
-from order import cms

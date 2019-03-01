@@ -15,7 +15,7 @@ from order.config import Config
 
 @unique_tree(cls=Config, parents=False)
 class Analysis(UniqueObject, AuxDataMixin):
-    """ __init__(name, id, configs=None, aux=None, context=None, set_config_context=None)
+    """ __init__(name, id, configs=None, aux=None, context=None)
     The analysis class which represents the central object of a physics analysis. Yet, it is quite
     lightweight as it essentially only *has* :py:class:`Config` objects that provide information in
     the scope of a :py:class:`Campaign`, initially set with *configs*. In addition, it provides some
@@ -24,7 +24,8 @@ class Analysis(UniqueObject, AuxDataMixin):
     *aux* is forwarded to the :py:class:`AuxDataMixin`, *name*, *id* and *context* to the
     :py:class:`UniqueObject` constructor.
 
-    For usage examples, see the `examples directory <https://github.com/riga/order/tree/master/examples>`_.
+    For usage examples, see the
+    `examples directory <https://github.com/riga/order/tree/master/examples>`_.
     """
 
     def __init__(self, name, id, configs=None, aux=None, context=None):

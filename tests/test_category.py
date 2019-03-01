@@ -14,7 +14,7 @@ class ChannelTest(unittest.TestCase):
     def test_constructor(self):
         c = Channel("test", 8, categories=["test_test"], label="TEST")
 
-        self.assertEqual(Channel.default_uniqueness_context, "channel")
+        self.assertEqual(Channel.default_context, "channel")
         self.assertEqual(c.name, "test")
         self.assertEqual(c.id, 8)
         self.assertEqual(len(c.categories), 1)
@@ -48,15 +48,20 @@ class ChannelTest(unittest.TestCase):
         self.assertEqual(c.label, c.name)
 
     def test_copy(self):
-        c = Channel("test3", 10, aux={"foo": "bar"}, label="test3 channel")
+        c = Channel("test3", 10, categories=["eq1j"], aux={"foo": "bar"}, label="test3 channel")
         c.add_channel("test3a", 101)
-        c2 = c.copy(name="test4", id=11, label="test3 channel")
+        c2 = c.copy(name="test4", id=11, label="test3 channel copy")
 
         self.assertEqual(len(c.channels), 1)
+        self.assertEqual(len(c.categories), 1)
+
         self.assertEqual(len(c2.channels), 0)
+        self.assertEqual(len(c2.categories), 0)
+
         self.assertEqual(c2.name, "test4")
         self.assertEqual(c2.id, 11)
         self.assertEqual(c2.aux, c.aux)
+        self.assertEqual(c2.label, "test3 channel copy")
         self.assertEqual(c2.label_short, c2.label)
 
 
@@ -88,7 +93,8 @@ class CategoryTest(unittest.TestCase):
             SL = Channel("SL", 1)
             c = Category("eq4j", channel=SL)
             c.add_category("eq4j_eq2b")
-            c2 = c.copy(name="SL2")
+            with uniqueness_context("other_context"):
+                c2 = c.copy(name="SL2", id="+")
 
         self.assertEqual(len(c.categories), 1)
         self.assertEqual(len(c2.categories), 0)

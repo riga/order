@@ -150,14 +150,15 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     """
 
     # attributes for copying
-    copy_builtin = False
     copy_specs = [
+        "name",
+        "id",
         "expression",
         "binning",
         "x_title",
-        ("_x_title_short", "x_title_short"),
+        ("x_title_short", "_x_title_short"),
         "y_title",
-        ("_y_title_short", "y_title_short"),
+        ("y_title_short", "_y_title_short"),
         "log_x",
         "log_y",
         "unit",
@@ -419,7 +420,11 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         the returned dict is updated with *update*. When *skip* is set, it can be a single key or a
         sequence of keys that will not be added to the returned dictionary.
         """
-        data = {"bins": self.n_bins, "range": (self.x_min, self.x_max), "label": self.name}
+        data = {
+            "bins": self.n_bins,
+            "range": (self.x_min, self.x_max),
+            "label": self.name,
+        }
         if self.log_x:
             data["log"] = True
 

@@ -52,6 +52,6 @@ setup(
     install_requires=install_requires,
     python_requires=">=2.7",
     zip_safe=False,
-    packages=["order", "order.cms"],
+    packages=["order"],
     package_data={"": ["LICENSE", "requirements.txt", "README.md"]},
 )

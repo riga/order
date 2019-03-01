@@ -21,7 +21,7 @@ from order.util import typed
 
 @unique_tree(cls=Dataset, parents=False)
 class Campaign(UniqueObject, AuxDataMixin):
-    """ __init__(name, id, ecm=None, bx=None, aux=None, context=None, set_dataset_context=None)
+    """ __init__(name, id, ecm=None, bx=None, aux=None, context=None)
     Class that provides data that is subject to a campaign, i.e., a well-defined range of
     data-taking, detector alignment, MC production settings, datasets, etc. Common, generic
     information is available via dedicated attributes, specialized data can be stored as auxiliary
@@ -57,11 +57,11 @@ class Campaign(UniqueObject, AuxDataMixin):
        The bunch crossing in arbitrary units.
     """
 
-    copy_builtin = False
     copy_specs = [
+        "name",
+        "id",
         "ecm",
         "bx",
-        "datasets",
         "aux",
         "context",
     ]
@@ -133,7 +133,7 @@ class Campaign(UniqueObject, AuxDataMixin):
 @unique_tree(cls=Variable, parents=False)
 @unique_tree(cls=Shift, parents=False)
 class Config(UniqueObject, CopyMixin, AuxDataMixin):
-    """ __init__(campaign, name=None, id=None, analysis=None, datasets=None, processes=None, channels=None, categories=None, variables=None, shifts=None, aux=None, context=None, set_dataset_context=None, set_process_context=None, set_channel_context=None, set_category_context=None, set_variable_context=None, set_shift_context=None)
+    """ __init__(campaign, name=None, id=None, analysis=None, datasets=None, processes=None, channels=None, categories=None, variables=None, shifts=None, aux=None, context=None)
     Class holding analysis information that is related to a :py:class:`Campaign` instance. Most of
     the analysis configuration happens here.
 
@@ -182,16 +182,11 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin):
        to the index of configs of the analysis object.
     """
 
-    copy_builtin = False
     copy_specs = [
         {"attr": "campaign", "ref": True},
+        "name",
+        "id",
         {"attr": "analysis", "ref": True},
-        "datasets",
-        "processes",
-        "channels",
-        "categories",
-        "variables",
-        "shifts",
         "aux",
         "context",
     ]

@@ -5,14 +5,17 @@ Helpful utilities.
 """
 
 
-__all__ = ["typed", "make_list", "multi_match", "flatten", "to_root_latex", "join_root_selection",
-           "join_numexpr_selection"]
+__all__ = [
+    "typed", "make_list", "multi_match", "flatten", "to_root_latex", "join_root_selection",
+    "join_numexpr_selection", "class_id", "args_to_kwargs",
+]
 
 
 import functools
 import types
 import re
 import fnmatch
+import inspect
 
 import six
 
@@ -241,3 +244,49 @@ def join_numexpr_selection(*selection, **kwargs):
         return _bracket(joined, force=True)
     else:
         return joined
+
+
+def class_id(cls):
+    """
+    Returns the full id of a *class*, i.e., the id of the module it is defined in, extended by the
+    name of the class. Example:
+
+    .. code-block:: python
+
+       # module a.b
+
+       class MyClass(object):
+           ...
+
+       class_id(MyClass)
+       # "a.b.MyClass"
+    """
+    name = cls.__name__
+    module = cls.__module__
+    # skip empty and builtin modules
+    if not module or module == str.__module__:
+        return name
+    else:
+        return module + "." + name
+
+
+def args_to_kwargs(func, args):
+    """
+    Converts arguments *args* passed to a function *func* to a dictionary that can be used as
+    keyword arguments. Internally, ``inspect.getargspec`` is used to get the names of arguments in
+    the function signature. Example:
+
+    .. code-block:: python
+
+       def func(a, b, c=1):
+           ...
+
+       def wrapper(*args, **kwargs):
+           kwargs.update(args_to_kwargs(func, args))
+           # kwargs now contains the initial args and kwargs for easy parsing
+           ...
+           return func(**kwargs)
+    """
+    ismethod = inspect.ismethod(func)
+    arg_names = inspect.getargspec(func).args[int(ismethod):]
+    return dict(zip(arg_names[:len(args)], args))

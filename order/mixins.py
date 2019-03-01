@@ -5,8 +5,10 @@ Mixin classes providing common functionality.
 """
 
 
-__all__ = ["CopyMixin", "AuxDataMixin", "TagMixin", "DataSourceMixin", "SelectionMixin",
-           "LabelMixin", "ColorMixin"]
+__all__ = [
+    "CopyMixin", "AuxDataMixin", "TagMixin", "DataSourceMixin", "SelectionMixin", "LabelMixin",
+    "ColorMixin", "CopySpec",
+]
 
 
 import copy
@@ -14,8 +16,53 @@ import collections
 
 import six
 
-from order.util import typed, make_list, multi_match, join_root_selection, join_numexpr_selection, \
-    to_root_latex
+from order.util import (
+    typed, make_list, multi_match, join_root_selection, join_numexpr_selection, to_root_latex,
+    args_to_kwargs,
+)
+
+
+class CopySpec(object):
+
+    @classmethod
+    def new(cls, obj):
+        if isinstance(obj, cls):
+            return copy.copy(obj)
+        elif isinstance(obj, six.string_types):
+            return cls(dst=obj)
+        elif isinstance(obj, (tuple, list)) and len(obj) == 2:
+            return cls(dst=obj[0], src=obj[1])
+        elif isinstance(obj, dict):
+            kwargs = {}
+            kwargs["dst"] = obj.get("dst", obj.get("attr"))
+            if kwargs["dst"] is None:
+                msg = "cannot create {} from dict, a 'dst' or 'attr' field is required, got '{}'"
+                raise ValueError(msg.format(cls.__name__, obj))
+            kwargs["src"] = obj.get("src", obj.get("attr"))
+            kwargs["ref"] = obj.get("ref", False)
+            kwargs["shallow"] = obj.get("shallow", False)
+            kwargs["use_setter"] = obj.get("use_setter", False)
+            kwargs["manual"] = obj.get("manual", False)
+            return cls(**kwargs)
+        else:
+            msg = "cannot create {} from unknown type of object '{}'"
+            raise TypeError(msg.format(cls.__name__, obj))
+
+    def __init__(self, dst, src=None, ref=False, shallow=False, use_setter=False, manual=False):
+        super(CopySpec, self).__init__()
+
+        self.dst = dst
+        self.src = src or dst
+        self.ref = ref
+        self.shallow = shallow
+        self.use_setter = use_setter
+        self.manual = manual
+
+    def __eq__(self, spec):
+        # two specs are equal when their dst attributes are equal
+        if not isinstance(spec, self.__class__):
+            spec = self.new(spec)
+        return self.dst == spec.dst
 
 
 class CopyMixin(object):
@@ -64,63 +111,24 @@ class CopyMixin(object):
        The default attributes to skip from copying when *skip_attrs* is *None* in the copy method.
     """
 
-    copy_ref = False
     copy_specs = []
 
-    @classmethod
-    def _expand_copy_specs(cls, specs):
-        _specs = []
-        for spec in specs:
-            _spec = {"src": None, "dst": None, "ref": False, "shallow": False, "use_setter": False}
-            if isinstance(spec, six.string_types):
-                _spec["src"] = spec
-                _spec["dst"] = spec
-            elif isinstance(spec, (tuple, list)) and len(spec) == 2:
-                _spec["src"] = spec[0]
-                _spec["dst"] = spec[1]
-            elif isinstance(spec, dict):
-                _spec.update(spec)
-                if "attr" in _spec:
-                    if _spec["src"] is None:
-                        _spec["src"] = _spec["attr"]
-                    if _spec["dst"] is None:
-                        _spec["dst"] = _spec["attr"]
-            _specs.append(_spec)
-        return _specs
+    def _copy_attribute(self, obj, spec):
+            if spec.ref:
+                return obj
+            elif spec.shallow:
+                return copy.copy(obj)
+            else:
+                return copy.deepcopy(obj)
 
-    def _copy_ref(self, kwargs, cls):
+    def _copy_attribute_manual(self, inst, obj, spec):
+        raise NotImplementedError()
+
+    def _copy_ref(self, specs, kwargs, cls):
         return False
 
-    def _copy_kwargs(self, specs, kwargs, shallow=False, shallow_attrs=None, ref_attrs=None):
-        shallow_attrs = shallow_attrs or []
-        ref_attrs = ref_attrs or []
-
-        # work on a copy of kwargs
-        kwargs = kwargs.copy()
-
-        for spec in specs:
-            src = spec["src"]
-            dst = spec["dst"]
-
-            if dst in kwargs:
-                continue
-
-            obj = getattr(self, src)
-            if spec["ref"] or dst in ref_attrs:
-                kwargs[dst] = obj
-            elif spec["shallow"] or dst in shallow_attrs:
-                kwargs[dst] = copy.copy(obj)
-            else:
-                kwargs[dst] = copy.deepcopy(obj)
-
-        return kwargs
-
-    def _update_copy_kwargs(self, kwargs, cls):
-        return kwargs
-
-    def copy(self, kwargs=None, cls=None, specs=None, shallow=False, shallow_attrs=None,
-            ref_attrs=None, use_setters=None):
-        r"""
+    def copy(self, *args, **kwargs):
+        r"""copy(*args, **kwargs, _cls=None, _specs=None, _replace_specs=False)
         Returns a copy of this instance via copying (*copy_attrs*) or re-referencing attributes
         (*ref_attrs*). When *None*, they default to the *copy_\** classmembers. *skip_attrs* defines
         attributes to skip, e.g., when *copy_attrs* is *None* and the default attributes are used.
@@ -129,36 +137,45 @@ class CopyMixin(object):
         copy and the attributes in a dict, so they can be updated *before* the actual copy is
         created.
         """
-        # default args
-        if kwargs is None:
-            kwargs = {}
-        if cls is None:
-            cls = self.__class__
+        # extract the copy configuration from kwargs
+        cls = kwargs.pop("_cls", self.__class__)
+        specs = kwargs.pop("_specs", None)
+        replace_specs = kwargs.pop("_replace_specs", False)
         if specs is None:
             specs = self.copy_specs
-        if use_setters is None:
-            use_setters = []
+        elif not replace_specs:
+            specs = self.copy_specs + specs
+
+        # unite args and kwargs
+        kwargs.update(args_to_kwargs(cls.__init__, args))
 
         # check if a reference should be returned instead of a real copy
-        if self._copy_ref(kwargs, cls):
+        # _copy_ref might also update kwargs
+        if self._copy_ref(kwargs, cls, specs):
             return self
 
-        # expand the copy specs
-        specs = self._expand_copy_specs(specs)
+        # ensure that specs contain CopySpec objects
+        # also remove duplicates, prioritize last occurances
+        _specs = []
+        for spec in specs[::-1]:
+            if not isinstance(spec, CopySpec):
+                spec = CopySpec.new(spec)
+            if spec not in _specs:
+                _specs.insert(0, spec)
+        specs = _specs
 
         # actual attribute copying
-        kwargs = self._copy_kwargs(specs, kwargs, shallow=shallow, shallow_attrs=shallow_attrs,
-            ref_attrs=ref_attrs)
-
-        # invoke the hook for updating kwargs
-        kwargs = self._update_copy_kwargs(kwargs, cls)
+        kwargs = kwargs.copy()
+        for spec in specs:
+            # only copy when not manual the attribute is not yet in kwargs
+            if not spec.manual and spec.dst not in kwargs:
+                kwargs[spec.dst] = self._copy_attribute(getattr(self, spec.src), spec)
 
         # determine which attributes are not passed to the constructor, but set with plain setters
         set_attrs = []
         for spec in specs:
-            attr = spec["dst"]
-            if attr in kwargs and (spec["use_setter"] or attr in use_setters):
-                set_attrs.append((attr, kwargs.pop(attr)))
+            if spec.use_setter and spec.dst in kwargs:
+                set_attrs.append((spec.dst, kwargs.pop(spec.dst)))
 
         # create the instance
         inst = cls(**kwargs)
@@ -167,13 +184,19 @@ class CopyMixin(object):
         for attr, obj in set_attrs:
             setattr(inst, attr, obj)
 
+        # invoke manual copy implementations
+        for spec in specs:
+            # only copy when the attribute is not yet in kwargs
+            if spec.manual and spec.dst not in kwargs:
+                self._copy_attribute_manual(inst, getattr(self, spec.src), spec)
+
         return inst
 
     def __copy__(self):
-        return self.copy(shallow=True)
+        return self.copy()
 
     def __deepcopy__(self, memo):
-        return self.copy(shallow=False)
+        return self.copy()
 
 
 class AuxDataMixin(object):

@@ -14,21 +14,13 @@ from order import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionM
 class CopyMixinTest(unittest.TestCase):
 
     def make_class(self):
-        def extend_name(inst, kwargs):
-            kwargs["name"] += "_"
-
         class C(CopyMixin):
-            copy_attrs = ["name", "id"]
-            copy_callbacks = [extend_name, "increment_id"]
+            copy_specs = ["name", "id"]
 
             def __init__(self, name, id=0):
                 super(C, self).__init__()
                 self.name = name
                 self.id = id
-
-            @staticmethod
-            def increment_id(inst, kwargs):
-                kwargs["id"] += 1
 
         return C
 
@@ -36,45 +28,10 @@ class CopyMixinTest(unittest.TestCase):
         C = self.make_class()
         a = C("foo", 1)
 
-        b = a.copy(callbacks=[])
+        b = a.copy()
         self.assertIsInstance(b, C)
         self.assertEqual(b.name, "foo")
         self.assertEqual(b.id, 1)
-
-    def test_copy_attrs(self):
-        C = self.make_class()
-        a = C("foo", 1)
-
-        b = a.copy(copy_attrs=["name"], callbacks=[])
-        self.assertIsInstance(b, C)
-        self.assertEqual(b.name, "foo")
-        self.assertEqual(b.id, 0)
-
-    def test_ref_attrs(self):
-        C = self.make_class()
-        a = C(object(), 1)
-
-        b = a.copy(copy_attrs=[], ref_attrs=["name"], callbacks=[])
-        self.assertIsInstance(b, C)
-        self.assertEqual(b.name, a.name)
-
-    def test_skip_attrs(self):
-        C = self.make_class()
-        a = C("foo", 1)
-
-        b = a.copy(skip_attrs=["id"], callbacks=[])
-        self.assertIsInstance(b, C)
-        self.assertEqual(b.name, "foo")
-        self.assertEqual(b.id, 0)
-
-    def test_callbacks(self):
-        C = self.make_class()
-        a = C("foo", 1)
-
-        b = a.copy()
-        self.assertIsInstance(b, C)
-        self.assertEqual(b.name, "foo_")
-        self.assertEqual(b.id, 2)
 
     def test_class(self):
         C = self.make_class()
@@ -83,10 +40,106 @@ class CopyMixinTest(unittest.TestCase):
         class D(C):
             pass
 
-        b = a.copy(cls=D)
+        b = a.copy(_cls=D)
         self.assertIsInstance(b, D)
-        self.assertEqual(b.name, "foo_")
-        self.assertEqual(b.id, 2)
+        self.assertEqual(b.name, "foo")
+        self.assertEqual(b.id, 1)
+
+    def test_replace_specs(self):
+        C = self.make_class()
+        a = C("foo", 1)
+
+        b = a.copy()
+
+        self.assertEqual(b.name, a.name)
+        self.assertEqual(b.id, a.id)
+
+        c = a.copy(_specs=["name"], _replace_specs=True)
+
+        self.assertEqual(c.name, a.name)
+        self.assertEqual(c.id, 0)
+
+    def test_ref(self):
+        C = self.make_class()
+        o = object()
+
+        class D(C):
+            copy_specs = C.copy_specs + [{"attr": "o", "ref": True}]
+
+            def __init__(self, name, id=0, o=None):
+                super(D, self).__init__(name, id=id)
+                self.o = o
+
+        d = D("foo", 1, o)
+        d2 = d.copy()
+
+        self.assertEqual(d.o, d2.o)
+
+        d3 = d.copy(_specs=[{"attr": "o", "ref": False}])
+        self.assertNotEqual(d.o, d3.o)
+
+    def test_shallow(self):
+        C = self.make_class()
+        d = {"a": [1]}
+
+        class D(C):
+            copy_specs = C.copy_specs + [{"attr": "d", "shallow": True}]
+
+            def __init__(self, name, id=0, d=None):
+                super(D, self).__init__(name, id=id)
+                self.d = d
+
+        a = D("foo", 1, d)
+        b = a.copy()
+
+        self.assertEqual(len(a.d["a"]), 1)
+        self.assertEqual(len(b.d["a"]), 1)
+
+        a.d["a"].append(2)
+
+        self.assertEqual(len(a.d["a"]), 2)
+        self.assertEqual(len(b.d["a"]), 2)
+
+        c = a.copy(_specs=[{"attr": "d", "shallow": False}])
+
+        self.assertEqual(len(a.d["a"]), 2)
+        self.assertEqual(len(c.d["a"]), 2)
+
+        a.d["a"].append(3)
+
+        self.assertEqual(len(a.d["a"]), 3)
+        self.assertEqual(len(c.d["a"]), 2)
+
+    def test_use_setter(self):
+        C = self.make_class()
+
+        class D(C):
+            copy_specs = C.copy_specs + [{"attr": "value", "use_setter": True}]
+
+            def __init__(self, *args, **kwargs):
+                super(D, self).__init__(*args, **kwargs)
+                self.value = 123
+
+        a = D("foo", 1)
+        b = a.copy()
+
+        self.assertEqual(b.value, a.value)
+
+    def test_different_dst_src(self):
+        C = self.make_class()
+
+        class D(C):
+            copy_specs = C.copy_specs + [{"src": "foo", "dst": "bar"}]
+
+            def __init__(self, name, id=0, bar=None):
+                super(D, self).__init__(name, id=id)
+
+                self.foo = bar
+
+        a = D("foo", 1, 123)
+        b = a.copy()
+
+        self.assertEqual(b.foo, a.foo)
 
 
 class AuxDataMixinTest(unittest.TestCase):

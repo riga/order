@@ -127,14 +127,13 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
     SHAPE = "shape"
 
     # attributes for copying
-    copy_builtin = False
     copy_specs = [
         "name",
         "id",
-        "context",
-        ("_label", "label"),
-        ("_label_short", "label_short"),
         "type",
+        ("label", "_label"),
+        ("label_short", "_label_short"),
+        "context",
     ]
 
     @classmethod
@@ -203,25 +202,6 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
         self._source, self._direction = self.split_name(self.name)
         if type is not None:
             self.type = type
-
-    def _copy_ref(self, kwargs, cls):
-        # kwargs contains attributes before copying, i.e., changed values w.r.t. this instance
-
-
-
-
-        context = kwargs.get("context", cls.get_default_context())
-        if context == self.context:
-
-
-
-
-
-        # in case name, id and context are identical, return True to signify that a reference
-        data = (self.name, self.id, self.context)
-        copy_data = (kwargs.get("name", self.name), kwargs.get("id", self.id))
-        import pdb; pdb.set_trace()
-        pass
 
     @property
     def source(self):

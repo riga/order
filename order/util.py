@@ -287,6 +287,9 @@ def args_to_kwargs(func, args):
            ...
            return func(**kwargs)
     """
-    ismethod = inspect.ismethod(func)
-    arg_names = inspect.getargspec(func).args[int(ismethod):]
+    if six.PY2:
+        ismethod = inspect.ismethod(func)
+        arg_names = inspect.getargspec(func).args[int(ismethod):]
+    else:
+        arg_names = list(inspect.signature(func).parameters.keys())
     return dict(zip(arg_names[:len(args)], args))

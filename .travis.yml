@@ -28,7 +28,7 @@ jobs:
       install:
         - docker pull $IMG
       script:
-        - docker run --rm -t -v `pwd`:/root/order -w /root/order $IMG bash -c "pip install -r requirements.txt && python -m unittest tests"
+        - bash tests/docker.sh $IMG
 
     - stage: test
       services:
@@ -39,4 +39,4 @@ jobs:
       install:
         - docker pull $IMG
       script:
-        - docker run --rm -t -v `pwd`:/root/order -w /root/order $IMG bash -c "pip install -r requirements.txt && python -m unittest tests"
+        - bash tests/docker.sh $IMG

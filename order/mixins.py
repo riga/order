@@ -147,7 +147,7 @@ class CopyMixin(object):
             specs = self.copy_specs + specs
 
         # unite args and kwargs
-        kwargs.update(args_to_kwargs(cls.__init__, args))
+        kwargs.update(args_to_kwargs(cls.__init__ if six.PY2 else cls, args))
 
         # check if a reference should be returned instead of a real copy
         # _copy_ref might also update kwargs

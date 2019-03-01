@@ -118,7 +118,7 @@ class UniqueObjectTest(unittest.TestCase):
         c = C("bar", 2)
         self.assertEqual(c.context, "c")
 
-        self.assertEqual(tuple(C._instances.contexts()), ("y", "x", "c", "test_context"))
+        self.assertEqual(set(C._instances.contexts()), {"y", "x", "c", "test_context"})
 
     def test_copy(self):
         C = self.make_class()
@@ -278,7 +278,7 @@ class UniqueObjectIndexTest(unittest.TestCase):
         self.assertEqual(idx.len(), 2)
         self.assertEqual(idx.len(context="other"), 1)
 
-        self.assertEqual(tuple(idx.contexts()), ("c", "other"))
+        self.assertEqual(set(idx.contexts()), {"c", "other"})
 
         self.assertEqual(tuple(idx.names()), ("foo", "bar"))
         self.assertEqual(tuple(idx.names(context="other")), ("test",))

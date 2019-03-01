@@ -1,31 +1,42 @@
+sudo: required
+
+dist: xenial
+
 language: python
 
 stages:
   - lint
   - test
 
-lint:
-  stage: lint
-  tags:
-    - docker
-  image: python:3.7
-  script:
-    - export PATH="$PATH:/root/.local/bin"
-    - pip install flake8 --user
-    - flake8 order
+jobs:
+  include:
+    - stage: lint
+      env:
+        - JOB=lint
+      install:
+        - pip install -r requirements.txt
+        - pip install flake8
+      script:
+        - flake8 order
 
-unittests_py2:
-  stage: test
-  tags:
-    - docker
-  image: python:2.7
-  script:
-    - python -m unittest test
+    - stage: test
+      services:
+        - docker
+      env:
+        - JOB=test_python27
+        - IMG=python:2.7
+      install:
+        - docker pull $IMG
+      script:
+        - docker run --rm -t -v `pwd`:/root/order -w /root/order $IMG bash -c "pip install -r requirements.txt && python -m unittest tests"
 
-unittests_py3:
-  stage: test
-  tags:
-    - docker
-  image: python:2.7
-  script:
-    - python -m unittest test
+    - stage: test
+      services:
+        - docker
+      env:
+        - JOB=test_python37
+        - IMG=python:3.7
+      install:
+        - docker pull $IMG
+      script:
+        - docker run --rm -t -v `pwd`:/root/order -w /root/order $IMG bash -c "pip install -r requirements.txt && python -m unittest tests"

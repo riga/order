@@ -151,7 +151,7 @@ class AuxDataMixinTest(unittest.TestCase):
         c = AuxDataMixin(aux={"foo": "bar"})
         self.assertEqual(len(c.aux), 1)
 
-    def test_set_has_remove(self):
+    def test_methods(self):
         c = AuxDataMixin()
         c.set_aux("foo", "bar")
         self.assertEqual(len(c.aux), 1)
@@ -167,7 +167,8 @@ class AuxDataMixinTest(unittest.TestCase):
 
         c.set_aux("foo", "bar")
         self.assertTrue(c.has_aux("foo"))
-        c.remove_aux()
+
+        c.clear_aux()
         self.assertFalse(c.has_aux("foo"))
 
 
@@ -250,24 +251,44 @@ class DataSourceMixinTest(unittest.TestCase):
 class SelectionMixinTest(unittest.TestCase):
 
     def test_constructor_root(self):
-        s = SelectionMixin("myBranchC > 0")
-        self.assertEqual(s.selection, "(myBranchC > 0)")
+        s = SelectionMixin("myBranchC > 0", selection_mode=SelectionMixin.MODE_ROOT)
+        self.assertEqual(s.selection, "myBranchC > 0")
 
         s.add_selection("myBranchD < 100", bracket=True)
         self.assertEqual(s.selection, "((myBranchC > 0) && (myBranchD < 100))")
 
         s.add_selection("myWeight", op="*")
-        self.assertEqual(s.selection, "(((myBranchC > 0) && (myBranchD < 100)) * (myWeight))")
+        self.assertEqual(s.selection, "((myBranchC > 0) && (myBranchD < 100)) * (myWeight)")
 
     def test_constructor_numexpr(self):
-        s = SelectionMixin("myBranchC > 0", "numexpr")
-        self.assertEqual(s.selection, "(myBranchC > 0)")
+        s = SelectionMixin("myBranchC > 0", selection_mode=SelectionMixin.MODE_NUMEXPR)
+        self.assertEqual(s.selection, "myBranchC > 0")
 
         s.add_selection("myBranchD < 100", bracket=True)
         self.assertEqual(s.selection, "((myBranchC > 0) & (myBranchD < 100))")
 
         s.add_selection("myWeight", op="*")
-        self.assertEqual(s.selection, "(((myBranchC > 0) & (myBranchD < 100)) * (myWeight))")
+        self.assertEqual(s.selection, "((myBranchC > 0) & (myBranchD < 100)) * (myWeight)")
+
+    def test_selections(self):
+        s = SelectionMixin(selection_mode=SelectionMixin.MODE_ROOT)
+
+        s.selection = "myBranchC > 0"
+        self.assertEqual(s.selection, "myBranchC > 0")
+
+        s.add_selection("myBranchD > 0", op="||")
+        self.assertEqual(s.selection, "(myBranchC > 0) || (myBranchD > 0)")
+
+        s.selection = "myBranchC > 0"
+        s.add_selection("myBranchD > 0", op="||", bracket=True)
+        self.assertEqual(s.selection, "((myBranchC > 0) || (myBranchD > 0))")
+
+        s.selection = ["myBranchC > 0", "myBranchE > 0"]
+        self.assertEqual(s.selection, "(myBranchC > 0) && (myBranchE > 0)")
+
+        s.selection_mode = SelectionMixin.MODE_NUMEXPR
+        s.selection = ["myBranchC > 0", "myBranchE > 0"]
+        self.assertEqual(s.selection, "(myBranchC > 0) & (myBranchE > 0)")
 
 
 class LabelMixinTest(unittest.TestCase):

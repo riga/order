@@ -12,23 +12,38 @@ import six
 
 from order.unique import UniqueObject
 from order.mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin
-from order.util import typed, to_root_latex, make_list
+from order.util import ROOT_DEFAULT, typed, to_root_latex, make_list
 
 
 class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     r"""
-    Class that provides simplified access to plotting variables.
+    Class that provides simplified access to variables for convenience methods for plotting with
+    both ROOT and matplotlib.
+
+    **Arguments**
 
     *expression* and *selection* can be used for projection statements. When empty, *expression*
     defaults to *name*. Other options that are relevant for plotting are *binning*, *x_title*,
-    *x_title_short*, *y_title*, *y_title_short*, and *unit*. *selection* and *selection_mode* are
-    passed to the :py:class:`SelectionMixin`, *tags* to the :py:class:`TagMixin`, *aux* to the
-    :py:class:`AuxDataMixin`, and *name*, *id* (defaulting to an auto id) and *context* to the
-    :py:class:`UniqueObject` constructor.
+    *x_title_short*, *y_title*, *y_title_short*, and *unit*. See the attribute listing below for
+    further information.
+
+    *selection* and *selection_mode* are passed to the :py:class:`~order.mixins.SelectionMixin`,
+    *tags* to the :py:class:`~order.mixins.TagMixin`, *aux* to the
+    :py:class:`~order.mixins.AuxDataMixin`, and *name*, *id* (defaulting to an automatically
+    increasing id) and *context* to the :py:class:`~order.unique.UniqueObject` constructor.
+
+    **Copy behavior**
+
+    All attributes are copied. Also note the copy behavior of
+    :py:class:`~order.unique.UniqueObject`'s.
+
+    **Example**
 
     .. code-block:: python
 
-        v = Variable("myVar",
+        import order as od
+
+        v1 = od.Variable("myVar",
             expression="myBranchA * myBranchB",
             selection="myBranchC > 0",
             binning=(20, 0., 10.),
@@ -36,11 +51,23 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
             unit="GeV",
         )
 
-        v.x_title_root
+        v1.x_title_root
         # -> "#mu p_{T}"
 
-        v.full_title()
-        # -> "myVar;$\mu p_{T}$" [GeV];Entries / 0.5 GeV'"
+        v1.full_title()
+        # -> "myVar;$\mu p_{T}$" / GeV;Entries / 0.5 GeV'"
+
+        v2 = v1.copy(name="copiedVar", id="+",
+            binning=[0.0, 0.5, 1.5, 3.0],
+        )
+
+        v2.full_title()
+        # -> "copiedVar;#mu p_{T} / GeV;Entries / GeV"
+
+        v2.even_binning
+        # -> False
+
+    **Members**
 
     .. py:attribute:: expression
        type: string, None
@@ -50,10 +77,10 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     .. py:attribute:: binning
        type: tuple, list
 
-       Descibes the bin edges when given a list, or number of bins, minimum bin and maximum bin when
-       passed a 3-tuple.
+       Descibes the bin edges when given a list, or the number of bins, minimum value and maximum
+       value when passed a 3-tuple.
 
-    .. py:attribute:: has_even_binning
+    .. py:attribute:: even_binning
        type: bool
        read-only
 
@@ -62,51 +89,59 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     .. py:attribute:: x_title
        type: string
 
-       The title of the x-axis.
+       The title of the x-axis in standard LaTeX format.
 
     .. py:attribute:: x_title_root
        type: string
        read-only
 
-       The title of the x-axis, converted to *proper* ROOT latex.
+       The title of the x-axis, converted to ROOT-style latex.
 
     .. py:attribute:: x_title_short
        type: string
 
-       Short version for the title of the x-axis. Defaults to *x_title* when not explicitely set.
+       Short version for the title of the x-axis in standard LaTeX format. Defaults to *x_title*
+       when not explicitely set.
 
     .. py:attribute:: x_title_short_root
        type: string
        read-only
 
-       The short version of the title of the x-axis, converted to *proper* ROOT latex.
+       The short version of the title of the x-axis, converted to ROOT-style latex.
 
     .. py:attribute:: y_title
        type: string
 
-       The title of the y-axis.
+       The title of the y-axis in standard LaTeX format.
 
     .. py:attribute:: y_title_root
        type: string
        read-only
 
-       The title of the y-axis, converted to *proper* ROOT latex.
+       The title of the y-axis, converted to ROOT-style latex.
 
     .. py:attribute:: y_title_short
        type: string
 
-       Short version for the title of the y-axis. Defaults to *y_title* when not explicitely set.
+       Short version for the title of the y-axis in standard LaTeX format. Defaults to *y_title*
+       when not explicitely set.
 
     .. py:attribute:: y_title_short_root
        type: string
        read-only
 
-       The short version of the title of the y-axis, converted to *proper* ROOT latex.
+       The short version of the title of the y-axis, converted to ROOT-style latex.
 
     .. py:attribute:: unit
        type: string, None
 
        The unit to be shown on both, x- and y-axis. When *None*, no unit is shown.
+
+    .. py:attribute:: unit_format
+       type: string
+
+       The format string for concatenating axis titles and units, e.g. ``"{title} / {unit}"``. The
+       format string must contain the fields *title* and *unit*.
 
     .. py:attribute:: log_x
        type: boolean
@@ -151,28 +186,15 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
     # attributes for copying
     copy_specs = [
-        "name",
-        "id",
-        "expression",
-        "binning",
-        "x_title",
-        ("x_title_short", "_x_title_short"),
-        "y_title",
-        ("y_title_short", "_y_title_short"),
-        "log_x",
-        "log_y",
-        "unit",
-        "aux",
-        "tags",
-        "selection",
-        "selection_mode",
-        "context",
-    ]
+        "expression", "binning", "x_title", ("_x_title_short", "x_title_short"), "y_title",
+        ("_y_title_short", "y_title_short"), "log_x", "log_y", "unit", "unit_format",
+    ] + UniqueObject.copy_specs + AuxDataMixin.copy_specs + TagMixin.copy_specs + \
+        SelectionMixin.copy_specs
 
     def __init__(self, name, id=UniqueObject.AUTO_ID, expression=None, binning=(1, 0., 1.),
             x_title="", x_title_short=None, y_title="Entries", y_title_short=None, log_x=False,
-            log_y=False, unit="1", selection=None, selection_mode=None, tags=None, aux=None,
-            context=None):
+            log_y=False, unit="1", unit_format="{title} / {unit}", selection=None,
+            selection_mode=None, tags=None, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
@@ -189,17 +211,19 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         self._log_x = None
         self._log_y = None
         self._unit = None
+        self._unit_format = None
 
         # set initial values
-        self._expression = expression
-        self._binning = binning
-        self._x_title = x_title
-        self._x_title_short = x_title_short
-        self._y_title = y_title
-        self._y_title_short = y_title_short
-        self._log_x = log_x
-        self._log_y = log_y
-        self._unit = unit
+        self.expression = expression
+        self.binning = binning
+        self.x_title = x_title
+        self.x_title_short = x_title_short
+        self.y_title = y_title
+        self.y_title_short = y_title_short
+        self.log_x = log_x
+        self.log_y = log_y
+        self.unit = unit
+        self.unit_format = unit_format
 
     @property
     def expression(self):
@@ -239,7 +263,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         return binning
 
     @property
-    def has_even_binning(self):
+    def even_binning(self):
         return isinstance(self.binning, tuple)
 
     @typed
@@ -328,39 +352,55 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     def unit(self, unit):
         if unit is None:
             return None
-        elif isinstance(unit, six.string_types):
-            return str(unit)
-        else:
+        elif not isinstance(unit, six.string_types):
             raise TypeError("invalid unit type: {}".format(unit))
+
+        return str(unit)
+
+    @typed
+    def unit_format(self, unit_format):
+        if not isinstance(unit_format, six.string_types):
+            raise TypeError("invalid unit_format type: {}".format(unit_format))
+
+        unit_format = str(unit_format)
+
+        # test for formatting
+        try:
+            unit_format.format(title="", unit="")
+        except KeyError as e:
+            key = e.args[0]
+            raise ValueError("invalid unit_format: {}, key '{}' missing".format(unit_format, key))
+
+        return unit_format
 
     @property
     def n_bins(self):
-        return self.binning[0] if self.has_even_binning else (len(self.binning) - 1)
+        return self.binning[0] if self.even_binning else (len(self.binning) - 1)
 
     @property
     def x_min(self):
-        return self.binning[1 if self.has_even_binning else 0]
+        return self.binning[1 if self.even_binning else 0]
 
     @property
     def x_max(self):
-        return self.binning[2 if self.has_even_binning else -1]
+        return self.binning[2 if self.even_binning else -1]
 
     @property
     def bin_width(self):
-        if not self.has_even_binning:
+        if not self.even_binning:
             raise Exception("bin_width is not defined when binning is not even")
 
         return (self.x_max - self.x_min) / float(self.n_bins)
 
     @property
     def bin_edges(self):
-        if not self.has_even_binning:
+        if not self.even_binning:
             return self.binning
         else:
             bin_width = self.bin_width
             return [self.x_min + i * bin_width for i in range(self.n_bins + 1)]
 
-    def full_x_title(self, short=False, root=False):
+    def full_x_title(self, short=False, root=ROOT_DEFAULT):
         """
         Returns the full title (i.e. with unit string) of the x-axis. When *short* is *True*, the
         short version is returned. When *root* is *True*, the title is converted to *proper* ROOT
@@ -369,36 +409,41 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         title = self.x_title_short if short else self.x_title
 
         if self.unit not in (None, "1"):
-            title += " [%s]" % self.unit
+            title = self.unit_format.format(title=title, unit=self.unit)
 
         return to_root_latex(title) if root else title
 
-    def full_y_title(self, bin_width=None, short=False, root=False):
+    def full_y_title(self, bin_width=None, short=False, root=ROOT_DEFAULT):
         """
         Returns the full title (i.e. with bin width and unit string) of the y-axis. When not *None*,
         the value *bin_width* instead of the one evaluated from *binning* when even. When *short* is
         *True*, the short version is returned. When *root* is *True*, the title is converted to
-        *proper* ROOT latex.
+        ROOT-style latex.
         """
         title = self.y_title_short if short else self.y_title
 
-        if bin_width is None and self.has_even_binning:
+        # determine the bin width when not set
+        if bin_width is None and self.even_binning:
             bin_width = round(self.bin_width, 2)
-        if bin_width:
-            title += " / %s" % bin_width
 
+        # add bin width and unit to the title
+        unit = []
         if self.unit not in (None, "1"):
-            title += " %s" % self.unit
+            unit.append(str(self.unit))
+        if bin_width:
+            unit.insert(0, str(bin_width))
+        if unit:
+            title = self.unit_format.format(title=title, unit=" ".join(unit))
 
         return to_root_latex(title) if root else title
 
-    def full_title(self, name=None, short=False, short_x=None, short_y=None, root=True,
+    def full_title(self, name=None, short=False, short_x=None, short_y=None, root=ROOT_DEFAULT,
             bin_width=None):
         """
         Returns the full combined title that is compliant with ROOT's TH1 classes. *short_x*
         (*short_y*) is passed to :py:meth:`full_x_title` (:py:meth:`full_y_title`). Both values
         fallback to *short* when *None*. *bin_width* is forwarded to :py:meth:`full_y_title`. When
-        *root* is *False*, the axis titles are not converted to *proper* ROOT latex.
+        *root* is *False*, the axis titles are not converted to ROOT-style latex.
         """
         if name is None:
             name = self.name

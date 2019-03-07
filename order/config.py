@@ -20,22 +20,33 @@ from order.util import typed
 
 
 @unique_tree(cls=Dataset, parents=False)
-class Campaign(UniqueObject, AuxDataMixin):
-    """ __init__(name, id, ecm=None, bx=None, aux=None, context=None)
+class Campaign(UniqueObject, CopyMixin, AuxDataMixin):
+    """ __init__(name, id, ecm=None, bx=None, datasets=None, aux=None, context=None)
     Class that provides data that is subject to a campaign, i.e., a well-defined range of
     data-taking, detector alignment, MC production settings, datasets, etc. Common, generic
     information is available via dedicated attributes, specialized data can be stored as auxiliary
     data.
 
+    **Arguments**
+
     *ecm* is the center-of-mass energy, *bx* the bunch-crossing. *aux* is forwarded to the
-    :py:class:`AuxDataMixin`, *name*, *id* and *context* to the :py:class:`UniqueObject`
-    constructor.
+    :py:class:`~order.mixins.AuxDataMixin`, *name*, *id* and *context* to the
+    :py:class:`~order.unique.UniqueObject` constructor.
+
+    **Copy behavior**
+
+    All attributes are copied **except** for references to contained datasets. Also note the copy
+    behavior of :py:class:`~order.unique.UniqueObject`'s.
+
+    **Example**
 
     .. code-block:: python
 
-        c = Campaign("2017B", 1,
-            ecm = 13,
-            bx  = 25
+        import order as od
+
+        c = od.Campaign("2017B", 1,
+            ecm=13,
+            bx=25,
         )
 
         d = c.add_dataset("ttH", 1)
@@ -45,6 +56,8 @@ class Campaign(UniqueObject, AuxDataMixin):
 
         d.campaign == c
         # -> True
+
+    **Members**
 
     .. py:attribute:: ecm
        type: float
@@ -57,14 +70,7 @@ class Campaign(UniqueObject, AuxDataMixin):
        The bunch crossing in arbitrary units.
     """
 
-    copy_specs = [
-        "name",
-        "id",
-        "ecm",
-        "bx",
-        "aux",
-        "context",
-    ]
+    copy_specs = ["ecm", "bx"] + UniqueObject.copy_specs + AuxDataMixin.copy_specs
 
     def __init__(self, name, id, ecm=None, bx=None, datasets=None, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
@@ -102,7 +108,7 @@ class Campaign(UniqueObject, AuxDataMixin):
     def add_dataset(self, *args, **kwargs):
         """
         Adds a child dataset and returns it. See :py:meth:`UniqueObjectIndex.add` for more info.
-        Also sets the campaign of the added dataset to *this* instance.
+        Also sets the *campaign* of the added dataset to *this* instance.
         """
         dataset = self.datasets.add(*args, **kwargs)
 
@@ -115,7 +121,7 @@ class Campaign(UniqueObject, AuxDataMixin):
     def remove_dataset(self, *args, **kwargs):
         """
         Removes a child dataset. See :py:meth:`UniqueObjectIndex.remove` for more info. Also resets
-        the campaign of the added dataset.
+        the *campaign* of the added dataset.
         """
         dataset = self.datasets.remove(*args, **kwargs)
 
@@ -137,36 +143,62 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin):
     Class holding analysis information that is related to a :py:class:`Campaign` instance. Most of
     the analysis configuration happens here.
 
-    It stores analysis *datasets*, *processes*, *channels*, *categories*, *variables*, and *shifts*
-    which are initialized from constructor arguments, as well as references to the
-    :py:class:`Analysis` and :py:class:`Campaign` instances it belongs to. *name*, *id* and
-    *context* are forwarded to the :py:class:`UniqueObject` constructor. *name* and *id* default to
-    the values of the *campaign* instance. Specialized data such as integrated luminosities,
-    triggers, or statistical models can be stored as auxiliary data.
+    Besides references to the :py:class:`~order.analysis.Analysis` and :py:class:`Campaign`
+    instances it belongs to, it stores analysis *datasets*, *processes*, *channels*, *categories*,
+    *variables*, and *shifts* in :py:class:`~order.unique.UniqueObjectIndex` instances.
+
+    **Arguments**
+
+    *datasets*, *processes*, *channels*, *categories*, *variables*, and *shifts* are initialized
+    from constructor arguments. *name*, *id* and *context* are forwarded to the
+    :py:class:`~order.unique.UniqueObject` constructor. *name* and *id* default to the values of the
+    *campaign* instance. Specialized data such as integrated luminosities, triggers, etc, can be
+    stored as auxiliary data *aux*, which are forwarded to the
+    :py:class:`~order.mixins.AuxDataMixin`.
+
+    **Copy behavior**
+
+    Only *name*, *id*, *context*, auxiliary data, and references to the *analysis* and *campaign*
+    instances are copied. Datasets, processes, channels, categories, variables and shifts are not
+    copied! This is due to the fact that order does not try to auto-magically guess wich exact copy
+    behavior is desired by the user. Also note the copy behavior of
+    :py:class:`~order.unique.UniqueObject`'s.
+
+    **Example**
 
     .. code-block:: python
 
-        analysis = Analysis("ttH", 1, ...)
-        campaign = Campaign("2017B", 1, ...)
+        import order as od
 
-        c = analysis.add_config(campaign)
+        analysis = od.Analysis("ttH", 1)
+        campaign = od.Campaign("data_taking_2018", 1)
 
-        c.name, c.id
-        # -> "2017B", 1
+        # add the campaign to the analysis, which returns a new config
+        cfg = analysis.add_config(campaign)
+
+        cfg.name, cfg.id
+        # -> "data_taking_2019", 1
 
         # start configuration
-        c.add_dataset(campaign.get_dataset("ttH_bb"))
-        c.add_process("ttH_bb", 1, xsecs={13: 0.5071})
-        bb = c.add_channel("bb", 1)
+        cfg.add_dataset(campaign.get_dataset("ttH_bb"))
+
+        cfg.add_process("ttH_bb", 1, xsecs={13: 0.5071})
+
+        bb = cfg.add_channel("bb", 1)
+
         bb.add_category("eq6j_eq4b")
-        c.add_variable("jet1_px", expression="jet1_pt * cos(jet1_phi)")
-        c.add_shift("pdf_up", type=Shift.SHAPE)
+
+        cfg.add_variable("jet1_px", expression="jet1_pt * cos(jet1_phi)")
+
+        cfg.add_shift("pdf_up", type=Shift.SHAPE)
         ...
 
         # at some point you might want to create a second config
         # with other values for that campaign, e.g. for sub-measurements
-        c2 = analysis.add_config(campaign, name="sf_meausurement", id=2)
+        cfg2 = analysis.add_config(campaign, name="sf_meausurement", id=2)
         ...
+
+    **Members**
 
     .. py:attribute:: campaign
        type: Campaign
@@ -178,18 +210,12 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin):
        type: Analysis
        read-only
 
-       The :py:class:`Analysis` instance this config belongs to. When set, *this* config is added
-       to the index of configs of the analysis object.
+       The :py:class:`~order.analysis.Analysis` instance this config belongs to. When set, *this*
+       config is added to the index of configs of the analysis object.
     """
 
-    copy_specs = [
-        {"attr": "campaign", "ref": True},
-        "name",
-        "id",
-        {"attr": "analysis", "ref": True},
-        "aux",
-        "context",
-    ]
+    copy_specs = [{"attr": "campaign", "ref": True}, {"attr": "analysis", "ref": True}] + \
+        UniqueObject.copy_specs + AuxDataMixin.copy_specs
 
     def __init__(self, campaign=None, name=None, id=None, analysis=None, datasets=None,
             processes=None, channels=None, categories=None, variables=None, shifts=None, aux=None,

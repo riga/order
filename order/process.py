@@ -17,64 +17,75 @@ from order.util import typed
 
 @unique_tree(plural="processes", deep_children=True, deep_parents=True)
 class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixin):
-    """ __init__(name, id, xsecs=None, processes=None, color=None, label=None, label_short=None, is_data=False, aux=None, context=None)
+    r""" __init__(name, id, xsecs=None, processes=None, color=None, label=None, label_short=None, is_data=False, aux=None, context=None)
     Definition of a phyiscs process.
 
-    *xsecs* should be a mapping of center-of-mass energy to cross section (a *scinum.Number*
-    instance). *color* is forwarded to the :py:class:`ColorMixin`, *label* and *label_short* to the
-    :py:class:`LabelMixin`, *is_data* to the :py:class:`DataSourceMixin`, *aux* to the
-    :py:class:`AuxDataMixin`, and *name*, *id* and *context* to the :py:class:`UniqueObject`
-    constructor.
+    **Arguments**
+
+    *xsecs* should be a mapping of center-of-mass energies to cross sections values (automatically
+    converted to `scinum.Number <https://scinum.readthedocs.io/en/latest/#number>`__ instances).
+
+    *color* is forwarded to the :py:class:`~order.mixins.ColorMixin`, *label* and *label_short* to
+    the :py:class:`~order.mixins.LabelMixin`, *is_data* to the
+    :py:class:`~order.mixins.DataSourceMixin`, *aux* to the :py:class:`~order.mixins.AuxDataMixin`,
+    and *name*, *id* and *context* to the :py:class:`~order.unique.UniqueObject` constructor.
 
     A process can have parent-child relations to other processes. Initial child processes are set
-    from *processes*. When copied via :py:meth:`copy` these relations are lost.
+    to *processes*.
+
+    **Copy behavior**
+
+    All attributes are copied **except** for references to child and parent processes. Also note the
+    copy behavior of :py:class:`~order.unique.UniqueObject`'s.
+
+    **Example**
 
     .. code-block:: python
 
+        import order as od
         from scinum import Number
 
-        p = Process("ttH", 1,
-            xsecs = {
-                13: Number(0.5071, {"scale": (Number.REL, 0.036)})
+        p = od.Process("ttH", 1,
+            xsecs={
+                13: Number(0.5071, {"scale": (Number.REL, 0.036)}),
             },
-            label = r"$t\\bar{t}H$",
-            color = (255, 0, 0)
+            label=r"$t\bar{t}H$",
+            color=(255, 0, 0),
         )
 
-        p.get_xsec(13)
-        # -> "0.51, scale: (+0.02, -0.02)"
+        p.get_xsec(13).str("%.2f")
+        # -> "0.51 +- 0.02 (scale)"
 
         p.label_root
         # -> "t#bar{t}H"
 
-        p.add_process("ttH_bb", 2,
-            xsecs = {
-                13: p.get_xsec(13) * 0.5824
+        p2 = p.add_process("ttH_bb", 2,
+            xsecs={
+                13: p.get_xsec(13) * 0.5824,
             },
-            label = p.label + r", $b\\bar{b}$"
+            label=p.label + r", $b\bar{b}$",
         )
 
-        p.get_process("ttH_bb").label_root
+        p2 == p.get_process("ttH_bb")
+        # -> True
+
+        p2.label_root
         # -> "t#bar{t}H, b#bar{b}"
+
+        p2.has_parent_process("ttH")
+        # -> True
+
+    **Members**
 
     .. py:attribute:: xsecs
        type: dictionary (float -> scinum.Number)
 
-       Cross sections mapped to a center-of-mass energy with arbitrary units.
+       Cross sections mapped to a center-of-mass energies with arbitrary units.
     """
 
     # attributes for copying
-    copy_specs = [
-        "name",
-        "id",
-        "xsecs",
-        "color",
-        ("label", "_label"),
-        ("label_short", "_label_short"),
-        "is_data",
-        "aux",
-        "context",
-    ]
+    copy_specs = ["xsecs"] + UniqueObject.copy_specs + AuxDataMixin.copy_specs + \
+        DataSourceMixin.copy_specs + LabelMixin.copy_specs + ColorMixin.copy_specs
 
     def __init__(self, name, id, xsecs=None, processes=None, color=None, label=None,
             label_short=None, is_data=False, aux=None, context=None):
@@ -120,13 +131,17 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
 
     def get_xsec(self, ecm):
         """
-        Returns the cross section *Number* for a center-of-mass energy *ecm*.
+        Returns the cross section (a
+        `scinum.Number <https://scinum.readthedocs.io/en/latest/#number>`__ instance) for a
+        center-of-mass energy *ecm*.
         """
         return self.xsecs[ecm]
 
     def set_xsec(self, ecm, xsec):
         """
-        Sets the *xsec* *Number* for a center-of-mass energy *ecm*. Returns the value.
+        Sets the cross section for a center-of-mass energy *ecm* to *xsec*. When *xsec* is not a
+        `scinum.Number <https://scinum.readthedocs.io/en/latest/#number>`__ instance, it is
+        converted to one. The (probably converted) value is returned.
         """
         ecm, xsec = list(self.__class__.xsecs.fparse(self, {ecm: xsec}).items())[0]
         self.xsecs[ecm] = xsec

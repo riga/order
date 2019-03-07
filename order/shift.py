@@ -19,16 +19,29 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
     """
     Description of a systematic shift.
 
+    **Arguments**
+
     The shift *name* should either be ``"nominal"`` or it should have the format
     ``"<source>_<direction>"`` where *direction* is either ``"up"`` or ``"down"``. *type* describes
     the shift's effect, which is either only rate-changing (*RATE*) or also shape-changing
-    (*SHAPE*). When *None*, *UNKNOWN* is used. *label* and *label_short* are forwarded to the
-    :py:class:`LabelMixin`, *name*, *id* (defaulting to an auto id) and *context* to the
-    :py:class:`UniqueObject` constructor.
+    (*SHAPE*). When *None*, *UNKNOWN* is used.
+
+    *label* and *label_short* are forwarded to the :py:class:`~order.mixins.LabelMixin`, *name*,
+    *id* (defaulting to an auto id) and *context* to the :py:class:`~order.unique.UniqueObject`
+    constructor.
+
+    **Copy behavior**
+
+    All attributes are copied. Also note the copy behavior of
+    :py:class:`~order.unique.UniqueObject`'s.
+
+    **Example**
 
     .. code-block:: python
 
-        s = Shift("nominal", 1)
+        import order as od
+
+        s = od.Shift("nominal", 1)
 
         s.name
         # -> "nominal"
@@ -36,7 +49,7 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
         s.is_up
         # -> False
 
-        s = Shift("pdf_up")
+        s = Shift("pdf_up", 2)
 
         s.source
         # -> "pdf"
@@ -47,40 +60,57 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
         s.is_up
         # -> True
 
-    .. py:attribute:: UNKNOWN
+    **Members**
+
+    .. py:classattribute:: NOMINAL
        type: string
-       classmember
 
-       Flag for empty shift effect.
+       Flag denoting a nominal shift (``"nominal"``). Same as
+       `scinum.Number.NOMINAL <https://scinum.readthedocs.io/en/latest/#scinum.Number.NOMINAL>`__.
 
-    .. py:attribute:: RATE
+    .. py:classattribute:: UP
        type: string
-       classmember
 
-       Flag for rate-changing effect.
+       Flag denoting an up variation (``"up"``). Same as
+       `scinum.Number.UP <https://scinum.readthedocs.io/en/latest/#scinum.Number.UP>`__.
 
-    .. py:attribute:: SHAPE
+    .. py:classattribute:: DOWN
        type: string
-       classmember
 
-       Flag for shape-changing effect.
+       Flag denoting a down variation (``"down"``). Same as
+       `scinum.Number.DOWN <https://scinum.readthedocs.io/en/latest/#scinum.Number.DOWN>`__.
+
+    .. py:classattribute:: RATE
+       type: string
+
+       Flag denoting a rate-changing effect (``"rate"``).
+
+    .. py:classattribute:: SHAPE
+       type: string
+
+       Flag denoting a shape-changing effect (``"shape"``).
+
+    .. py:classattribute:: RATE_SHAPE
+       type: string
+
+       Flag denoting a both rate- and shape-changing effect (``"rate_shape"``).
 
     .. py:attribute:: source
        type: string
        read-only
 
-       The source of this shift, e.g. ``"nominal"`` or ``"pdf"``.
+       The source of this shift, e.g. *NOMINAL*, ``"pdf"``, etc.
 
     .. py:attribute:: direction
        type: string
        read-only
 
-       The direction of this shift, ``"nominal"``, ``"up"`` or ``"down"``.
+       The direction of this shift, either *NOMINAL*, *UP* or *DOWN*.
 
     .. py:attribute:: type
        type: string
 
-       The type of this shift, either *UNKNOWN*, *RATE* or *SHAPE*.
+       The type of this shift, either *RATE*, *SHAPE* or *RATE_SHAPE*.
 
     .. py:attribute:: is_nominal
        type: bool
@@ -92,13 +122,13 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
        type: bool
        read-only
 
-       Flag denoting if the shift direction is ``"up"``.
+       Flag denoting if the shift direction is *UP*.
 
     .. py:attribute:: is_down
        type: bool
        read-only
 
-       Flag denoting if the shift direction is ``"down"``.
+       Flag denoting if the shift direction is *DOWN*.
 
     .. py:attribute:: is_rate
        type: bool
@@ -110,43 +140,41 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
        type: bool
        read-only
 
-       Flag denoting if the shift type is shape-changing.
+       Flag denoting if the shift type is shape-changing only.
+
+    .. py:attribute:: is_rate_shape
+       type: bool
+       read-only
+
+       Flag denoting if the shift type is rate- and shape-changing.
     """
 
-    # nominal keyword plus shorthand
+    # nominal flag
     NOMINAL = sn.Number.NOMINAL
-    NOM = NOMINAL
 
     # shift directions
     UP = sn.Number.UP
     DOWN = sn.Number.DOWN
 
     # shift types
-    UNKNOWN = "unknown"
     RATE = "rate"
     SHAPE = "shape"
+    RATE_SHAPE = "rate_shape"
 
     # attributes for copying
-    copy_specs = [
-        "name",
-        "id",
-        "type",
-        ("label", "_label"),
-        ("label_short", "_label_short"),
-        "context",
-    ]
+    copy_specs = ["type"] + UniqueObject.copy_specs + LabelMixin.copy_specs
 
     @classmethod
     def split_name(cls, name):
         """
-        Splits a shift *name* into its source and direction. If *name* is ``"nominal"``, both source
-        and direction will be ``"nominal"``. Example:
+        Splits a shift *name* into its source and direction. If *name* is *NOMINAL*, both source
+        and direction will be *NOMINAL*. Example:
 
         .. code-block:: python
 
-            split_name("nominal") # -> ("nominal", "nominal")
-            split_name("pdf_up")  # -> ("pdf", "up")
-            split_name("pdfup")   # -> ValueError: invalid shift name format: pdfup
+            split_name("nominal")  # -> ("nominal", "nominal")
+            split_name("pdf_up")   # -> ("pdf", "up")
+            split_name("pdfup")    # -> ValueError: invalid shift name format: pdfup
         """
         if name is None:
             return (None, None)
@@ -167,16 +195,15 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
     def join_name(cls, source, direction):
         """
         Joins a shift *source* and a shift *direction* to return a shift name. If either *source* or
-        *direction* is *None*, *None* is returned. If *source* is ``"nominal"``, *direction* must be
-        ``"nominal"`` as well. Otherwise, *direction* must be either ``"up"`` or ``"down"``.
-        Example:
+        *direction* is *None*, *None* is returned. If *source* is *NOMINAL*, *direction* must be
+        *NOMINAL* as well. Otherwise, *direction* must be either *UP* or *DOWN*. Example:
 
         .. code-block:: python
 
-            join_name("nominal", "nominal") # -> "nominal"
-            join_name("nominal", "up")      # -> ValueError: pointless nominal shift direction
-            join_name("pdf", "up")          # -> "pdf_up"
-            join_name("pdf", "high")        # -> ValueError: invalid shift direction
+            join_name("nominal", "nominal")  # -> "nominal"
+            join_name("nominal", "up")       # -> ValueError: pointless nominal shift direction
+            join_name("pdf", "up")           # -> "pdf_up"
+            join_name("pdf", "high")         # -> ValueError: invalid shift direction
         """
         if source == cls.NOMINAL:
             if direction != cls.NOMINAL:
@@ -196,7 +223,7 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
         # register empty attributes
         self._source = None
         self._direction = None
-        self._type = self.UNKNOWN
+        self._type = self.RATE_SHAPE
 
         # set initial values
         self._source, self._direction = self.split_name(self.name)
@@ -216,7 +243,7 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
     @typed
     def type(self, type):
         # type parser
-        if type not in (self.UNKNOWN, self.RATE, self.SHAPE):
+        if type not in (self.RATE, self.SHAPE, self.RATE_SHAPE):
             raise ValueError("unknown type: {}".format(type))
 
         return type
@@ -245,3 +272,8 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
     def is_shape(self):
         # is_shape getter
         return self.type == self.SHAPE
+
+    @property
+    def is_rate_shape(self):
+        # is_rate_shape getter
+        return self.type == self.RATE_SHAPE

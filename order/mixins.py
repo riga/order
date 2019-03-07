@@ -17,12 +17,61 @@ import collections
 import six
 
 from order.util import (
-    typed, make_list, multi_match, join_root_selection, join_numexpr_selection, to_root_latex,
-    args_to_kwargs,
+    ROOT_DEFAULT, typed, make_list, multi_match, join_root_selection, join_numexpr_selection,
+    to_root_latex, args_to_kwargs,
 )
 
 
 class CopySpec(object):
+    """
+    Class holding attribute copy specifications. Instances of this class are used in
+    :py:class:`CopyMixin` to describe the copy behavior individually per attribute.
+
+    **Arguments**
+
+    *dst* is the destination attribute name, *src* is the source attribute. When *ref* is *True*,
+    the attribute is not copied but a reference is passed to the newly created instance. By default,
+    ``copy.deepcopy`` is used to copy attributes (if *ref* is *False*). When *shallow* is *True*,
+    ``copy.copy`` is used instead. The standard way to pass copied attributes to new instances is
+    via constructor arguments. However, you can set *use_setter* to *True* to use a plain setter to
+    add the copied attribute to the instance. *manual* denotes whether the custom
+    :py:meth:`CopyMixin._copy_attribute_manual` method should be invoked to copy an attribute. This
+    method must be implemented by inheriting functions.
+
+    **Members**
+
+    .. py:attribute:: dst
+       type: string
+
+       The destination attribute.
+
+    .. py:attribute:: src
+       type: string
+
+       The source attribute.
+
+    .. py:attribute:: ref
+       type: bool
+
+       Whether or not the attribute should be passed as a reference instead of copying.
+
+    .. py:attribute:: shallow
+       type: bool
+
+       Whether or not the attribute should be copied shallow or deep.
+
+    .. py:attribute:: use_setter
+       type: bool
+
+       Whether or not a setter should be invoked to set the copied attribute. When *False*, it is
+       passed as a constructor argument (the default).
+
+    .. py:attribute:: manual
+       type: bool
+
+       Whether or not the attribute should be copied manually by the custom
+       :py:meth:`CopyMixin._copy_attribute_manual` method.
+    """
 
     @classmethod
     def new(cls, obj):
@@ -31,7 +80,7 @@ class CopySpec(object):
         elif isinstance(obj, six.string_types):
             return cls(dst=obj)
         elif isinstance(obj, (tuple, list)) and len(obj) == 2:
-            return cls(dst=obj[0], src=obj[1])
+            return cls(src=obj[0], dst=obj[1])
         elif isinstance(obj, dict):
             kwargs = {}
             kwargs["dst"] = obj.get("dst", obj.get("attr"))
@@ -59,7 +108,10 @@ class CopySpec(object):
         self.manual = manual
 
     def __eq__(self, spec):
-        # two specs are equal when their dst attributes are equal
+        """
+        To instances are equal when their *dst* attributes are equal
+        """
+        # two specs are
         if not isinstance(spec, self.__class__):
             spec = self.new(spec)
         return self.dst == spec.dst
@@ -69,17 +121,31 @@ class CopyMixin(object):
     """
     Mixin-class that adds copy features to inheriting classes.
 
+    Inheriting classes should define a *copy_specs* class member, which is supposed to be a list
+    containing specifications per attribute to be copied. See :py:class:`CopySpec` and
+    :py:meth:`CopySpec.new` for information about possible copy specifications.
+
+    **Example**
+
     .. code-block:: python
 
-        class MyClass(CopyMixin):
+        import order as od
 
-            copy_attrs = ["name"]
+        some_object = object()
 
-            def __init__(self, name):
+        class MyClass(od.CopyMixin):
+
+            copy_specs = [
+                "name",
+                {"attr": "obj", "ref": True},
+            ]
+
+            def __init__(self, name, obj):
                 super(MyClass, self).__init__()
                 self.name = name
+                self.obj = obj
 
-        a = MyClass("foo")
+        a = MyClass("foo", some_object)
         a.name
         # -> "foo"
 
@@ -87,33 +153,46 @@ class CopyMixin(object):
         b.name
         # -> "foo"
 
+        b.obj is a.obj
+        # -> True
+
         c = a.copy(name="bar")
         c.name
         # -> "bar"
 
-    .. :py:attribute:: copy_attrs
+        # one can also use the python copy module
+        import copy
+
+        d = copy.copy(a)
+
+        d.name
+        # -> "foo"
+
+        d.obj is a.obj
+        # -> True
+
+        # no distinction is made between copy and deepcopy
+        e = copy.deepcopy(a)
+
+        e.obj is a.obj
+        # -> True
+
+    **Members**
+
+    .. :py:classattribute:: copy_specs
        type: list
-       classmember
 
-       The default attributes to copy when *attrs* is *None* in the copy method.
-
-    .. :py:attribute:: copy_private_attrs
-       type: list
-       classmember
-
-       Same as *copy_attrs* but attributes in this list are prefixed with an underscore for reading
-       the value to copy.
-
-    .. :py:attribute:: copy_skip_attrs
-       type: list
-       classmember
-
-       The default attributes to skip from copying when *skip_attrs* is *None* in the copy method.
+       List of copy specifications per attribute.
     """
 
     copy_specs = []
 
     def _copy_attribute(self, obj, spec):
+        """
+        Copies an object *obj*, taking into account the :py:class:`CopySpec` speficications *spec*,
+        and returns the copy. Internally, ``copy.copy`` and ``copy.deepcopy`` are used to copy
+        objects.
+        """
         if spec.ref:
             return obj
         elif spec.shallow:
@@ -122,20 +201,33 @@ class CopyMixin(object):
             return copy.deepcopy(obj)
 
     def _copy_attribute_manual(self, inst, obj, spec):
+        """
+        Hook that is called in :py:meth:`copy` to invoke the manual copying of an object *obj*
+        **after** the copied instance *inst* was created. *spec* is the associated
+        :py:class:`CopySpec` object. Instead of returning the copied object, the method should
+        directly alter *inst*.
+        """
         raise NotImplementedError()
 
-    def _copy_ref(self, specs, kwargs, cls):
+    def _copy_ref(self, kwargs, cls, specs):
+        """
+        Hook that is called in :py:meth:`copy` before an instance is actually copied. When this
+        method returns *True*, no new instance is created but rather a reference will be returned.
+        The default is *False*. This is useful in special situations that require flexible copy
+        decisions. *kwargs* is a dictionary that contains all *args* and *kwargs* passed to
+        :py:meth:`copy` (*args* are included by mapping them to the target argument names via
+        inspection), *cls* is the target class to instantiate, and *specs* is the full list of
+        :py:class:`CopySpec` instances.
+        """
         return False
 
     def copy(self, *args, **kwargs):
         r"""copy(*args, **kwargs, _cls=None, _specs=None, _replace_specs=False)
-        Returns a copy of this instance via copying (*copy_attrs*) or re-referencing attributes
-        (*ref_attrs*). When *None*, they default to the *copy_\** classmembers. *skip_attrs* defines
-        attributes to skip, e.g., when *copy_attrs* is *None* and the default attributes are used.
-        *kwargs* overwrite attributes. *cls* is the class of the returned instance. When *None*,
-        *this* class is used. *callbacks* can be a list of functions that receive the instance to
-        copy and the attributes in a dict, so they can be updated *before* the actual copy is
-        created.
+        Creates a copy of this instance and returns it. Internally, an instance if *_cls* is
+        created, defaulting to the class of *this* instance, with all *args* and *kwargs* forwarded
+        to its constructor. Attributes that are not present in *args* or *kwargs* are copied over
+        from *this* instance based in the attribute specifications given in :py:attr:`copy_specs`.
+        They can be extended by *_specs* or even replaced when *_replace_specs* is *True*.
         """
         # extract the copy configuration from kwargs
         cls = kwargs.pop("_cls", self.__class__)
@@ -149,11 +241,6 @@ class CopyMixin(object):
         # unite args and kwargs
         kwargs.update(args_to_kwargs(cls.__init__ if six.PY2 else cls, args))
 
-        # check if a reference should be returned instead of a real copy
-        # _copy_ref might also update kwargs
-        if self._copy_ref(kwargs, cls, specs):
-            return self
-
         # ensure that specs contain CopySpec objects
         # also remove duplicates, prioritize last occurances
         _specs = []
@@ -163,6 +250,11 @@ class CopyMixin(object):
             if spec not in _specs:
                 _specs.insert(0, spec)
         specs = _specs
+
+        # check if a reference should be returned instead of a real copy
+        # _copy_ref might also update kwargs
+        if self._copy_ref(kwargs, cls, specs):
+            return self
 
         # actual attribute copying
         kwargs = kwargs.copy()
@@ -193,26 +285,46 @@ class CopyMixin(object):
         return inst
 
     def __copy__(self):
+        """
+        Shorthand to :py:meth:`copy` without arguments.
+        """
         return self.copy()
 
     def __deepcopy__(self, memo):
+        """
+        Shorthand to :py:meth:`copy` without arguments.
+        """
         return self.copy()
 
 
 class AuxDataMixin(object):
     """
-    Mixin-class that provides storage of auxiliary data via a simple interface:
+    Mixin-class that provides storage of auxiliary data via a simple interface.
+
+    **Arguments**
+
+    *aux* can be a dictionary or a list of 2-tuples to initialize the auxiliary data container.
+
+    **Example**
 
     .. code-block:: python
 
-        class MyClass(AuxDataMixin):
-            ...
+        import order as od
 
-        c = MyClass()
-        c.set_aux("foo", "bar")
+        class MyClass(od.AuxDataMixin):
+            pass
 
-        c.get_aux("foo")
-        # -> "bar"
+        c = MyClass(aux={"foo": "bar"})
+
+        # "foo" in c.aux
+        # same as c.has_aux("foo")
+        # -> True
+
+        c.set_aux("test", "some_value")
+        c.get_aux("test")
+        # -> "some_value"
+
+    **Members**
 
     .. :py:attribute:: aux
        type: OrderedDict
@@ -222,6 +334,8 @@ class AuxDataMixin(object):
 
     _no_default = object()
 
+    copy_specs = ["aux"]
+
     def __init__(self, aux=None):
         super(AuxDataMixin, self).__init__()
 
@@ -230,7 +344,7 @@ class AuxDataMixin(object):
 
         # set initial values
         if aux is not None:
-            for key, data in dict(aux).items():
+            for key, data in collections.OrderedDict(aux).items():
                 self.set_aux(key, data)
 
     @typed
@@ -239,7 +353,7 @@ class AuxDataMixin(object):
         try:
             aux = collections.OrderedDict(aux)
         except:
-            raise TypeError("invalid aux type: %s" % (aux,))
+            raise TypeError("invalid aux type: {}".format(aux))
 
         return aux
 
@@ -249,15 +363,6 @@ class AuxDataMixin(object):
         """
         self.aux[key] = data
         return data
-
-    def remove_aux(self, key=None):
-        """
-        Removes the auxiliary data for a specific *key*, or all data if *key* is *None*.
-        """
-        if key is None:
-            self.aux.clear()
-        elif key in self.aux:
-            del(self.aux[key])
 
     def has_aux(self, key):
         """
@@ -275,39 +380,69 @@ class AuxDataMixin(object):
         else:
             return self.aux[key]
 
+    def remove_aux(self, key, silent=False):
+        """
+        Removes the auxiliary data for a specific *key*. Unless *silent* is *True*, an exception is
+        raised if the *key* to remove is not found.
+        """
+        if key in self.aux or not silent:
+            del(self.aux[key])
+
+    def clear_aux(self):
+        """
+        Clears the auxiliary data container.
+        """
+        self.aux.clear()
+
 
 class TagMixin(object):
     """
-    Mixin-class that allows inheriting objects to be tagged.
+    Mixin-class that allows inheriting objects to be attribute one or more *tags*. See the example
+    below for more infos.
+
+    **Arguments**
+
+    *tags* initializes the internal set of stored tags.
+
+    **Example**
 
     .. code-block:: python
 
-        class MyClass(TagMixin):
-            ...
+        import order as od
 
-        c = MyClass()
-        c.tags = {"foo", "bar"}
+        class MyClass(od.TagMixin):
+            pass
+
+        c = MyClass(tags={"foo", "bar"})
 
         c.has_tag("foo")
         # -> True
 
-        c.has_tag("f*")
-        # -> True
+        c.has_tag("baz")
+        # -> False
 
-        c.has_tag(("foo", "baz"))
+        c.has_tag(("foo", "baz"), mode=any)  # the default mode
         # -> True
 
         c.has_tag(("foo", "baz"), mode=all)
         # -> False
 
-        c.has_tag(("foo", "bar"), mode=all)
+        c.has_tag(("foo", "ba*"), mode=all)
         # -> True
+
+        c.has_tag(("foo", "ba(r|z)"), mode=all, func="re")
+        # -> True
+
+    **Members**
 
     .. py:attribute:: tags
        type: set
 
-       The set of string tags of this object.
+       The set of tags of this object. See :py:meth:`has_tag` for information about how to evaluate
+       them with patterns or regular expressions.
     """
+
+    copy_specs = ["tags"]
 
     def __init__(self, tags=None):
         super(TagMixin, self).__init__()
@@ -325,50 +460,58 @@ class TagMixin(object):
         if isinstance(tags, six.string_types):
             tags = {tags}
         if not isinstance(tags, (set, list, tuple)):
-            raise TypeError("invalid tags type: %s" % (tags,))
+            raise TypeError("invalid tags type: {}".format(tags))
 
         _tags = set()
         for tag in tags:
             if not isinstance(tag, six.string_types):
-                raise TypeError("invalid tag type: %s" % (tag,))
+                raise TypeError("invalid tag type: {}".format(tag))
             _tags.add(str(tag))
 
         return _tags
 
     def add_tag(self, tag):
         """
-        Adds a new *tag* to the object.
+        Adds a new *tag* to the set of tags.
         """
         self._tags.update(self.__class__.tags.fparse(self, tag))
 
     def remove_tag(self, tag):
         """
-        Removes a previously added *tag*.
+        Removes a previously added *tag* from the set if tags.
         """
         self._tags.difference_update(self.__class__.tags.fparse(self, tag))
 
     def has_tag(self, tag, mode=any, **kwargs):
         """ has_tag(tag, mode=any, **kwargs)
         Returns *True* when this object is tagged with *tag*, *False* otherwise. When *tag* is a
-        sequence of tags, the behavior is defined by *mode*. When *any*, the object is considered
+        sequence of tags, the behavior is defined by *mode*. For *any*, the object is considered
         *tagged* when at least one of the provided tags matches. When *all*, all provided tags have
         to match. Each *tag* can be a *fnmatch* or *re* pattern. All *kwargs* are passed to
         :py:func:`util.multi_match`.
         """
-        match = lambda tag: any(multi_match(t, [tag], mode=any, **kwargs) for t in self.tags)
+        match = lambda tag: any(multi_match(t, [tag], **kwargs) for t in self.tags)
         return mode(match(tag) for tag in make_list(tag))
 
 
 class DataSourceMixin(object):
     """
-    Mixin-class that provides convenience attributes for distinguishing between MC and data.
+    Mixin-class that provides convenience attributes for distinguishing between MC and real data.
+
+    **Arguments**
+
+    *is_data* initializes the same-named attribute.
+
+    **Example**
 
     .. code-block:: python
 
-        class MyClass(DataSourceMixin):
-            ...
+        import order as od
 
-        c = MyClass()
+        class MyClass(od.DataSourceMixin):
+            pass
+
+        c = MyClass(is_data=False)
 
         c.is_data
         # -> False
@@ -379,6 +522,18 @@ class DataSourceMixin(object):
         c.is_data = True
         c.data_source
         # -> "data"
+
+    **Members**
+
+    .. py:classattribute:: DATA_SOURCE_DATA
+       type: string
+
+       The data source string for data (``"data"``).
+
+    .. py:classattribute:: DATA_SOURCE_MC
+       type: string
+
+       The data source string for mc (``"mc"``).
 
     .. py:attribute:: is_data
        type: boolean
@@ -393,8 +548,13 @@ class DataSourceMixin(object):
     .. py:attribute:: data_source
        type: string
 
-       Either ``"data"`` or ``"mc"``, depending on the source of contained data.
+       Either *DATA_SOURCE_DATA* or *DATA_SOURCE_MC*, depending on the source of contained data.
     """
+
+    DATA_SOURCE_DATA = "data"
+    DATA_SOURCE_MC = "mc"
+
+    copy_specs = ["is_data"]
 
     def __init__(self, is_data=False):
         super(DataSourceMixin, self).__init__()
@@ -412,7 +572,7 @@ class DataSourceMixin(object):
     @is_data.setter
     def is_data(self, is_data):
         if not isinstance(is_data, bool):
-            raise TypeError("invalid is_data type: %s" % (is_data,))
+            raise TypeError("invalid is_data type: {}".format(is_data))
 
         self._is_data = is_data
 
@@ -423,56 +583,90 @@ class DataSourceMixin(object):
     @is_mc.setter
     def is_mc(self, is_mc):
         if not isinstance(is_mc, bool):
-            raise TypeError("invalid is_mc type: %s" % (is_mc,))
+            raise TypeError("invalid is_mc type: {}".format(is_mc))
 
         self._is_data = not is_mc
 
     @property
     def data_source(self):
-        return "data" if self.is_data else "mc"
+        return self.DATA_SOURCE_DATA if self.is_data else self.DATA_SOURCE_MC
 
 
 class SelectionMixin(object):
     """
-    Mixin-class that adds attibutes and methods to describe a selection rule.
+    Mixin-class that adds attibutes and methods to describe a selection rule using ROOT- and
+    numexpr-style expressions.
+
+    **Arguments**
+
+    *selection* and *selection_mode* initialize the same-named attributes.
+
+    **Example**
 
     .. code-block:: python
 
-        class MyClass(SelectionMixin):
-            ...
+        import order as od
 
-        c = MyClass(selection="branchA > 0")
+        class MyClass(od.SelectionMixin):
+            pass
 
-        c.add_selection("myBranchB < 100", bracket=True)
+        # ROOT-style expressions
+        c = MyClass(selection="branchA > 0", selection_mode=MyClass.MODE_ROOT)
+
         c.selection
-        # -> "((myBranchA > 0) && (myBranchB < 100))"
+        # -> "branchA > 0"
+
+        c.add_selection("myBranchB < 100")
+        c.selection
+        # -> "(myBranchA > 0) && (myBranchB < 100)"
 
         c.add_selection("myWeight", op="*")
         c.selection
         # -> "((myBranchA > 0) && (myBranchB < 100)) * (myWeight)"
 
-        c = MyClass(selection="branchA > 0", selection_mode="numexpr")
+        # numexpr-style expressions
+        c = MyClass(selection="branchA > 0", selection_mode=MyClass.MODE_NUMEXPR)
 
         c.add_selection("myBranchB < 100")
         c.selection
         # -> "(myBranchA > 0) & (myBranchB < 100)"
 
-    .. py:attribute:: default_selection_mode
-       type: string
-       classmember
+    **Members**
 
-       The default *selection_mode* when none is given in the instance constructor.
+    .. py:classattribute:: MODE_ROOT
+       type: string
+
+       Flag denoting the ROOT-style selection mode (``"root"``).
+
+    .. py:classattribute:: MODE_NUMEXP
+       type: string
+
+       Flag denoting the numexpr-style selection mode (``"numexpr"``).
+
+    .. py:classattribute:: default_selection_mode
+       type: string
+
+       The default *selection_mode* when none is given in the instance constructor. It is initially
+       set to *MODE_NUMEXPR* if :py:attr:`order.util.ROOT_DEFAULT` is *false*, or to *MODE_ROOT*
+       otherwise.
+
+    .. py:attribute:: selection
+       type: string
+
+       The selection string.
 
     .. py:attribute:: selection_mode
        type: string
 
-       The selection mode. Should either be ``"root"`` or ``"numexpr"``.
+       The selection mode. Should either be *MODE_ROOT* or *MODE_NUMEXPR*.
     """
 
     MODE_ROOT = "root"
     MODE_NUMEXPR = "numexpr"
 
-    default_selection_mode = MODE_ROOT
+    default_selection_mode = MODE_ROOT if ROOT_DEFAULT else MODE_NUMEXPR
+
+    copy_specs = ["selection", "selection_mode"]
 
     def __init__(self, selection=None, selection_mode=None):
         super(SelectionMixin, self).__init__()
@@ -486,10 +680,9 @@ class SelectionMixin(object):
             selection_mode = self.default_selection_mode
 
         # set initial values
+        self.selection_mode = selection_mode
         if selection is not None:
             self.selection = selection
-        if selection_mode is not None:
-            self.selection_mode = selection_mode
 
     @typed
     def selection(self, selection):
@@ -502,15 +695,27 @@ class SelectionMixin(object):
         try:
             selection = join(selection)
         except:
-            raise TypeError("invalid selection type: %s" % (selection,))
+            raise TypeError("invalid selection type: {}".format(selection))
 
         return selection
 
+    @typed
+    def selection_mode(self, selection_mode):
+        # selection mode parser
+        if not isinstance(selection_mode, six.string_types):
+            raise TypeError("invalid selection_mode type: {}".format(selection_mode))
+
+        selection_mode = str(selection_mode)
+        if selection_mode not in (self.MODE_ROOT, self.MODE_NUMEXPR):
+            raise ValueError("unknown selection_mode: {}".format(selection_mode))
+
+        return selection_mode
+
     def add_selection(self, selection, **kwargs):
         """
-        Adds a *selection* string to the overall selection. The new string will be logically
-        connected via *AND*. All *kwargs* are forwarded to :py:func:`util.join_root_selection` or
-        :py:func:`util.join_numexpr_selection`.
+        Adds a *selection* string to the current one. The new string will be logically connected via
+        *AND* by default, which can be configured through *kwargs*. All *kwargs* are forwarded to
+        :py:func:`util.join_root_selection` or :py:func:`util.join_numexpr_selection`.
         """
         if self.selection_mode == self.MODE_ROOT:
             join = join_root_selection
@@ -519,61 +724,70 @@ class SelectionMixin(object):
 
         self.selection = join(self.selection, selection, **kwargs)
 
-    @typed
-    def selection_mode(self, selection_mode):
-        # selection mode parser
-        if not isinstance(selection_mode, six.string_types):
-            raise TypeError("invalid selection_mode type: %s" % (selection_mode,))
-
-        selection_mode = str(selection_mode)
-        if selection_mode not in (self.MODE_ROOT, self.MODE_NUMEXPR):
-            raise ValueError("unknown selection_mode: %s" % (selection_mode,))
-
-        return selection_mode
-
 
 class LabelMixin(object):
     r"""
     Mixin-class that provides a label, a short version of that label, and some convenience
     attributes.
 
+    **Arguments**
+
+    *label* and *label_short* initialize the same-named attributes.
+
+    **Example**
+
     .. code-block:: python
 
-        l = LabelMixin(label="Muon", label_short=r"$\mu$")
+        import order as od
+
+        l = od.LabelMixin(label="Muon")
 
         l.label
         # -> "Muon"
 
+        # when not set, the short label returns the normal label
+        l.label_short
+        # -> "Muon"
+
+        l.label_short = r"$\mu$"
+        l.label_short
+        # -> "$\mu$"
+
+        # conversion to ROOT-style latex
         l.label_short_root
         # -> "#mu"
 
-        l.label_short = None
-        l.label_short_root
-        # -> "Muon"
+    **Members**
 
     .. py:attribute:: label
        type: string
 
        The label. When this object has a *name* (configurable via *_label_fallback_attr*) attribute,
-       the label defaults to that value.
+       the label defaults to that value when not set.
 
     .. py:attribute:: label_root
        type: string
        read-only
 
-       The label, converted to *proper* ROOT latex.
+       The label, converted to ROOT-style latex.
 
     .. py:attribute:: label_short
        type: string
 
-       A short label, defaults to the normal label.
+       A short label, which defaults to the normal label when not set.
 
     .. py:attribute:: label_short_root
        type: string
        read-only
 
-       Short version of the label, converted to *proper* ROOT latex.
+       Short version of the label, converted to ROOT-style latex.
     """
+
+    copy_specs = [
+        ("_label", "label"),
+        ("_label_short", "label_short"),
+        {"attr": "_label_fallback_attr", "use_setter": True},
+    ]
 
     def __init__(self, label=None, label_short=None):
         super(LabelMixin, self).__init__()
@@ -605,7 +819,7 @@ class LabelMixin(object):
         if label is None:
             self._label = None
         elif not isinstance(label, six.string_types):
-            raise TypeError("invalid label type: %s" % (label,))
+            raise TypeError("invalid label type: {}".format(label))
         else:
             self._label = str(label)
 
@@ -627,7 +841,7 @@ class LabelMixin(object):
         elif isinstance(label_short, six.string_types):
             self._label_short = str(label_short)
         else:
-            raise TypeError("invalid label_short type: %s" % (label_short,))
+            raise TypeError("invalid label_short type: {}".format(label_short))
 
     @property
     def label_short_root(self):
@@ -639,15 +853,30 @@ class ColorMixin(object):
     """
     Mixin-class that provides a color in terms of RGB values as well as some convenience methods.
 
+    **Arguments**
+
+    *color* can be a tuple of 3 or 4 numbers that are interpreted as red, green and blue color
+    values, and optinally an alpha value. Floats are stored internally. When integers are passed,
+    they are divided by 255.
+
+    **Example**
+
     .. code-block:: python
 
-        c = ColorMixin(color=(255, 0.5, 100))
+        import order as od
+
+        c = od.ColorMixin(color=(255, 0.5, 100))
 
         c.color
         # -> (1.0, 0.5, 0.392..)
 
         c.color_int
         # -> (255, 128, 100)
+
+        c.color_alpha
+        # -> 1.0
+
+    **Members**
 
     .. py:attribute:: color_r
        type: float
@@ -695,6 +924,8 @@ class ColorMixin(object):
        The RGB int color values in a 3-tuple.
     """
 
+    copy_specs = ["color"]
+
     def __init__(self, color=None):
         super(ColorMixin, self).__init__()
 
@@ -711,36 +942,42 @@ class ColorMixin(object):
     @typed
     def color_r(self, color_r):
         if isinstance(color_r, six.integer_types):
+            if not (0 <= color_r <= 255):
+                raise ValueError("invalid color_r value: {}".format(color_r))
             color_r /= 255.
-        if isinstance(color_r, float):
+        elif isinstance(color_r, float):
             if not (0 <= color_r <= 1):
-                raise ValueError("invalid color_r value: %s" % (color_r,))
+                raise ValueError("invalid color_r value: {}".format(color_r))
         else:
-            raise TypeError("invalid color_r type: %s" % (color_r,))
+            raise TypeError("invalid color_r type: {}".format(color_r))
 
         return color_r
 
     @typed
     def color_g(self, color_g):
         if isinstance(color_g, six.integer_types):
+            if not (0 <= color_g <= 255):
+                raise ValueError("invalid color_g value: {}".format(color_g))
             color_g /= 255.
-        if isinstance(color_g, float):
+        elif isinstance(color_g, float):
             if not (0 <= color_g <= 1):
-                raise ValueError("invalid color_g value: %s" % (color_g,))
+                raise ValueError("invalid color_g value: {}".format(color_g))
         else:
-            raise TypeError("invalid color_g type: %s" % (color_g,))
+            raise TypeError("invalid color_g type: {}".format(color_g))
 
         return color_g
 
     @typed
     def color_b(self, color_b):
         if isinstance(color_b, six.integer_types):
+            if not (0 <= color_b <= 255):
+                raise ValueError("invalid color_b value: {}".format(color_b))
             color_b /= 255.
-        if isinstance(color_b, float):
+        elif isinstance(color_b, float):
             if not (0 <= color_b <= 1):
-                raise ValueError("invalid color_b value: %s" % (color_b,))
+                raise ValueError("invalid color_b value: {}".format(color_b))
         else:
-            raise TypeError("invalid color_b type: %s" % (color_b,))
+            raise TypeError("invalid color_b type: {}".format(color_b))
 
         return color_b
 
@@ -748,9 +985,9 @@ class ColorMixin(object):
     def color_alpha(self, color_alpha):
         if isinstance(color_alpha, (float, int)):
             if not (0 <= color_alpha <= 1):
-                raise ValueError("invalid color_alpha value: %s" % (color_alpha,))
+                raise ValueError("invalid color_alpha value: {}".format(color_alpha))
         else:
-            raise TypeError("invalid color_alpha type: %s" % (color_alpha,))
+            raise TypeError("invalid color_alpha type: {}".format(color_alpha))
 
         return float(color_alpha)
 
@@ -763,9 +1000,9 @@ class ColorMixin(object):
     def color(self, color):
         # color setter
         if not isinstance(color, (tuple, list)):
-            raise TypeError("invalid color type: %s" % (color,))
+            raise TypeError("invalid color type: {}".format(color))
         elif not len(color) in (3, 4):
-            raise ValueError("invalid color value: %s" % (color,))
+            raise ValueError("invalid color value: {}".format(color))
         else:
             self.color_r = color[0]
             self.color_g = color[1]

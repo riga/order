@@ -10,24 +10,91 @@ __all__ = ["Channel", "Category"]
 
 from order.unique import UniqueObject, unique_tree
 from order.mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin
-from order.util import to_root_latex
+from order.util import ROOT_DEFAULT, to_root_latex
 
 
 @unique_tree(plural="categories", deep_children=True, deep_parents=True)
 class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin):
     """ __init__(name, id="+", channel=None, categories=None, label=None, label_short=None, context=None, selection=None, selection_mode=None, aux=None, tags=None)
     Class that describes an analysis category. This is not to be confused with an analysis
-    :py:class:`Channel`. While the definition of a channel is somewhat fixed by the final state of
-    an event, a category describes an arbitrary sub phase-space. Therefore, a category can be
-    uniquely assigned to a channel - it *has* a channel.
+    :py:class:`Channel`. While the definition of a channel can be understood as being fixed by e.g.
+    the final state of an event, a category describes an arbitrary sub phase-space. Therefore, a
+    category can be (optionally) uniquely assigned to a channel - it *has* a channel.
 
-    *label* and *label_short* are forwarded to the :py:class:`LabelMixin`, *selection* and
-    *selection_mode* to the :py:class:`SelectionMixin`, *tags* to the :py:class:`TagMixin`, *aux* to
-    the :py:class:`AuxDataMixin`, and *name*, *id* (defaulting to an auto id) and *context* to the
-    :py:class:`UniqueObject` constructor.
+    Also, categories can be nested, i.e., they can have child and parent categories.
 
-    A category can also have child and parent categories. When copied via :py:meth:`copy` these
-    relations are lost. Initial child categories as set from *categories*.
+    **Arguments**
+
+    *channel* should be a reference to a :py:class:`Channel` instance or *None*. Child categories
+    are initialized with *categories*.
+
+    *label* and *label_short* are forwarded to the :py:class:`~order.mixins.LabelMixin`, *selection*
+    and *selection_mode* to the :py:class:`~order.mixins.SelectionMixin`, *tags* to the
+    :py:class:`~order.mixins.TagMixin`, *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and
+    *name*, *id* (defaulting to an auto id) and *context* to the
+    :py:class:`~order.unique.UniqueObject` constructor.
+
+    **Copy behavior**
+
+    All attributes are copied **except** for references to child and parent categories. If set, the
+    *channel* reference is kept. Also note the copy behavior of
+    :py:class:`~order.unique.UniqueObject`'s.
+
+    **Example**
+
+    .. code-block:: python
+
+        import order as od
+
+        # toggle the default selection mode to Root-style selection string concatenation
+        od.Category.default_selection_mode = "root"
+
+        cat = od.Category("4j",
+            label="4 jets",
+            label_short="4j",
+            selection="nJets == 4",
+        )
+
+        # note that no id needs to be passed to the Category constructor
+        # its id is set automatically based on the maximum id of currently existing category
+        # instances plus one (which is - of course - one in this example)
+        cat.id
+        # -> 1
+
+        cat.label
+        # -> "4 jets"
+
+        # add a channel
+        ch = od.Channel("dilepton", 1,
+            label="Dilepton",
+            label_short="DL"
+        )
+        cat.channel = ch
+
+        # the category is also assigned to the channel now
+        cat in ch.categories
+        # -> True
+
+        # and we can create the full category label
+        cat.full_label()
+        # -> "Dilepton, 4 jets"
+
+        # and the short version of it
+        cat.full_label(short=True)
+        # -> "DL, 4j"
+
+        # add a sub category
+        cat2 = cat.add_category("4j_2b",
+            label=cat.label + ", 2 b-tags",
+        )
+
+        # set the selection string (could also be set in add_category above)
+        cat2.selection = [cat.selection, "nBTags == 2"]
+
+        cat2.selection
+        # -> "(nJets == 4) && (nBTags == 2)"
+
+    **Members**
 
     .. py:attribute:: channel
        type: Channel, None
@@ -36,18 +103,9 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
     """
 
     # attributes for copying
-    copy_specs = [
-        "name",
-        "id",
-        {"attr": "channel", "ref": True},
-        ("label", "_label"),
-        ("label_short", "_label_short"),
-        "selection",
-        "selection_mode",
-        "tags",
-        "aux",
-        "context",
-    ]
+    copy_specs = [{"attr": "channel", "ref": True}] + UniqueObject.copy_specs + \
+        AuxDataMixin.copy_specs + TagMixin.copy_specs + SelectionMixin.copy_specs + \
+        LabelMixin.copy_specs
 
     def __init__(self, name, id=UniqueObject.AUTO_ID, channel=None, categories=None, label=None,
             label_short=None, selection=None, selection_mode=None, tags=None, aux=None,
@@ -91,16 +149,17 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
 
         self._channel = channel
 
-    def full_label(self, short=False, root=False):
+    def full_label(self, short=False, root=ROOT_DEFAULT):
         """
-        Returns the full label, i.e. starting with the channel label. When *short* is *True*, the
-        short version is returned. When *root* is *True*, the label is converted to *proper* ROOT
-        latex.
+        Returns the full label of this cateogry, starting with the channel label if set. When
+        *short* is *True*, the short version is returned. When *root* is *True*, the label is
+        converted to ROOT-style latex.
         """
         label = self.label_short if short else self.label
 
         if self.channel:
-            label = "{}, {}".format(self.channel.label, label)
+            ch_label = self.channel.label_short if short else self.channel.label
+            label = "{}, {}".format(ch_label, label)
 
         return to_root_latex(label) if root else label
 
@@ -110,21 +169,32 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
 class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
     """ __init__(name, id, categories=None, label=None, label_short=None, aux=None, context=None)
     An object that descibes an analysis channel, often defined by a particular decay *channel* that
-    results in distinct final state objects.
+    results in distinct final state objects. A channel can have parent-child relations to other
+    channels with one parent per child, and child relations to categories.
 
-    *label* and *label_short* are passed to the :py:class:`LabelMixin`, *aux* to the
-    :py:class:`AuxDataMixin`, and *name*, *id* and *context* to the :py:class:`UniqueObject`
-    constructor.
+    **Arguments**
 
-    A channel can have parent-child relations to other channels with one parent per child, and child
-    relations to categories, initialized from *categories*. When copied via :py:meth:`copy` these
-    relations are lost.
+    References to contained categories are initialized with *categories*. *label* and *label_short*
+    are passed to the :py:class:`~order.mixins.LabelMixin`, *aux* to the
+    :py:class:`~order.mixins.AuxDataMixin`, and *name*, *id* and *context* to the
+    :py:class:`~order.unique.UniqueObject` constructor.
+
+    **Copy behavior**
+
+    All attributes are copied **except** for references to child channels and the parent channel as
+    well as categories. Also note the copy behavior of :py:class:`~order.unique.UniqueObject`'s.
+
+    **Example**
 
     .. code-block:: python
 
-        SL_channel = Channel("SL", 1, label="lepton+jets")
+        import order as od
 
-        e_channel  = SL_channel.add_channel("e", 1)
+        # create a channel
+        SL_channel = od.Channel("SL", 1, label="lepton+jets")
+
+        # add child channels
+        e_channel  = SL_channel.add_channel("e", 1, label="e+jets")
         mu_channel = SL_channel.add_channel("mu", 2)
 
         len(SL_channel.channels)
@@ -135,17 +205,22 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
 
         e_channel.parent_channel
         # -> SL_channel
+
+        # add categories
+        cat_e_2j = e_channel.add_category("e_2j",
+            label="2 jets",
+            selection="nJets == 2",
+        )
+
+        # print the category label
+        cat_e_2j.full_label()
+        # -> "e+jets, 2 jets"
+
+    **Members**
     """
 
     # attributes for copying
-    copy_specs = [
-        "name",
-        "id",
-        ("label", "_label"),
-        ("label_short", "_label_short"),
-        "aux",
-        "context",
-    ]
+    copy_specs = UniqueObject.copy_specs + AuxDataMixin.copy_specs + LabelMixin.copy_specs
 
     def __init__(self, name, id, categories=None, label=None, label_short=None, aux=None,
             context=None):
@@ -161,7 +236,7 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
     def add_category(self, *args, **kwargs):
         """
         Adds a child category. See :py:meth:`UniqueObjectIndex.add` for more info. Also sets the
-        channel of the added category to *this* instance.
+        *channel* of the added category to *this* instance.
         """
         category = self.categories.add(*args, **kwargs)
 
@@ -174,7 +249,7 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
     def remove_category(self, *args, **kwargs):
         """
         Removes a child category. See :py:meth:`UniqueObjectIndex.remove` for more info. Also resets
-        the channel of the added category.
+        the *channel* of the added category.
         """
         category = self.categories.remove(*args, **kwargs)
 

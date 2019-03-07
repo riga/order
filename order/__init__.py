@@ -18,6 +18,7 @@ from order.__version__ import (
 )
 
 # provisioning imports
+import order.util
 from order.unique import (
     UniqueObject, UniqueObjectIndex, DuplicateObjectException, DuplicateNameException,
     DuplicateIdException, uniqueness_context, unique_tree,

@@ -1,9 +1,0 @@
-div.sphinxsidebar {
-  overflow-y: auto;
-  height: 100%;
-}
-
-h1.logo,
-div.sphinxsidebarwrapper > h3 {
-  display: none;
-}

@@ -82,14 +82,25 @@ class UniqueObject(object):
 
 class UniqueObjectIndex(CopyMixin):
     """
-    Index of :py:class:`UniqueObject` instances for faster lookup by either name or id.
+    Index of :py:class:`UniqueObject` instances for faster lookup by either name or id. The
+    instances are stored for different uniqueness context, so most methods have a *context*
+    argument which usually defaults to the return value of
+    :py:meth:`UniqueObject.get_default_context`.
+
+    **Arguments**
 
     *cls* must be a subclass of :py:class:`UniqueObject`, which is used for type validation when a
-    new object is added to the index. Examples:
+    new object is added to the index. The *default_context* is used in case no context argument is
+    set in most methods of this index object. It defaults to the return value of the *cls*'
+    :py:meth:`UniqueObject.get_default_context`.
+
+    **Example**
 
     .. code-block:: python
 
-        idx = UniqueObjectIndex()
+        import order as od
+
+        idx = od.UniqueObjectIndex()
         foo = idx.add("foo", 1)
         bar = idx.add("bar", 2)
 
@@ -102,27 +113,45 @@ class UniqueObjectIndex(CopyMixin):
         idx.ids()
         # -> [1, 2]
 
-        for obj in idx:
-            print(obj)
-        # -> "foo__1"
-        # -> "bar__2"
-
-        1 in idx
-        # -> True
-
         idx.get(1) == foo
         # -> True
 
-        idx.get("bar") == bar
-        # -> True
+        # add objects for an other uniqueness context
+        # note: for the default context, the redundant use of the id 1 would have caused an error!
+        baz = idx.add("baz", 1, context="other")
 
-        # TODO: multiple contexts
+        len(idx)
+        # -> 3
+
+        # idx.len() (with a context argument) returns the number of objects contained with the
+        # default context
+        idx.len()
+        # -> 2
+
+        idx.len(context="other")
+        # -> 1
+
+        # get ids of objects for all contexts (which might contain duplicates)
+        idx.ids(context=all)
+        # -> [1, 2, 1]
+
+    **Members**
+
+    .. py:classattribute:: ALL
+
+       The flag that denotes that all contexts should be tranversed in methods that accept a
+       *context* argument. It defaults to the built-in function ``all``.
 
     .. py:attribute:: cls
        type: class
        read-only
 
        Class of objects hold by this index.
+
+    .. py:attribute:: default_context
+       type: string
+
+       The default context that is used when no *context* argument is provided in most methods.
     """
 
     # yeah, I know ... but hey, why not
@@ -158,7 +187,7 @@ class UniqueObjectIndex(CopyMixin):
     def _copy_attribute_manual(self, inst, obj, spec):
         if spec.dst == "_indices":
             # simply extend the new index with the values of this instance
-            inst.extend(self.values(context=all))
+            inst.extend(self.values(context=self.ALL))
         else:
             raise NotImplementedError()
 
@@ -230,7 +259,7 @@ class UniqueObjectIndex(CopyMixin):
         """
         Returns the length of the index stored for *context*. When *None*, the *default_context* is
         used. When *context* is *all*, the sum of lengths of all indices is returned, which is
-        equivalent to :py:meth`__len__`.
+        equivalent to :py:meth:`__len__`.
         """
         if context != self.ALL:
             return len(self._indices[context or self.default_context]["ids"])
@@ -418,50 +447,98 @@ class UniqueObjectIndex(CopyMixin):
 class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
     """
     An unique object defined by a *name* and an *id*. The purpose of this class is to provide a
-    simple interface for objects that are
+    simple interface for objects that
 
-    1. used programatically and should therefore have a unique, human-readable name, and
+    1. are used programatically and should therefore have a unique, human-readable name, and
     2. have a unique identifier that can be saved to files, such as (e.g.) ROOT trees.
 
-    Both, *name* and *id* should have unique values on their *uniqueness context*. If *context* is
-    *None*, either the current one is used as defined in :py:func:`context` or, when empty, the
-    class member *default_context* is used instead. Examples:
+    Both, *name* and *id* should have unique values within a certain *uniqueness context*. This
+    context defaults to either the current one as set by :py:func:`uniqueness_context`, the
+    *default_context* of this class, or, whem empty, the lower-case class name. See
+    :py:meth:`get_default_context` for more info.
+
+    **Arguments**
+
+    *name*, *id* and *context* initialize the same-named attributes.
+
+    **Copy behavior**
+
+    When an inheriting class inherits also from :py:class:`~order.mixins.CopyMixin` certain copy
+    rules apply for the *name*, *id* and *context* attributes as duplicate names or ids within the
+    same context would directly cause an exception to be thrown (which is the desired behavior, see
+    examples below). Two ways are in general recommended to copy a unique object:
 
     .. code-block:: python
 
-       foo = UniqueObject("foo", 1)
+        import order as od
 
-       print(foo.name)
-       # -> "foo"
-       print(foo.id)
-       # -> 1
+        class MyClass(od.UniqueObject, od.CopyMixin):
+            pass
 
-       UniqueObject(123, 1)
-       # -> TypeError: invalid name: 123
-       UniqueObject("foo", "mystring")
-       # -> TypeError: invalid id: mystring
+        orig = MyClass("foo", 1)
 
-       bar = UniqueObject("foo", 2)
-       # -> ValueError: duplicate name in uniqueness context 'uniqueobject': foo
+        # 1. use the same context, explicitely change name and id
+        copy = orig.copy(name="bar", id=2)
 
-       bar = UniqueObject("bar", 1)
-       # -> ValueError: duplicate id in uniqueness context 'uniqueobject': 1
+        # 2. use a different context, optionally set different name or id
+        with od.unqiueness_context("other"):
+            copy = orig.copy()
+            copy2 = orig.copy(name="baz")
 
-       bar = UniqueObject("bar", 1, context="myNewContext")
-       # works!
+    **Example**
 
-       foo == 1
-       # -> True
+    .. code-block:: python
 
-       bar == "bar"
-       # -> True
+        import order as od
 
-       foo == bar
-       # -> False
+        foo = od.UniqueObject("foo", 1)
 
-    .. py:attribute:: default_context
+        print(foo.name)
+        # -> "foo"
+        print(foo.id)
+        # -> 1
+
+        # name and id must be strictly string and integer types, respectively
+        od.UniqueObject(123, 1)
+        # -> TypeError: invalid name: 123
+        UniqueObject("foo", "mystring")
+        # -> TypeError: invalid id: mystring
+
+        # the name "foo" and the id 1 can no longer be used
+        # (at least not within the same uniqueness context, which is the default one when not set)
+        bar = UniqueObject("foo", 2)
+        # -> DuplicateNameException: an object with name 'foo' already exists in the uniqueness
+        #                            context 'uniqueobject'
+
+        bar = UniqueObject("bar", 1)
+        # -> DuplicateIdException: an object with id '1' already exists in the uniqueness context
+        #                          'uniqueobject'
+
+        # everything is fine when an other context is provided
+        bar = UniqueObject("bar", 1, context="myNewContext")
+        # works!
+
+        # unique objects can als be compared by name and id
+        foo == 1
+        # -> True
+
+        bar == "bar"
+        # -> True
+
+        foo == bar
+        # -> False
+
+        # automatically use the next highest possible id
+        obj = UniqueObject("baz", id=UniqueObject.AUTO_ID)
+
+        obj.id
+        # -> 2  # 1 is the highest used id in the default context, see above
+
+    **Members**
+    TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+
+    .. py:classattribute:: default_context
        type: arbitrary (hashable)
-       classmember
 
        The default context of uniqueness when none is given in the instance constructor. Two
        instances are only allowed to have the same name *or* the same id if their classes have
@@ -486,6 +563,8 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
     """
 
     AUTO_ID = "+"
+
+    copy_specs = ["name", "id", "context"]
 
     @classmethod
     def get_default_context(cls):
@@ -749,8 +828,8 @@ def unique_tree(**kwargs):
     *get_\** and *has_\** child (parent) methods will have recursive features. When *skip* is a
     sequence, it can contain names of attributes to skip that would normally be created.
 
-    A class can be decorated multiple times. Internally, the objects are stored in separated
-    :py:class:`UniqueObjectIndex`s per added tree functionality.
+    A class can be decorated multiple times. Internally, the objects are stored in a separated
+    :py:class:`UniqueObjectIndex` instance per added tree functionality.
 
     Doc strings are automatically created.
     """
@@ -803,7 +882,7 @@ def unique_tree(**kwargs):
        type: UniqueObjectIndex
        read-only
 
-       The index of child {plural}.
+       The :py:class:`~order.unique.UniqueObjectIndex` of child {plural}.
     """.format(plural=plural)
 
             if parents:
@@ -812,7 +891,7 @@ def unique_tree(**kwargs):
        type: UniqueObjectIndex
        read-only
 
-       The index of parent {plural}.
+       The :py:class:`~order.unique.UniqueObjectIndex` of parent {plural}.
     """.format(plural=plural)
 
         #
@@ -831,9 +910,9 @@ def unique_tree(**kwargs):
             @patch("has_" + singular)
             def has(self, obj, context=None):
                 """
-                Checks if the child {plural} index for *context* contains an *obj* which might be a
-                *name*, *id*, or an instance. When *context* is *None*, the index' *default_context*
-                is used.
+                Checks if the :py:attr:`{plural}` index for *context* contains an *obj* which might
+                be a *name*, *id*, or an instance. When *context* is *None*, the *default_context*
+                of the :py:attr:`{plural}` index is used.
                 """
                 return getattr(self, plural).has(obj, context=context)
 
@@ -842,9 +921,9 @@ def unique_tree(**kwargs):
             def get(self, obj, default=_no_default, context=None):
                 """
                 Returns a child {singular} given by *obj*, which might be a *name*, *id*, or an
-                instance from the index for *context*. When no {singular} is found, *default* is
-                returned when set. Otherwise, an error is raised. When *context* is *None*, the
-                index' *default_context* is used.
+                instance from the :py:attr:`{plural}` index for *context*. When no {singular} is
+                found, *default* is returned when set. Otherwise, an error is raised. When *context*
+                is *None*, the *default_context* of the :py:attr:`{plural}` index is used.
                 """
                 return getattr(self, plural).get(obj, default=default, context=context)
 
@@ -854,8 +933,10 @@ def unique_tree(**kwargs):
             @patch("has_" + singular)
             def has(self, obj, deep=True, context=None):
                 """
-                Checks if the child {plural} index for *context* contains an *obj* which might be a
-                *name*, *id*, or an instance. If *deep* is *True*, the lookup is recursive.
+                Checks if the :py:attr:`{plural}` index for *context* contains an *obj* which might
+                be a *name*, *id*, or an instance. If *deep* is *True*, the lookup is recursive.
+                When *context* is *None*, the *default_context* of the :py:attr:`{plural}` index is
+                used.
                 """
                 return getattr(self, "get_" + singular)(obj, default=_not_found, deep=deep,
                     context=context) != _not_found
@@ -865,9 +946,10 @@ def unique_tree(**kwargs):
             def get(self, obj, default=_no_default, deep=True, context=None):
                 """
                 Returns a child {singular} given by *obj*, which might be a *name*, *id*, or an
-                instance from the index for *context*. If *deep* is *True*, the lookup is recursive.
-                When no {singular} is found, *default* is returned when set. Otherwise, an error is
-                raised. When *context* is *None*, the index' *default_context* is used.
+                instance from the :py:attr:`{plural}` index for *context*. If *deep* is *True*, the
+                lookup is recursive. When no {singular} is found, *default* is returned when set.
+                Otherwise, an error is raised. When *context* is *None*, the *default_context* of
+                the :py:attr:`{plural}` index is used.
                 """
                 indexes = [getattr(self, plural)]
                 while len(indexes) > 0:
@@ -887,11 +969,11 @@ def unique_tree(**kwargs):
             @patch("walk_" + plural)
             def walk(self, context=None):
                 """
-                Walks through the child {plural} index for *context* and per iteration, yields a
-                child {singular}, its depth relative to *this* {singular}, and its child {plural} in
-                a list that can be modified to alter the walking. When *context* is *None*, the
-                index' *default_context* is used. When *context* is *all*, all indices are
-                traversed.
+                Walks through the :py:attr:`{plural}` index for *context* and per iteration, yields
+                a child {singular}, its depth relative to *this* {singular}, and its child {plural}
+                in a list that can be modified to alter the walking. When *context* is *None*, the
+                *default_context* of the :py:attr:`{plural}` index is used. When *context* is *all*,
+                all indices are traversed.
                 """
                 lookup = [(obj, 1) for obj in getattr(self, plural).values(context=context)]
                 while lookup:
@@ -931,10 +1013,10 @@ def unique_tree(**kwargs):
             def remove(self, obj, context=None, silent=False):
                 """
                 Removes a child {singular} given by *obj*, which might be a *name*, *id*, or an
-                instance from the index for *context* and returns the removed object. When *context*
-                is *None*, the index' *default_context* is used. Unless *silent* is *True*, an error
-                is raised if the object was not found. See :py:meth:`UniqueObjectIndex.remove` for
-                more info.
+                instance from the :py:attr:`{plural}` index for *context* and returns the removed
+                object. When *context* is *None*, the *default_context* of the :py:attr:`{plural}`
+                index is used. Unless *silent* is *True*, an error is raised if the object was not
+                found. See :py:meth:`UniqueObjectIndex.remove` for more info.
                 """
                 return getattr(self, plural).remove(obj, context=context, silent=silent)
 
@@ -949,11 +1031,11 @@ def unique_tree(**kwargs):
             def remove(self, obj, context=None, silent=False):
                 """
                 Removes a child {singular} given by *obj*, which might be a *name*, *id*, or an
-                instance from the index for *context* and returns the removed object. Also removes
-                *this* {singular} from the parent index of the removed {singular}. When *context*
-                is *None*, the index' *default_context* is used. Unless *silent* is *True*, an error
-                is raised if the object was not found. See :py:meth:`UniqueObjectIndex.remove` for
-                more info.
+                instance from the :py:attr:`{plural}` index for *context* and returns the removed
+                object. Also removes *this* {singular} from the :py:attr:`parent_{plural}` index of
+                the removed {singular}. When *context* is *None*, the *default_context* of the
+                :py:attr:`{plural}` index is used. Unless *silent* is *True*, an error is raised if
+                the object was not found. See :py:meth:`UniqueObjectIndex.remove` for more info.
                 """
                 obj = getattr(self, plural).remove(obj, context=context, silent=silent)
                 if obj is not None:
@@ -1016,10 +1098,11 @@ def unique_tree(**kwargs):
             def remove(self, obj, context=None, silent=False):
                 """
                 Removes a parent {singular} *obj* which might be a *name*, *id*, or an instance from
-                the parent {plural} index for *context*. Also removes *this* {singular} from the
-                child index of the removed {singular}. Returns the removed object. Unless *silent*
-                is *True*, an error is raised if the object was not found. See
-                :py:meth:`UniqueObjectIndex.remove` for more info.
+                the :py:attr:`parent_{plural}` index for *context*. Also removes *this* instance
+                from the child index of the removed {singular}. Returns the removed object. When
+                *context* is *None*, the *default_context* of the :py:attr:`parent_{plural}` index
+                is used. Unless *silent* is *True*, an error is raised if the object was not found.
+                See :py:meth:`UniqueObjectIndex.remove` for more info.
                 """
                 obj = getattr(self, "parent_" + plural).remove(obj, context=context, silent=silent)
                 if obj is not None:
@@ -1031,8 +1114,9 @@ def unique_tree(**kwargs):
                 @patch("has_parent_" + singular)  # noqa: F811
                 def has(self, obj, context=None):
                     """
-                    Checks if the parent {plural} index for *context* contains an *obj* which might
-                    be a *name*, *id*, or an instance.
+                    Checks if the :py:attr:`parent_{plural}` index for *context* contains an *obj*
+                    which might be a *name*, *id*, or an instance. When *context* is *None*, the
+                    *default_context* of the :py:attr:`parent_{plural}` index is used.
                     """
                     return getattr(self, "parent_" + plural).has(obj, context=context)
 
@@ -1041,9 +1125,10 @@ def unique_tree(**kwargs):
                 def get(self, obj, default=_no_default, context=None):
                     """
                     Returns a parent {singular} given by *obj*, which might be a *name*, *id*, or an
-                    instance from the {plural} index for *context*. When no {singular} is found,
-                    *default* is returned when set. Otherwise, an error is raised. When *context* is
-                    *None*, the index' *default_context* is used.
+                    instance from the :py:attr:`parent_{plural}` index for *context*. When no
+                    {singular} is found, *default* is returned when set. Otherwise, an error is
+                    raised. When *context* is *None*, the *default_context* of the
+                    :py:attr:`parent_{plural}` index is used.
                     """
                     return getattr(self, "parent_" + plural).get(obj, default=default,
                         context=context)
@@ -1054,8 +1139,10 @@ def unique_tree(**kwargs):
                 @patch("has_parent_" + singular)
                 def has(self, obj, deep=True, context=None):
                     """
-                    Checks if the parent {plural} index for *context* contains an *obj*, which might
-                    be a *name*, *id*, or an instance. If *deep* is *True*, the lookup is recursive.
+                    Checks if the :py:attr:`parent_{plural}` index for *context* contains an *obj*,
+                    which might be a *name*, *id*, or an instance. If *deep* is *True*, the lookup
+                    is recursive. When *context* is *None*, the *default_context* of the
+                    :py:attr:`parent_{plural}` index is used.
                     """
                     return getattr(self, "get_parent_" + singular)(obj, default=_not_found,
                         deep=deep, context=context) != _not_found
@@ -1065,10 +1152,10 @@ def unique_tree(**kwargs):
                 def get(self, obj, default=_no_default, deep=True, context=None):
                     """
                     Returns a parent {singular} given by *obj*, which might be a *name*, *id*, or an
-                    instance from the index for *context*. If *deep* is *True*, the lookup is
-                    recursive. When no {singular} is found, *default* is returned when set.
-                    Otherwise, an error is raised. When *context* is *None*, the index'
-                    *default_context* is used.
+                    instance from the :py:attr:`parent_{plural}` index for *context*. If *deep* is
+                    *True*, the lookup is recursive. When no {singular} is found, *default* is
+                    returned when set. Otherwise, an error is raised. When *context* is *None*, the
+                    *default_context* of the :py:attr:`parent_{plural}` index is used.
                     """
                     indexes = [getattr(self, "parent_" + plural)]
                     while len(indexes) > 0:
@@ -1088,11 +1175,12 @@ def unique_tree(**kwargs):
                 @patch("walk_parent_" + plural)  # noqa: F811
                 def walk(self, context=None):
                     """
-                    Walks through the parent {plural} index for *context* and per iteration, yields
-                    a parent {singular}, its depth relative to *this* {singular}, and its parent
-                    {plural} in a list that can be modified to alter the walking. When *context* is
-                    *None*, the index' *default_context* is used. When *context* is *all*, all
-                    indices are traversed.
+                    Walks through the :py:attr:`parent_{plural}` index for *context* and per
+                    iteration, yields a parent {singular}, its depth relative to *this* {singular},
+                    and its parent {plural} in a list that can be modified to alter the walking.
+                    When *context* is *None*, the *default_context* of the
+                    :py:attr:`parent_{plural}` index is used. When *context* is *all*, all indices
+                    are traversed.
                     """
                     lookup = [(obj, 1) for obj in getattr(self, "parent_" + plural).values()]
                     while lookup:
@@ -1124,7 +1212,7 @@ def unique_tree(**kwargs):
                 @patch("add_parent_" + singular)  # noqa: F811
                 def add(self, *args, **kwargs):
                     """
-                    Adds a child {singular}. Also adds *this* {singular} to the parent index of the
+                    Adds a parent {singular}. Also adds *this* {singular} to the child index of the
                     added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
                     """
                     obj = getattr(self, "parent_" + plural).add(*args, **kwargs)
@@ -1141,7 +1229,7 @@ def unique_tree(**kwargs):
                 @patch("add_parent_" + singular)
                 def add(self, *args, **kwargs):
                     """
-                    Adds a child {singular}. Also adds *this* {singular} to the parent index of the
+                    Adds a parent {singular}. Also adds *this* {singular} to the child index of the
                     added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
                     """
                     parent_index = getattr(self, "parent_" + plural)
@@ -1155,7 +1243,7 @@ def unique_tree(**kwargs):
         # convenient parent methods, exactly 1 parent
         #
 
-                if parents == 1:
+                if not isinstance(parents, bool) and parents == 1:
 
                     # direct parent access
                     @patch(name="parent_" + singular)

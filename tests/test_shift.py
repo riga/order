@@ -49,8 +49,15 @@ class ShiftTest(unittest.TestCase):
         self.assertEqual(s.direction, "up")
         self.assertEqual(s.type, Shift.SHAPE)
 
+        s = Shift("ps_down", 3)
+
+        self.assertEqual(s.name, "ps_down")
+        self.assertEqual(s.source, "ps")
+        self.assertEqual(s.direction, Shift.DOWN)
+        self.assertEqual(s.type, Shift.RATE_SHAPE)
+
     def test_attributes(self):
-        s = Shift("pdf_down", 3, type=Shift.SHAPE)
+        s = Shift("pdf_down", 4, type=Shift.SHAPE)
 
         self.assertEqual(s.name, "pdf_down")
         self.assertTrue(s.is_down)
@@ -60,8 +67,8 @@ class ShiftTest(unittest.TestCase):
         self.assertTrue(s.is_rate)
 
     def test_copy(self):
-        s = Shift("scale_down", 4, type=Shift.SHAPE)
-        s2 = s.copy(name="scale_up", id=5, label_short="sup")
+        s = Shift("scale_down", 5, type=Shift.SHAPE)
+        s2 = s.copy(name="scale_up", id=6, label_short="sup")
 
         self.assertEqual(s2.name, "scale_up")
         self.assertEqual(s2.type, Shift.SHAPE)

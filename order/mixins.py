@@ -333,6 +333,7 @@ class AuxDataMixin(object):
     """
 
     _no_default = object()
+    _no_value = object()
 
     copy_specs = ["aux"]
 
@@ -357,12 +358,12 @@ class AuxDataMixin(object):
 
         return aux
 
-    def set_aux(self, key, data):
+    def set_aux(self, key, value):
         """
-        Stores auxiliary *data* for a specific *key*. Returns *data*.
+        Stores auxiliary *value* for a specific *key*. Returns *value*.
         """
-        self.aux[key] = data
-        return data
+        self.aux[key] = value
+        return value
 
     def has_aux(self, key):
         """
@@ -393,6 +394,17 @@ class AuxDataMixin(object):
         Clears the auxiliary data container.
         """
         self.aux.clear()
+
+    def x(self, key, value=_no_value, default=_no_default):
+        """ x(key, [value], [default])
+        Shorthand to :py:meth:`get_aux` if value is not set, and to :py:meth:`set_aux` otherwise.
+        In the former case, *default* should be set via a keyword argument. In any case, the value
+        is returned.
+        """
+        if value == self._no_value:
+            return self.get_aux(key, default=default)
+        else:
+            return self.set_aux(key, value)
 
 
 class TagMixin(object):

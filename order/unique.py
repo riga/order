@@ -535,7 +535,6 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
         # -> 2  # 1 is the highest used id in the default context, see above
 
     **Members**
-    TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 
     .. py:classattribute:: default_context
        type: arbitrary (hashable)

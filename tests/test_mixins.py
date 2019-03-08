@@ -171,6 +171,15 @@ class AuxDataMixinTest(unittest.TestCase):
         c.clear_aux()
         self.assertFalse(c.has_aux("foo"))
 
+    def test_x(self):
+        c = AuxDataMixin(aux={"foo": "bar"})
+
+        self.assertEqual(c.x("foo"), "bar")
+        self.assertEqual(c.x("nonexisting", default="bar"), "bar")
+
+        self.assertEqual(c.x("foo", "baz"), "baz")
+        self.assertEqual(c.x("foo"), "baz")
+
 
 class TagMixinTest(unittest.TestCase):
 

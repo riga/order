@@ -68,4 +68,4 @@ class ConfigTest(unittest.TestCase):
 
         self.assertEqual(c.name, "otherName")
         self.assertEqual(c.id, 3)
-        self.assertEqual(c.uniqueness_context, "config")
+        self.assertEqual(c.context, "config")

@@ -2,15 +2,17 @@
 
 
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 
+
 keywords = [
-    "physics", "analysis", "experiment", "order", "structure", "database", "lhc", "cms", "atlas",
-    "alice", "lhcb",
+    "physics", "analysis", "experiment", "order", "structure", "database", "lhc", "hep", "alice",
+    "atlas", "cms", "lhcb",
 ]
+
 
 classifiers = [
     "Programming Language :: Python",
@@ -24,18 +26,22 @@ classifiers = [
     "Intended Audience :: Information Technology",
 ]
 
+
 # read the readme file
-with open(os.path.join(this_dir, "README.md"), "r") as f:
+with open(os.path.join(this_dir, "README.rst"), "r") as f:
     long_description = f.read()
+
 
 # load installation requirements
 with open(os.path.join(this_dir, "requirements.txt"), "r") as f:
     install_requires = [line.strip() for line in f.readlines() if line.strip()]
 
+
 # load package infos
 pkg = {}
 with open(os.path.join(this_dir, "order", "__version__.py"), "r") as f:
     exec(f.read(), pkg)
+
 
 setup(
     name="order",
@@ -48,10 +54,8 @@ setup(
     keywords=keywords,
     classifiers=classifiers,
     long_description=long_description,
-    long_description_content_type="text/markdown",
     install_requires=install_requires,
     python_requires=">=2.7",
     zip_safe=False,
-    packages=["order", "order.cms"],
-    package_data={"": ["LICENSE", "requirements.txt", "README.md"]},
+    packages=find_packages(exclude=["tests"]),
 )

@@ -1,242 +1,29 @@
-order
-=====
-
-.. centered:: This page contains only API docs. For more info, visit `order on GitHub <https://github.com/riga/order>`_.
-
+**order**
+=========
 
 .. toctree::
-   :maxdepth: 2
+   :hidden:
 
-.. automodule:: order
+   self
 
-
-Simple installation via `pip <https://pypi.python.org/pypi/order>`__:
-
-.. code-block:: bash
-
-   pip install order
+.. include:: ../README.rst
+   :start-after: marker-after-logo
+   :end-before: marker-after-header
 
 
-See the `intro.ipynb <https://github.com/riga/order/blob/master/examples/intro.ipynb>`__ notebook for an introduction to the most important classes and an example setup of a small analysis.
-
-
-Main classes
-^^^^^^^^^^^^
-
-``Analysis``
-------------
-
-.. autoclass:: Analysis
-   :show-inheritance:
-   :member-order: bysource
-   :members:
-
-
-``Campaign``
-------------
-
-.. autoclass:: Campaign
-   :show-inheritance:
-   :member-order: bysource
-   :members:
-
-
-``Config``
-----------
-
-.. autoclass:: Config
-   :show-inheritance:
-   :member-order: bysource
-   :members:
-
-
-``Process``
------------
-
-.. autoclass:: Process
-   :show-inheritance:
-   :member-order: bysource
-   :members:
-
-
-``Dataset``
------------
-
-.. autoclass:: Dataset
-   :show-inheritance:
-   :member-order: bysource
-   :members:
-
-
-``DatasetInfo``
+Getting started
 ---------------
 
-.. autoclass:: DatasetInfo
-   :show-inheritance:
-   :member-order: bysource
-   :members:
+.. toctree::
+   :maxdepth: 1
+
+   quickstart
+   api/index
+
+See the `intro.ipynb <https://github.com/riga/order/blob/master/examples/intro.ipynb>`__ notebook for an introduction to the most important classes and an example setup of a small analysis. You can also run the notebook interactively on binder:
+
+|binder|
 
 
-``Channel``
------------
-
-.. autoclass:: Channel
-   :show-inheritance:
-   :member-order: bysource
-   :members:
-
-
-``Category``
-------------
-
-.. autoclass:: Category
-   :show-inheritance:
-   :member-order: bysource
-   :members:
-
-
-``Variable``
-------------
-
-.. autoclass:: Variable
-   :show-inheritance:
-   :member-order: bysource
-   :members:
-
-
-``Shift``
----------
-
-.. autoclass:: Shift
-   :show-inheritance:
-   :member-order: bysource
-   :members:
-
-
-CMS-related classes
-^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: order.cms
-
-
-``LumiList``
-------------
-
-.. autoclass:: LumiList
-   :show-inheritance:
-   :member-order: bysource
-   :members:
-
-
-``StatModel``
--------------
-
-.. autoclass:: StatModel
-   :show-inheritance:
-   :member-order: bysource
-   :members:
-
-
-``Datacard``
-------------
-
-.. autoclass:: Datacard
-   :show-inheritance:
-   :member-order: bysource
-   :members:
-
-
-.. currentmodule:: order
-
-
-Helper classes and mixins
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-``UniqueObject``
-----------------
-
-.. autoclass:: UniqueObject
-   :member-order: bysource
-   :members:
-
-
-``UniqueObjectIndex``
----------------------
-
-.. autoclass:: UniqueObjectIndex
-   :member-order: bysource
-   :members:
-
-
-``CopyMixin``
--------------
-
-.. autoclass:: CopyMixin
-   :member-order: bysource
-   :members:
-
-
-``AuxDataMixin``
-----------------
-
-.. autoclass:: AuxDataMixin
-   :member-order: bysource
-   :members:
-
-
-``TagMixin``
-------------
-
-.. autoclass:: TagMixin
-   :member-order: bysource
-   :members:
-
-
-``DataSourceMixin``
--------------------
-
-.. autoclass:: DataSourceMixin
-   :member-order: bysource
-   :members:
-
-
-``SelectionMixin``
-------------------
-
-.. autoclass:: SelectionMixin
-   :member-order: bysource
-   :members:
-
-
-``LabelMixin``
---------------
-
-.. autoclass:: LabelMixin
-   :member-order: bysource
-   :members:
-
-
-``ColorMixin``
---------------
-
-.. autoclass:: ColorMixin
-   :member-order: bysource
-   :members:
-
-
-Functions
-^^^^^^^^^
-
-.. autofunction:: order.uniqueness_context
-
-.. autofunction:: order.util.make_list
-
-.. autofunction:: order.util.multi_match
-
-.. autofunction:: order.util.flatten
-
-.. autofunction:: order.util.to_root_latex
-
-.. autofunction:: order.util.join_root_selection
-
-.. autofunction:: order.util.join_numexpr_selection
+.. include:: ../README.rst
+   :start-after: marker-after-getting-started

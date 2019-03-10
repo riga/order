@@ -1,16 +1,53 @@
 sudo: required
 
-dist: stretch
+dist: xenial
 
 language: python
 
-python:
-  - "2.7"
-  - "3.5"
-  - "3.6"
+stages:
+  - lint
+  - test
 
-install:
-  - pip install -r requirements.txt
+jobs:
+  include:
+    - stage: lint
+      env:
+        - JOB=lint
+      install:
+        - pip install -r requirements.txt
+        - pip install flake8
+      script:
+        - flake8 order tests setup.py
 
-script:
-  - python -m unittest tests
+    - stage: test
+      services:
+        - docker
+      env:
+        - JOB=test_python27
+        - IMG=python:2.7
+      install:
+        - docker pull $IMG
+      script:
+        - bash tests/docker.sh $IMG
+
+    - stage: test
+      services:
+        - docker
+      env:
+        - JOB=test_python36
+        - IMG=python:3.6
+      install:
+        - docker pull $IMG
+      script:
+        - bash tests/docker.sh $IMG
+
+    - stage: test
+      services:
+        - docker
+      env:
+        - JOB=test_python37
+        - IMG=python:3.7
+      install:
+        - docker pull $IMG
+      script:
+        - bash tests/docker.sh $IMG

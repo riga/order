@@ -14,21 +14,13 @@ from order import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionM
 class CopyMixinTest(unittest.TestCase):
 
     def make_class(self):
-        def extend_name(inst, kwargs):
-            kwargs["name"] += "_"
-
         class C(CopyMixin):
-            copy_attrs = ["name", "id"]
-            copy_callbacks = [extend_name, "increment_id"]
+            copy_specs = ["name", "id"]
 
             def __init__(self, name, id=0):
                 super(C, self).__init__()
                 self.name = name
                 self.id = id
-
-            @staticmethod
-            def increment_id(inst, kwargs):
-                kwargs["id"] += 1
 
         return C
 
@@ -36,45 +28,10 @@ class CopyMixinTest(unittest.TestCase):
         C = self.make_class()
         a = C("foo", 1)
 
-        b = a.copy(callbacks=[])
+        b = a.copy()
         self.assertIsInstance(b, C)
         self.assertEqual(b.name, "foo")
         self.assertEqual(b.id, 1)
-
-    def test_copy_attrs(self):
-        C = self.make_class()
-        a = C("foo", 1)
-
-        b = a.copy(copy_attrs=["name"], callbacks=[])
-        self.assertIsInstance(b, C)
-        self.assertEqual(b.name, "foo")
-        self.assertEqual(b.id, 0)
-
-    def test_ref_attrs(self):
-        C = self.make_class()
-        a = C(object(), 1)
-
-        b = a.copy(copy_attrs=[], ref_attrs=["name"], callbacks=[])
-        self.assertIsInstance(b, C)
-        self.assertEqual(b.name, a.name)
-
-    def test_skip_attrs(self):
-        C = self.make_class()
-        a = C("foo", 1)
-
-        b = a.copy(skip_attrs=["id"], callbacks=[])
-        self.assertIsInstance(b, C)
-        self.assertEqual(b.name, "foo")
-        self.assertEqual(b.id, 0)
-
-    def test_callbacks(self):
-        C = self.make_class()
-        a = C("foo", 1)
-
-        b = a.copy()
-        self.assertIsInstance(b, C)
-        self.assertEqual(b.name, "foo_")
-        self.assertEqual(b.id, 2)
 
     def test_class(self):
         C = self.make_class()
@@ -83,10 +40,128 @@ class CopyMixinTest(unittest.TestCase):
         class D(C):
             pass
 
-        b = a.copy(cls=D)
+        b = a.copy(_cls=D)
         self.assertIsInstance(b, D)
-        self.assertEqual(b.name, "foo_")
-        self.assertEqual(b.id, 2)
+        self.assertEqual(b.name, "foo")
+        self.assertEqual(b.id, 1)
+
+    def test_replace_specs(self):
+        C = self.make_class()
+        a = C("foo", 1)
+
+        b = a.copy()
+
+        self.assertEqual(b.name, a.name)
+        self.assertEqual(b.id, a.id)
+
+        c = a.copy(_specs=["name"], _replace_specs=True)
+
+        self.assertEqual(c.name, a.name)
+        self.assertEqual(c.id, 0)
+
+    def test_ref(self):
+        C = self.make_class()
+        o = object()
+
+        class D(C):
+            copy_specs = C.copy_specs + [{"attr": "o", "ref": True}]
+
+            def __init__(self, name, id=0, o=None):
+                super(D, self).__init__(name, id=id)
+                self.o = o
+
+        d = D("foo", 1, o)
+        d2 = d.copy()
+
+        self.assertEqual(d.o, d2.o)
+
+        d3 = d.copy(_specs=[{"attr": "o", "ref": False}])
+        self.assertNotEqual(d.o, d3.o)
+
+    def test_shallow(self):
+        C = self.make_class()
+        d = {"a": [1]}
+
+        class D(C):
+            copy_specs = C.copy_specs + [{"attr": "d", "shallow": True}]
+
+            def __init__(self, name, id=0, d=None):
+                super(D, self).__init__(name, id=id)
+                self.d = d
+
+        a = D("foo", 1, d)
+        b = a.copy()
+
+        self.assertEqual(len(a.d["a"]), 1)
+        self.assertEqual(len(b.d["a"]), 1)
+
+        a.d["a"].append(2)
+
+        self.assertEqual(len(a.d["a"]), 2)
+        self.assertEqual(len(b.d["a"]), 2)
+
+        c = a.copy(_specs=[{"attr": "d", "shallow": False}])
+
+        self.assertEqual(len(a.d["a"]), 2)
+        self.assertEqual(len(c.d["a"]), 2)
+
+        a.d["a"].append(3)
+
+        self.assertEqual(len(a.d["a"]), 3)
+        self.assertEqual(len(c.d["a"]), 2)
+
+    def test_use_setter(self):
+        C = self.make_class()
+
+        class D(C):
+            copy_specs = C.copy_specs + [{"attr": "value", "use_setter": True}]
+
+            def __init__(self, *args, **kwargs):
+                super(D, self).__init__(*args, **kwargs)
+                self.value = 123
+
+        a = D("foo", 1)
+        b = a.copy()
+
+        self.assertEqual(b.value, a.value)
+
+    def test_different_dst_src(self):
+        C = self.make_class()
+
+        class D(C):
+            copy_specs = C.copy_specs + [{"src": "foo", "dst": "bar"}]
+
+            def __init__(self, name, id=0, bar=None):
+                super(D, self).__init__(name, id=id)
+
+                self.foo = bar
+
+        a = D("foo", 1, 123)
+        b = a.copy()
+
+        self.assertEqual(b.foo, a.foo)
+
+    def test_skip(self):
+        C = self.make_class()
+
+        class D(C):
+            copy_specs = C.copy_specs + ["some_attr"]
+
+            def __init__(self, name, id=0, some_attr=None):
+                super(D, self).__init__(name, id=id)
+
+                self.some_attr = some_attr
+
+        a = D("foo", 1, 123)
+        b = a.copy()
+
+        self.assertEqual(b.some_attr, a.some_attr)
+
+        c = a.copy(_skip=["id", "some_attr"])
+
+        self.assertEqual(c.name, a.name)
+        self.assertEqual(c.id, 0)
+        self.assertIsNone(c.some_attr)
 
 
 class AuxDataMixinTest(unittest.TestCase):
@@ -98,7 +173,7 @@ class AuxDataMixinTest(unittest.TestCase):
         c = AuxDataMixin(aux={"foo": "bar"})
         self.assertEqual(len(c.aux), 1)
 
-    def test_set_has_remove(self):
+    def test_methods(self):
         c = AuxDataMixin()
         c.set_aux("foo", "bar")
         self.assertEqual(len(c.aux), 1)
@@ -114,8 +189,18 @@ class AuxDataMixinTest(unittest.TestCase):
 
         c.set_aux("foo", "bar")
         self.assertTrue(c.has_aux("foo"))
-        c.remove_aux()
+
+        c.clear_aux()
         self.assertFalse(c.has_aux("foo"))
+
+    def test_x(self):
+        c = AuxDataMixin(aux={"foo": "bar"})
+
+        self.assertEqual(c.x("foo"), "bar")
+        self.assertEqual(c.x("nonexisting", default="bar"), "bar")
+
+        self.assertEqual(c.x("foo", "baz"), "baz")
+        self.assertEqual(c.x("foo"), "baz")
 
 
 class TagMixinTest(unittest.TestCase):
@@ -197,24 +282,44 @@ class DataSourceMixinTest(unittest.TestCase):
 class SelectionMixinTest(unittest.TestCase):
 
     def test_constructor_root(self):
-        s = SelectionMixin("myBranchC > 0")
-        self.assertEqual(s.selection, "(myBranchC > 0)")
+        s = SelectionMixin("myBranchC > 0", selection_mode=SelectionMixin.MODE_ROOT)
+        self.assertEqual(s.selection, "myBranchC > 0")
 
         s.add_selection("myBranchD < 100", bracket=True)
         self.assertEqual(s.selection, "((myBranchC > 0) && (myBranchD < 100))")
 
         s.add_selection("myWeight", op="*")
-        self.assertEqual(s.selection, "(((myBranchC > 0) && (myBranchD < 100)) * (myWeight))")
+        self.assertEqual(s.selection, "((myBranchC > 0) && (myBranchD < 100)) * (myWeight)")
 
     def test_constructor_numexpr(self):
-        s = SelectionMixin("myBranchC > 0", "numexpr")
-        self.assertEqual(s.selection, "(myBranchC > 0)")
+        s = SelectionMixin("myBranchC > 0", selection_mode=SelectionMixin.MODE_NUMEXPR)
+        self.assertEqual(s.selection, "myBranchC > 0")
 
         s.add_selection("myBranchD < 100", bracket=True)
         self.assertEqual(s.selection, "((myBranchC > 0) & (myBranchD < 100))")
 
         s.add_selection("myWeight", op="*")
-        self.assertEqual(s.selection, "(((myBranchC > 0) & (myBranchD < 100)) * (myWeight))")
+        self.assertEqual(s.selection, "((myBranchC > 0) & (myBranchD < 100)) * (myWeight)")
+
+    def test_selections(self):
+        s = SelectionMixin(selection_mode=SelectionMixin.MODE_ROOT)
+
+        s.selection = "myBranchC > 0"
+        self.assertEqual(s.selection, "myBranchC > 0")
+
+        s.add_selection("myBranchD > 0", op="||")
+        self.assertEqual(s.selection, "(myBranchC > 0) || (myBranchD > 0)")
+
+        s.selection = "myBranchC > 0"
+        s.add_selection("myBranchD > 0", op="||", bracket=True)
+        self.assertEqual(s.selection, "((myBranchC > 0) || (myBranchD > 0))")
+
+        s.selection = ["myBranchC > 0", "myBranchE > 0"]
+        self.assertEqual(s.selection, "(myBranchC > 0) && (myBranchE > 0)")
+
+        s.selection_mode = SelectionMixin.MODE_NUMEXPR
+        s.selection = ["myBranchC > 0", "myBranchE > 0"]
+        self.assertEqual(s.selection, "(myBranchC > 0) & (myBranchE > 0)")
 
 
 class LabelMixinTest(unittest.TestCase):

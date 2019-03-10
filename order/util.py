@@ -5,16 +5,34 @@ Helpful utilities.
 """
 
 
-__all__ = ["typed", "make_list", "multi_match", "flatten", "to_root_latex", "join_root_selection",
-           "join_numexpr_selection"]
+__all__ = [
+    "ROOT_DEFAULT", "typed", "make_list", "multi_match", "flatten", "to_root_latex",
+    "join_root_selection", "join_numexpr_selection", "class_id", "args_to_kwargs",
+]
 
 
+import os
 import functools
 import types
 import re
 import fnmatch
+import inspect
 
 import six
+
+
+#: Boolean value that denotes if ROOT-style selection strings, latex labels, etc, are used by
+#: default. The value defaults to *False* and can be altered by setting
+#:
+#: .. code-block:: python
+#:
+#:     os.environ["ORDER_ROOT_DEFAULT"] = 1|"1"|"yes"|"true"
+#:
+#: before importing order. This rather peculiar mechanism is favored over e.g. using a setter since
+#: also default values of various methods across the order package depend on this flag.
+ROOT_DEFAULT = False
+if str(os.environ.get("ORDER_ROOT_DEFAULT", "0")).lower() in ("1", "yes", "true"):
+    ROOT_DEFAULT = True
 
 
 class typed(property):
@@ -197,27 +215,35 @@ def _bracket(s, force=False):
     return "({})".format(s) if embed else s
 
 
-def join_root_selection(*selection, **kwargs):
-    """ join_root_selection(*selection, op="&&", bracket=False)
-    Returns a concatenation of root *selection* strings, which is done by default via logical *AND*.
-    (*op*). When *bracket* is *True*, the final selection string is placed into brackets.
-    """
-    # parse the selection strings
-    selection = _parse_selection(*selection)
+def _join_selection(selection, op, bracket):
+    selection = _parse_selection(selection)
 
     # trivial case, no selection
     if not selection:
         return "1"
 
     # prepare the concatenation op
-    op = kwargs.get("op", "&&")
     op = " {} ".format(op.strip())
 
-    joined = op.join(_bracket(s) for s in selection)
-    if kwargs.get("bracket", False):
+    # build the joined selection string
+    if len(selection) == 1:
+        joined = selection[0]
+    else:
+        joined = op.join(_bracket(s) for s in selection)
+
+    # check if brackets should be placed around the joined selection string
+    if bracket:
         return _bracket(joined, force=True)
     else:
         return joined
+
+
+def join_root_selection(*selection, **kwargs):
+    """ join_root_selection(*selection, op="&&", bracket=False)
+    Returns a concatenation of root *selection* strings, which is done by default via logical *AND*.
+    (*op*). When *bracket* is *True*, the final selection string is placed into brackets.
+    """
+    return _join_selection(selection, kwargs.get("op", "&&"), kwargs.get("bracket", False))
 
 
 def join_numexpr_selection(*selection, **kwargs):
@@ -225,19 +251,54 @@ def join_numexpr_selection(*selection, **kwargs):
     Returns a concatenation of numexpr *selection* strings, which is done by default via logical
     *AND*. (*op*). When *bracket* is *True*, the final selection string is placed into brackets.
     """
-    # parse the selection strings
-    selection = _parse_selection(*selection)
+    return _join_selection(selection, kwargs.get("op", "&"), kwargs.get("bracket", False))
 
-    # trivial case, no selection
-    if not selection:
-        return "1"
 
-    # prepare the concatenation op
-    op = kwargs.get("op", "&")
-    op = " {} ".format(op.strip())
+def class_id(cls):
+    """
+    Returns the full id of a *class*, i.e., the id of the module it is defined in, extended by the
+    name of the class. Example:
 
-    joined = op.join(_bracket(s) for s in selection)
-    if kwargs.get("bracket", False):
-        return _bracket(joined, force=True)
+    .. code-block:: python
+
+       # module a.b
+
+       class MyClass(object):
+           ...
+
+       class_id(MyClass)
+       # "a.b.MyClass"
+    """
+    name = cls.__name__
+    module = cls.__module__
+
+    # skip empty and builtin modules
+    if not module or module == str.__module__:
+        return name
     else:
-        return joined
+        return module + "." + name
+
+
+def args_to_kwargs(func, args):
+    """
+    Converts arguments *args* passed to a function *func* to a dictionary that can be used as
+    keyword arguments. Internally, ``inspect.getargspec`` is used to get the names of arguments in
+    the function signature. Example:
+
+    .. code-block:: python
+
+       def func(a, b, c=1):
+           ...
+
+       def wrapper(*args, **kwargs):
+           kwargs.update(args_to_kwargs(func, args))
+           # kwargs now contains the initial args and kwargs for easy parsing
+           ...
+           return func(**kwargs)
+    """
+    if six.PY2:
+        ismethod = inspect.ismethod(func)
+        arg_names = inspect.getargspec(func).args[int(ismethod):]
+    else:
+        arg_names = list(inspect.signature(func).parameters.keys())
+    return dict(zip(arg_names[:len(args)], args))

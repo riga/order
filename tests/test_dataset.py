@@ -110,24 +110,17 @@ class DatasetTest(unittest.TestCase):
 class DatasetInfoTest(unittest.TestCase):
 
     def test_constructor(self):
-        d = DatasetInfo(keys="/ttH", gen_eff=0.99, n_files=100, n_events=10000)
+        d = DatasetInfo(keys="/ttH", n_files=100, n_events=10000)
 
         self.assertEqual(d.keys[0], "/ttH")
-        self.assertEqual(d.gen_eff, 0.99)
         self.assertEqual(d.n_files, 100)
         self.assertEqual(d.n_events, 10000)
 
     def test_attributes(self):
-        d = DatasetInfo(keys="/ttH", gen_eff=0.99, n_files=100, n_events=10000)
+        d = DatasetInfo(keys="/ttH", n_files=100, n_events=10000)
 
         with self.assertRaises(TypeError):
             d.keys = 123
-
-        with self.assertRaises(TypeError):
-            d.gen_eff = "foo"
-
-        with self.assertRaises(ValueError):
-            d.gen_eff = 1.1
 
         with self.assertRaises(TypeError):
             d.n_files = "foo"
@@ -136,10 +129,9 @@ class DatasetInfoTest(unittest.TestCase):
             d.n_events = "foo"
 
     def test_copy(self):
-        d = DatasetInfo(keys="/ttH", gen_eff=0.99, n_files=100, n_events=10000)
-        d2 = d.copy(skip_attrs=["n_files"], keys="/ttH2")
+        d = DatasetInfo(keys="/ttH", n_files=100, n_events=10000)
+        d2 = d.copy(keys="/ttH2")
 
         self.assertEqual(d2.keys[0], "/ttH2")
-        self.assertEqual(d2.gen_eff, 0.99)
-        self.assertEqual(d2.n_files, -1)
+        self.assertEqual(d2.n_files, 100)
         self.assertEqual(d2.n_events, 10000)

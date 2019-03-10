@@ -11,15 +11,15 @@ __all__ = ["Dataset", "DatasetInfo"]
 import six
 
 from order.unique import UniqueObject, unique_tree
-from order.mixins import CopyMixin, DataSourceMixin, LabelMixin
+from order.mixins import CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
 from order.process import Process
 from order.shift import Shift
 from order.util import typed, make_list
 
 
 @unique_tree(cls=Process, plural="processes", parents=False, deep_children=True)
-class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
-    """ __init__(name, id, campaign=None, info=None, processes=None, label=None, label_short=None, is_data=False, context=None, **kwargs)
+class Dataset(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin):
+    """ __init__(name, id, campaign=None, info=None, processes=None, label=None, label_short=None, is_data=False, aux=None, context=None, **kwargs)
     Dataset definition providing two kinds of information:
 
     1. (systematic) shift-dependent, and
@@ -28,31 +28,42 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
     Independent is e.g. whether or not it contains real data, whereas shift-dependent information is
     e.g. the number of events in the *nominal* or a *shifted* variation. Latter information is
     contained in :py:class:`DatasetInfo` objects that are stored in *this* class and mapped to
-    string that fulfill the format rules of :py:meth:`Shift.split_name`. These info objects can be
-    accessed via :py:meth:`get_info` or via items (*__getitem__*) However, for convenience, some of
-    the properties of the *nominal* :py:class:`DatasetInfo` are accessible on this class via
-    forwarding.
+    strings. These info objects can be accessed via :py:meth:`get_info` or via items
+    (*__getitem__*). For convenience, some of the properties of the *nominal*
+    :py:class:`DatasetInfo` object are accessible on this class via forwarding.
+
+    **Arguments**
 
     A dataset is always measured in (real data) / created for (MC) a dedicated *campaign*, therefore
-    it *belongs* to a :py:class:`Campaign` object. In addition, physics *processes* can be *linked*
-    to a dataset, therefore it *has* :py:class:`Process` objects. When copied via :py:meth:`copy`
-    the *campaign* reference is kept while the process relations are lost.
+    it *belongs* to a :py:class:`~order.config.Campaign` object. In addition, physics *processes*
+    can be *linked* to a dataset, therefore it *has* :py:class:`~order.process.Process` objects.
 
-    When *info* is does not contain a ``"nominal"`` :py:class:`DatasetInfo` object, all *kwargs* are
-    used to create one. Otherwise, it should be a dictionary matching the format of the *info*
-    mapping. *label* and *label_short* are forwarded to the :py:class:`LabelMixin`, *is_data* to the
-    :py:class:`DataSourceMixin`, and *name*, *id* and *context* to the :py:class:`UniqueObject`
-    constructor.
+    When *info* is does not contain a nominal :py:class:`DatasetInfo` object (mapped to the key
+    :py:attr:`order.shift.Shift.NOMINAL`, i.e., ``"nominal"``), all *kwargs* are used to create
+    one. Otherwise, it should be a dictionary matching the format of the *info* mapping. *aux* is
+    forwarded to the :py:class:`~order.mixins.AuxDataMixin`, *is_data* to the
+    :py:class:`~order.mixins.DataSourceMixin`, *label* and *label_short* to the
+    :py:class:`~order.mixins.LabelMixin`, and *name*, *id* and *context* to the
+    :py:class:`~order.unique.UniqueObject` constructor.
+
+    **Copy behavior**
+
+    All attributes are copied **except** for references to linked processes. The *campaign*
+    reference is kept. Also note the copy behavior of :py:class:`~order.unique.UniqueObject`'s.
+
+    **Example**
 
     .. code-block:: python
 
-        campaign = Campaign("2017B", 1, ...)
+        import order as od
 
-        d = Dataset("ttH_bb", 1,
-            campaign = campaign,
-            keys     = ["/ttHTobb_M125.../.../..."],
-            n_files  = 123,
-            n_events = 456789
+        campaign = od.Campaign("2017B", 1, ...)
+
+        d = od.Dataset("ttH_bb", 1,
+            campaign=campaign,
+            keys=["/ttHTobb_M125.../.../..."],
+            n_files=123,
+            n_events=456789,
         )
 
         d.info.keys()
@@ -64,22 +75,21 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
         d.n_files
         # -> 123
 
-        # set explicit info objects
-
+        # similar to above, but set explicit info objects
         d = Dataset("ttH_bb", 1,
-            campaign = campaign,
-            info     = {
+            campaign=campaign,
+            info={
                 "nominal": {
-                    "keys"    : ["/ttHTobb_M125.../.../..."],
-                    "n_files" : 123,
-                    "n_events": 456789
+                    "keys": ["/ttHTobb_M125.../.../..."],
+                    "n_files": 123,
+                    "n_events": 456789,
                 },
                 "scale_up": {
-                    "keys"    : ["/ttHTobb_M125_scaleUP.../.../..."],
-                    "n_files" : 100,
-                    "n_events": 40000
-                }
-            }
+                    "keys": ["/ttHTobb_M125_scaleUP.../.../..."],
+                    "n_files": 100,
+                    "n_events": 40000,
+                },
+            },
         )
 
         d.info.keys()
@@ -94,11 +104,13 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
         d["scale_up"].n_files
         # -> 100
 
+    **Members**
+
     .. py:attribute:: campaign
        type: Campaign, None
 
-       The :py:class:`Campaign` object this dataset belongs to. When set, *this* dataset is also
-       added to the dataset index of the campaign object.
+       The :py:class:`~order.config.Campaign` object this dataset belongs to. When set, *this*
+       dataset is also added to the dataset index of the campaign object.
 
     .. py:attribute:: info
        type: dictionary
@@ -107,34 +119,32 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
 
     .. py:attribute:: keys
        type: list
+       read-only
 
-       The dataset keys of the *nominal* :py:class:`DatasetInfo` object.
-
-    .. py:attribute:: gen_eff
-       type: scinum.Number
-
-       The generator efficiency of the *nominal* :py:class:`DatasetInfo` object.
+       The dataset keys of the nominal :py:class:`DatasetInfo` object.
 
     .. py:attribute:: n_files
        type: integer
+       read-only
 
-       The number of files of the *nominal* :py:class:`DatasetInfo` object.
+       The number of files of the nominal :py:class:`DatasetInfo` object.
 
     .. py:attribute:: n_events
        type: integer
+       read-only
 
-       The number of events of the *nominal* :py:class:`DatasetInfo` object.
+       The number of events of the nominal :py:class:`DatasetInfo` object.
     """
 
     # attributes for copying
-    copy_attrs = ["info", "is_data"]
-    copy_ref_attrs = ["campaign"]
-    copy_private_attrs = ["label", "label_short"]
+    copy_specs = [{"attr": "campaign", "ref": True}, "info"] + UniqueObject.copy_specs + \
+        AuxDataMixin.copy_specs + DataSourceMixin.copy_specs + LabelMixin.copy_specs
 
     def __init__(self, name, id, campaign=None, info=None, processes=None, label=None,
-            label_short=None, is_data=False, context=None, **kwargs):
+            label_short=None, is_data=False, aux=None, context=None, **kwargs):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
+        AuxDataMixin.__init__(self, aux=aux)
         DataSourceMixin.__init__(self, is_data=is_data)
         LabelMixin.__init__(self, label=label, label_short=label_short)
 
@@ -152,7 +162,7 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
 
         # set initial processes
         if processes is not None:
-            self.processes.add_many(processes)
+            self.processes.extend(processes)
 
     def __getitem__(self, name):
         """
@@ -191,11 +201,15 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
 
         _info = {}
         for name, obj in info.items():
-            Shift.split_name(name)
-            if isinstance(obj, dict):
+            if not isinstance(name, six.string_types):
+                raise TypeError("invalid info name type: {}".format(name))
+            if not isinstance(obj, DatasetInfo):
+                if not isinstance(obj, dict):
+                    try:
+                        obj = dict(obj)
+                    except:
+                        raise TypeError("invalid info value type: {}".format(obj))
                 obj = DatasetInfo(**obj)
-            elif not isinstance(obj, DatasetInfo):
-                raise TypeError("invalid info value type: {}".format(obj))
             _info[str(name)] = obj
 
         return _info
@@ -217,42 +231,41 @@ class Dataset(UniqueObject, CopyMixin, DataSourceMixin, LabelMixin):
     @property
     def keys(self):
         # keys getter, nominal info object
-        return self.info["nominal"].keys
-
-    @property
-    def gen_eff(self):
-        # gen_eff getter, nominal info object
-        return self.info["nominal"].gen_eff
+        return self.info[Shift.NOMINAL].keys
 
     @property
     def n_files(self):
         # n_files getter, nominal info object
-        return self.info["nominal"].n_files
+        return self.info[Shift.NOMINAL].n_files
 
     @property
     def n_events(self):
         # n_events getter, nominal info object
-        return self.info["nominal"].n_events
+        return self.info[Shift.NOMINAL].n_events
 
 
-class DatasetInfo(CopyMixin):
+class DatasetInfo(CopyMixin, AuxDataMixin):
     """
     Container class holding information on particular dataset variations. Instances of *this* class
     are typically used in :py:class:`Dataset` objects to store shift-dependent information, such as
     the number of files or events for a particular shift (e.g. *nominal*, *scale_up*, etc).
 
-    *keys* denote the identifiers or *origins* of a dataset. *gen_eff* is the generator efficiency
-    used during production. *n_files* and *n_events* can be used for further bookkeeping.
+    **Arguments**
+
+    *keys* denote the identifiers or *origins* of a dataset. *n_files* and *n_events* can be used
+    for further bookkeeping.
+
+    **Copy behavior**
+
+    All attributes are copied. Also note the copy behavior of
+    :py:class:`~order.unique.UniqueObject`'s.
+
+    **Members**
 
     .. py:attribute:: keys
        type: list
 
        The dataset keys, e.g. ``["/ttHTobb_M125.../.../..."]``.
-
-    .. py:attribute:: gen_eff
-       type: scinum.Number
-
-       The generator efficiency from dataset production.
 
     .. py:attribute:: n_files
        type: integer
@@ -265,22 +278,20 @@ class DatasetInfo(CopyMixin):
        The number of events.
     """
 
-    copy_attrs = ["keys", "gen_eff", "n_files", "n_events"]
+    copy_specs = ["keys", "n_files", "n_events"] + AuxDataMixin.copy_specs
 
-    def __init__(self, keys=None, gen_eff=1., n_files=-1, n_events=-1):
+    def __init__(self, keys=None, n_files=-1, n_events=-1, aux=None):
         CopyMixin.__init__(self)
+        AuxDataMixin.__init__(self, aux=aux)
 
         # instance members
         self._keys = []
-        self._gen_eff = 1.
         self._n_files = -1
         self._n_events = -1
 
         # set initial values
         if keys is not None:
             self.keys = keys
-        if gen_eff is not None:
-            self.gen_eff = gen_eff
         if n_files is not None:
             self.n_files = n_files
         if n_events is not None:
@@ -296,19 +307,6 @@ class DatasetInfo(CopyMixin):
             _keys.append(str(key))
 
         return _keys
-
-    @typed
-    def gen_eff(self, gen_eff):
-        # gen_eff parser
-        if isinstance(gen_eff, six.integer_types):
-            gen_eff = float(gen_eff)
-        elif not isinstance(gen_eff, float):
-            raise TypeError("invalid gen_eff type: {}".format(gen_eff))
-
-        if not (0. <= gen_eff <= 1.):
-            raise ValueError("invalid gen_eff value: {}".format(gen_eff))
-
-        return gen_eff
 
     @typed
     def n_files(self, n_files):

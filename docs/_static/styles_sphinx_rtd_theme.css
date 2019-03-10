@@ -1,0 +1,17 @@
+/* sphinx_rtd_theme styles */
+
+div.wy-side-nav-search {
+    background-color: #aad5ff;
+}
+
+div.wy-side-nav-search > a:hover {
+    background-color: transparent;
+}
+
+div.wy-side-nav-search div.version {
+    color: #23529e;
+}
+
+form#rtd-search-form > input[type="text"] {
+    border: 0;
+}

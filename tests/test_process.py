@@ -14,11 +14,11 @@ class ProcessTest(unittest.TestCase):
 
     def test_constructor(self):
         p = Process("ttH", 1,
-            xsecs = {
-                13: Number(0.5071, {"scale": (Number.REL, 0.036)})
+            xsecs={
+                13: Number(0.5071, {"scale": (Number.REL, 0.036)}),
             },
-            label = r"$t\bar{t}H$",
-            color = (255, 0, 0)
+            label=r"$t\bar{t}H$",
+            color=(255, 0, 0),
         )
 
         self.assertEqual(p.get_xsec(13).n, 0.5071)
@@ -50,10 +50,10 @@ class ProcessTest(unittest.TestCase):
 
     def test_copy(self):
         p = Process("ttVV", 7, xsecs={13: 5}, color=(0.3, 0.4, 0.5), is_data=False, aux={1: 2})
-        p2 = p.copy(name="ttVVV", id=8, aux={3: 4}, skip_attrs=["color"])
+        p2 = p.copy(name="ttVVV", id=8, aux={3: 4})
 
         self.assertEqual(p2.name, "ttVVV")
         self.assertEqual(p2.id, 8)
         self.assertEqual(p2.get_xsec(13), 5)
-        self.assertEqual(p2.color, (0., 0., 0.))
+        self.assertEqual(p2.color, p.color)
         self.assertEqual(list(p2.aux.keys())[0], 3)

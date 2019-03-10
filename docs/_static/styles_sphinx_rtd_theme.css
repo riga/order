@@ -1,7 +1,11 @@
 /* sphinx_rtd_theme styles */
 
 div.wy-side-nav-search {
-    background-color: #c4ddff;
+    background-color: #aad5ff;
+}
+
+div.wy-side-nav-search > a:hover {
+    background-color: transparent;
 }
 
 div.wy-side-nav-search div.version {

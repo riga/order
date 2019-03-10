@@ -28,10 +28,9 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
     Independent is e.g. whether or not it contains real data, whereas shift-dependent information is
     e.g. the number of events in the *nominal* or a *shifted* variation. Latter information is
     contained in :py:class:`DatasetInfo` objects that are stored in *this* class and mapped to
-    strings that fulfill the format rules of :py:meth:`Shift.split_name`. These info objects can be
-    accessed via :py:meth:`get_info` or via items (*__getitem__*). For convenience, some of
-    the properties of the *nominal* :py:class:`DatasetInfo` object are accessible on this class via
-    forwarding.
+    strings. These info objects can be accessed via :py:meth:`get_info` or via items
+    (*__getitem__*). For convenience, some of the properties of the *nominal*
+    :py:class:`DatasetInfo` object are accessible on this class via forwarding.
 
     **Arguments**
 
@@ -124,12 +123,6 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
 
        The dataset keys of the nominal :py:class:`DatasetInfo` object.
 
-    .. py:attribute:: gen_eff
-       type: scinum.Number
-       read-only
-
-       The generator efficiency of the nominal :py:class:`DatasetInfo` object.
-
     .. py:attribute:: n_files
        type: integer
        read-only
@@ -208,11 +201,15 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
 
         _info = {}
         for name, obj in info.items():
-            Shift.split_name(name)
-            if isinstance(obj, dict):
+            if not isinstance(name, six.string_types):
+                raise TypeError("invalid info name type: {}".format(name))
+            if not isinstance(obj, DatasetInfo):
+                if not isinstance(obj, dict):
+                    try:
+                        obj = dict(obj)
+                    except:
+                        raise TypeError("invalid info value type: {}".format(obj))
                 obj = DatasetInfo(**obj)
-            elif not isinstance(obj, DatasetInfo):
-                raise TypeError("invalid info value type: {}".format(obj))
             _info[str(name)] = obj
 
         return _info
@@ -237,11 +234,6 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
         return self.info[Shift.NOMINAL].keys
 
     @property
-    def gen_eff(self):
-        # gen_eff getter, nominal info object
-        return self.info[Shift.NOMINAL].gen_eff
-
-    @property
     def n_files(self):
         # n_files getter, nominal info object
         return self.info[Shift.NOMINAL].n_files
@@ -260,8 +252,8 @@ class DatasetInfo(CopyMixin, AuxDataMixin):
 
     **Arguments**
 
-    *keys* denote the identifiers or *origins* of a dataset. *gen_eff* is the generator efficiency
-    used during production. *n_files* and *n_events* can be used for further bookkeeping.
+    *keys* denote the identifiers or *origins* of a dataset. *n_files* and *n_events* can be used
+    for further bookkeeping.
 
     **Copy behavior**
 
@@ -275,11 +267,6 @@ class DatasetInfo(CopyMixin, AuxDataMixin):
 
        The dataset keys, e.g. ``["/ttHTobb_M125.../.../..."]``.
 
-    .. py:attribute:: gen_eff
-       type: scinum.Number
-
-       The generator efficiency from dataset production.
-
     .. py:attribute:: n_files
        type: integer
 
@@ -291,23 +278,20 @@ class DatasetInfo(CopyMixin, AuxDataMixin):
        The number of events.
     """
 
-    copy_specs = ["keys", "gen_eff", "n_files", "n_events"] + AuxDataMixin.copy_specs
+    copy_specs = ["keys", "n_files", "n_events"] + AuxDataMixin.copy_specs
 
-    def __init__(self, keys=None, gen_eff=1., n_files=-1, n_events=-1, aux=None):
+    def __init__(self, keys=None, n_files=-1, n_events=-1, aux=None):
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
 
         # instance members
         self._keys = []
-        self._gen_eff = 1.
         self._n_files = -1
         self._n_events = -1
 
         # set initial values
         if keys is not None:
             self.keys = keys
-        if gen_eff is not None:
-            self.gen_eff = gen_eff
         if n_files is not None:
             self.n_files = n_files
         if n_events is not None:
@@ -323,19 +307,6 @@ class DatasetInfo(CopyMixin, AuxDataMixin):
             _keys.append(str(key))
 
         return _keys
-
-    @typed
-    def gen_eff(self, gen_eff):
-        # gen_eff parser
-        if isinstance(gen_eff, six.integer_types):
-            gen_eff = float(gen_eff)
-        elif not isinstance(gen_eff, float):
-            raise TypeError("invalid gen_eff type: {}".format(gen_eff))
-
-        if not (0. <= gen_eff <= 1.):
-            raise ValueError("invalid gen_eff value: {}".format(gen_eff))
-
-        return gen_eff
 
     @typed
     def n_files(self, n_files):

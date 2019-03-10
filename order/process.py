@@ -43,11 +43,11 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
     .. code-block:: python
 
         import order as od
-        from scinum import Number
+        from scinum import Number, REL
 
         p = od.Process("ttH", 1,
             xsecs={
-                13: Number(0.5071, {"scale": (Number.REL, 0.036)}),
+                13: Number(0.5071, {"scale": (REL, 0.036)}),  # +-3.6% scale uncertainty
             },
             label=r"$t\bar{t}H$",
             color=(255, 0, 0),

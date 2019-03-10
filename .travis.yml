@@ -17,7 +17,7 @@ jobs:
         - pip install -r requirements.txt
         - pip install flake8
       script:
-        - flake8 order
+        - flake8 order tests setup.py
 
     - stage: test
       services:

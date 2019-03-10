@@ -25,7 +25,7 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(v.expression, "myBranchA * myBranchB")
         self.assertEqual(v.selection, "myBranchC > 0")
         self.assertEqual(v.binning, (20, 0., 10.))
-        self.assertEqual(v.full_title(), "constructor_var;p_{T} / GeV;Entries / 0.5 GeV")
+        self.assertEqual(v.get_full_title(), "constructor_var;p_{T} / GeV;Entries / 0.5 GeV")
 
     def test_parsing(self):
         v = self.make_var("parsing_var")
@@ -113,17 +113,19 @@ class VariableTest(unittest.TestCase):
             binning=(40, 0., 10.),
         )
 
-        self.assertEqual(v.full_x_title(), "Muon transverse momentum / GeV")
-        self.assertEqual(v.full_x_title(short=True), "$\\mu p_{T}$ / GeV")
-        self.assertEqual(v.full_x_title(short=True, root=True), "#mu p_{T} / GeV")
-        self.assertEqual(v.full_y_title(), "Entries / 0.25 GeV")
-        self.assertEqual(v.full_y_title(bin_width=0.2), "Entries / 0.2 GeV")
-        self.assertEqual(v.full_y_title(short=True), "N / 0.25 GeV")
-        self.assertEqual(v.full_title(), "foo;Muon transverse momentum / GeV;Entries / 0.25 GeV")
-        self.assertEqual(v.full_title(short=True), r"foo;$\mu p_{T}$ / GeV;N / 0.25 GeV")
+        self.assertEqual(v.get_full_x_title(), "Muon transverse momentum / GeV")
+        self.assertEqual(v.get_full_x_title(short=True), "$\\mu p_{T}$ / GeV")
+        self.assertEqual(v.get_full_x_title(short=True, root=True), "#mu p_{T} / GeV")
+        self.assertEqual(v.get_full_y_title(), "Entries / 0.25 GeV")
+        self.assertEqual(v.get_full_y_title(bin_width=0.2), "Entries / 0.2 GeV")
+        self.assertEqual(v.get_full_y_title(short=True), "N / 0.25 GeV")
+        self.assertEqual(v.get_full_title(),
+            "foo;Muon transverse momentum / GeV;Entries / 0.25 GeV")
+        self.assertEqual(v.get_full_title(short=True), r"foo;$\mu p_{T}$ / GeV;N / 0.25 GeV")
 
         v.unit_format = "{title} [{unit}]"
-        self.assertEqual(v.full_title(), "foo;Muon transverse momentum [GeV];Entries [0.25 GeV]")
+        self.assertEqual(v.get_full_title(),
+            "foo;Muon transverse momentum [GeV];Entries [0.25 GeV]")
 
     def test_copy(self):
         v = self.make_var("copy_var").copy(name="otherVar", id=Variable.AUTO_ID,
@@ -139,13 +141,13 @@ class VariableTest(unittest.TestCase):
             log_x=True,
         )
 
-        data = v.mpl_hist_data()
+        data = v.get_mpl_hist_data()
         self.assertEqual(data["bins"], 40)
         self.assertEqual(data["range"], (0., 10.))
         self.assertEqual(data["label"], "mpl_hist")
         self.assertTrue(data["log"])
 
-        data = v.mpl_hist_data(update={"color": "red", "label": "bar"}, skip="log")
+        data = v.get_mpl_hist_data(update={"color": "red", "label": "bar"}, skip="log")
         self.assertEqual(data["bins"], 40)
         self.assertEqual(data["range"], (0., 10.))
         self.assertEqual(data["label"], "bar")

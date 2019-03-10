@@ -222,21 +222,25 @@ class CopyMixin(object):
         return False
 
     def copy(self, *args, **kwargs):
-        r"""copy(*args, **kwargs, _cls=None, _specs=None, _replace_specs=False)
+        r"""copy(*args, **kwargs, _cls=None, _specs=None, _replace_specs=False, _skip=None)
         Creates a copy of this instance and returns it. Internally, an instance if *_cls* is
         created, defaulting to the class of *this* instance, with all *args* and *kwargs* forwarded
         to its constructor. Attributes that are not present in *args* or *kwargs* are copied over
         from *this* instance based in the attribute specifications given in :py:attr:`copy_specs`.
-        They can be extended by *_specs* or even replaced when *_replace_specs* is *True*.
+        They can be extended by *_specs* or even replaced when *_replace_specs* is *True*. *_skip*
+        can be a sequence of destination attribute names that should be skipped.
         """
         # extract the copy configuration from kwargs
         cls = kwargs.pop("_cls", self.__class__)
         specs = kwargs.pop("_specs", None)
         replace_specs = kwargs.pop("_replace_specs", False)
+        skip = kwargs.pop("_skip", None)
         if specs is None:
             specs = self.copy_specs
         elif not replace_specs:
             specs = self.copy_specs + specs
+        if skip is None:
+            skip = []
 
         # unite args and kwargs
         kwargs.update(args_to_kwargs(cls.__init__ if six.PY2 else cls, args))
@@ -250,6 +254,12 @@ class CopyMixin(object):
             if spec not in _specs:
                 _specs.insert(0, spec)
         specs = _specs
+
+        # maybe skip some specs, identified by the destination attribute
+        specs = list(filter((lambda spec: spec.dst not in skip), specs))
+        for skip_dst in skip:
+            if skip_dst in kwargs:
+                del kwargs[skip_dst]
 
         # check if a reference should be returned instead of a real copy
         # _copy_ref might also update kwargs

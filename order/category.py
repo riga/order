@@ -10,12 +10,12 @@ __all__ = ["Channel", "Category"]
 
 from order.unique import UniqueObject, unique_tree
 from order.mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin
-from order.util import ROOT_DEFAULT, to_root_latex
+from order.util import to_root_latex
 
 
 @unique_tree(plural="categories", deep_children=True, deep_parents=True)
 class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin):
-    """ __init__(name, id="+", channel=None, categories=None, label=None, label_short=None, context=None, selection=None, selection_mode=None, aux=None, tags=None)
+    """ __init__(name, id="+", channel=None, categories=None, label=None, label_short=None, selection=None, selection_mode=None, tags=None, aux=None, context=None)
     Class that describes an analysis category. This is not to be confused with an analysis
     :py:class:`Channel`. While the definition of a channel can be understood as being fixed by e.g.
     the final state of an event, a category describes an arbitrary sub phase-space. Therefore, a
@@ -76,11 +76,11 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
         # -> True
 
         # and we can create the full category label
-        cat.full_label()
+        cat.full_label
         # -> "Dilepton, 4 jets"
 
         # and the short version of it
-        cat.full_label(short=True)
+        cat.full_label_short
         # -> "DL, 4j"
 
         # add a sub category
@@ -100,6 +100,32 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
        type: Channel, None
 
        The channel instance of this category, or *None* when not set.
+
+    .. py:attribute:: full_label
+       type: string
+       read-only
+
+       The label of this category, prefix with the channel label if a channel is set.
+
+    .. py:attribute:: full_label_short
+       type: string
+       read-only
+
+       The short label of this category, prefix with the short channel label if a channel is set.
+
+    .. py:attribute:: full_label_root
+       type: string
+       read-only
+
+       The label of this category, prefix with the channel label if a channel is set, converted to
+       ROOT-style latex.
+
+    .. py:attribute:: full_label_short_root
+       type: string
+       read-only
+
+       The short label of this category, prefix with the short channel label if a channel is set,
+       converted to ROOT-style latex.
     """
 
     # attributes for copying
@@ -149,25 +175,33 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
 
         self._channel = channel
 
-    def full_label(self, short=False, root=ROOT_DEFAULT):
-        """
-        Returns the full label of this cateogry, starting with the channel label if set. When
-        *short* is *True*, the short version is returned. When *root* is *True*, the label is
-        converted to ROOT-style latex.
-        """
-        label = self.label_short if short else self.label
-
+    @property
+    def full_label(self):
         if self.channel:
-            ch_label = self.channel.label_short if short else self.channel.label
-            label = "{}, {}".format(ch_label, label)
+            return "{}, {}".format(self.channel.label, self.label)
+        else:
+            return self.label
 
-        return to_root_latex(label) if root else label
+    @property
+    def full_label_short(self):
+        if self.channel:
+            return "{}, {}".format(self.channel.label_short, self.label_short)
+        else:
+            return self.label_short
+
+    @property
+    def full_label_root(self):
+        return to_root_latex(self.full_label)
+
+    @property
+    def full_label_short_root(self):
+        return to_root_latex(self.full_label_short)
 
 
 @unique_tree(parents=1, deep_children=True, deep_parents=True)
 @unique_tree(cls=Category, plural="categories", parents=False, deep_children=True)
-class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
-    """ __init__(name, id, categories=None, label=None, label_short=None, aux=None, context=None)
+class Channel(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
+    """ __init__(name, id, categories=None, label=None, label_short=None, tags=None, aux=None, context=None)
     An object that descibes an analysis channel, often defined by a particular decay *channel* that
     results in distinct final state objects. A channel can have parent-child relations to other
     channels with one parent per child, and child relations to categories.
@@ -175,9 +209,9 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
     **Arguments**
 
     References to contained categories are initialized with *categories*. *label* and *label_short*
-    are passed to the :py:class:`~order.mixins.LabelMixin`, *aux* to the
-    :py:class:`~order.mixins.AuxDataMixin`, and *name*, *id* and *context* to the
-    :py:class:`~order.unique.UniqueObject` constructor.
+    are passed to the :py:class:`~order.mixins.LabelMixin`, *tags* to the
+    :py:class:`~order.mixins.TagMixin`, *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and
+    *name*, *id* and *context* to the :py:class:`~order.unique.UniqueObject` constructor.
 
     **Copy behavior**
 
@@ -213,20 +247,22 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, LabelMixin):
         )
 
         # print the category label
-        cat_e_2j.full_label()
+        cat_e_2j.full_label
         # -> "e+jets, 2 jets"
 
     **Members**
     """
 
     # attributes for copying
-    copy_specs = UniqueObject.copy_specs + AuxDataMixin.copy_specs + LabelMixin.copy_specs
+    copy_specs = UniqueObject.copy_specs + AuxDataMixin.copy_specs + TagMixin.copy_specs + \
+        LabelMixin.copy_specs
 
-    def __init__(self, name, id, categories=None, label=None, label_short=None, aux=None,
+    def __init__(self, name, id, categories=None, label=None, label_short=None, tags=None, aux=None,
             context=None):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
+        TagMixin.__init__(self, tags=tags)
         LabelMixin.__init__(self, label=label, label_short=label_short)
 
         # set initial categories

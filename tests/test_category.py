@@ -85,8 +85,8 @@ class CategoryTest(unittest.TestCase):
         c2 = c.add_category("eq4j_eq2b")
 
         self.assertIsNone(c2.channel, SL)
-        self.assertEqual(c.full_label(), r"SL, $\eq$ 4 jets")
-        self.assertEqual(c.full_label(root=True), "SL, #eq 4 jets")
+        self.assertEqual(c.full_label, r"SL, $\eq$ 4 jets")
+        self.assertEqual(c.full_label_root, "SL, #eq 4 jets")
 
     def test_copy(self):
         with uniqueness_context("category_test_copy"):

@@ -14,11 +14,11 @@ class ProcessTest(unittest.TestCase):
 
     def test_constructor(self):
         p = Process("ttH", 1,
-            xsecs = {
-                13: Number(0.5071, {"scale": (Number.REL, 0.036)})
+            xsecs={
+                13: Number(0.5071, {"scale": (Number.REL, 0.036)}),
             },
-            label = r"$t\bar{t}H$",
-            color = (255, 0, 0)
+            label=r"$t\bar{t}H$",
+            color=(255, 0, 0),
         )
 
         self.assertEqual(p.get_xsec(13).n, 0.5071)

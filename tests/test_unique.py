@@ -60,8 +60,8 @@ class UniqueObjectTest(unittest.TestCase):
     def test_context(self):
         C = self.make_class()
 
-        foo = C("foo", 1)
-        bar = C("foo", 1, context="other_context")
+        foo = C("foo", 1)  # noqa: F841
+        bar = C("foo", 1, context="other_context")  # noqa: F841
 
     def test_equality(self):
         C = self.make_class()
@@ -261,7 +261,7 @@ class UniqueObjectIndexTest(unittest.TestCase):
         self.assertTrue("foo" in idx)
         self.assertTrue(idx.has("foo"))
 
-        c = idx.add("test", 1, context="newindex")
+        idx.add("test", 1, context="newindex")
         self.assertTrue("test" in idx)
         self.assertFalse(idx.has("test"))
 
@@ -433,6 +433,7 @@ class UniqueTreeTest(unittest.TestCase):
         n4 = n2.add_node("d", 4)
 
         self.assertEqual(n1.get_node(2), n2)
+        self.assertEqual(n1.get_node(3), n3)
         self.assertEqual(n1.get_node(4), n4)
         self.assertEqual(n1.get_node(4, default=123, deep=False), 123)
 

@@ -25,7 +25,7 @@
    :alt: License
 
 
-If you're designing a high-energy physics analysis (e.g. with data recorded with an `LHC <https://home.cern/topics/large-hadron-collider>`__ experiment at `CERN <http://home.cern>`__, manual bookkeeping of external data can get complicated quite fast. *order* provides a pythonic class collection that helps you structuring
+If you're designing a high-energy physics analysis (e.g. with data recorded by an `LHC <https://home.cern/topics/large-hadron-collider>`__ experiment at `CERN <http://home.cern>`__), manual bookkeeping of external data can get complicated quite fast. *order* provides a pythonic class collection that helps you structuring
 
 - analyses,
 - MC campaigns,
@@ -34,13 +34,18 @@ If you're designing a high-energy physics analysis (e.g. with data recorded with
 - channels,
 - categories,
 - variables, and
-- systematics.
+- systematic shifts.
+
+
+.. marker-after-header
 
 
 Getting started
 ---------------
 
-See the `intro.ipynb <https://github.com/riga/order/blob/master/examples/intro.ipynb>`__ notebook for an introduction to the most important classes and an example setup of a small analysis.
+See the `intro.ipynb <https://github.com/riga/order/blob/master/examples/intro.ipynb>`__ notebook for an introduction to the most important classes and an example setup of a small analysis. You can also run the notebook interactively on binder:
+
+|binder|
 
 You can find the full `API documentation on readthedocs <http://python-order.readthedocs.io>`__.
 
@@ -51,7 +56,7 @@ You can find the full `API documentation on readthedocs <http://python-order.rea
 Installation and dependencies
 -----------------------------
 
-Install *order* simply via `pip <https://pypi.python.org/pypi/order>`__:
+Install *order* via `pip <https://pypi.python.org/pypi/order>`__:
 
 .. code-block:: shell
 
@@ -69,13 +74,7 @@ If you like to contribute, I'm happy to receive pull requests. Just make sure to
 
    python -m unittest tests
 
-In general, tests should be run for different environments:
-
-- Python 2.7
-- Python 3.6
-- Python 3.7
-
-To run tests in a docker container, do:
+In general, tests should be run for Python 2.7, 3.6 and 3.7. To run tests in a docker container, do
 
 .. code-block:: shell
 
@@ -87,6 +86,12 @@ To run tests in a docker container, do:
    > pip install -r requirements.txt
    > python -m unittest tests
 
+In addition, `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`__ compatibility should be checked with `flake8 <https://pypi.org/project/flake8/>`__:
+
+.. code-block:: shell
+
+   flake8 order tests setup.py
+
 
 Development
 -----------
@@ -95,4 +100,6 @@ Development
 - Report issues, questions, feature requests on `GitHub Issues <https://github.com/riga/order/issues>`__
 
 
-.. marker-after-body
+.. |binder| image:: https://mybinder.org/badge_logo.svg
+   :target: https://mybinder.org/v2/gh/riga/order/master?filepath=exampels%2Fintro.ipynb
+   :alt: Open in binder

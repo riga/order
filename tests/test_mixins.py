@@ -141,6 +141,28 @@ class CopyMixinTest(unittest.TestCase):
 
         self.assertEqual(b.foo, a.foo)
 
+    def test_skip(self):
+        C = self.make_class()
+
+        class D(C):
+            copy_specs = C.copy_specs + ["some_attr"]
+
+            def __init__(self, name, id=0, some_attr=None):
+                super(D, self).__init__(name, id=id)
+
+                self.some_attr = some_attr
+
+        a = D("foo", 1, 123)
+        b = a.copy()
+
+        self.assertEqual(b.some_attr, a.some_attr)
+
+        c = a.copy(_skip=["id", "some_attr"])
+
+        self.assertEqual(c.name, a.name)
+        self.assertEqual(c.id, 0)
+        self.assertIsNone(c.some_attr)
+
 
 class AuxDataMixinTest(unittest.TestCase):
 

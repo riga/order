@@ -54,14 +54,14 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         v1.x_title_root
         # -> "#mu p_{T}"
 
-        v1.full_title()
+        v1.get_full_title()
         # -> "myVar;$\mu p_{T}$" / GeV;Entries / 0.5 GeV'"
 
         v2 = v1.copy(name="copiedVar", id="+",
             binning=[0.0, 0.5, 1.5, 3.0],
         )
 
-        v2.full_title()
+        v2.get_full_title()
         # -> "copiedVar;#mu p_{T} / GeV;Entries / GeV"
 
         v2.even_binning
@@ -400,7 +400,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
             bin_width = self.bin_width
             return [self.x_min + i * bin_width for i in range(self.n_bins + 1)]
 
-    def full_x_title(self, short=False, root=ROOT_DEFAULT):
+    def get_full_x_title(self, short=False, root=ROOT_DEFAULT):
         """
         Returns the full title (i.e. with unit string) of the x-axis. When *short* is *True*, the
         short version is returned. When *root* is *True*, the title is converted to *proper* ROOT
@@ -413,7 +413,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
         return to_root_latex(title) if root else title
 
-    def full_y_title(self, bin_width=None, short=False, root=ROOT_DEFAULT):
+    def get_full_y_title(self, bin_width=None, short=False, root=ROOT_DEFAULT):
         """
         Returns the full title (i.e. with bin width and unit string) of the y-axis. When not *None*,
         the value *bin_width* instead of the one evaluated from *binning* when even. When *short* is
@@ -437,7 +437,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
         return to_root_latex(title) if root else title
 
-    def full_title(self, name=None, short=False, short_x=None, short_y=None, root=ROOT_DEFAULT,
+    def get_full_title(self, name=None, short=False, short_x=None, short_y=None, root=ROOT_DEFAULT,
             bin_width=None):
         """
         Returns the full combined title that is compliant with ROOT's TH1 classes. *short_x*
@@ -452,12 +452,12 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         if short_y is None:
             short_y = short
 
-        x_title = self.full_x_title(short=short_x, root=root)
-        y_title = self.full_y_title(bin_width=bin_width, short=short_y, root=root)
+        x_title = self.get_full_x_title(short=short_x, root=root)
+        y_title = self.get_full_y_title(bin_width=bin_width, short=short_y, root=root)
 
         return ";".join([name, x_title, y_title])
 
-    def mpl_hist_data(self, update=None, skip=None):
+    def get_mpl_hist_data(self, update=None, skip=None):
         """
         Returns a dictionary containing information on *bins*, *range*, *label*, and *log*, that can
         be passed to `matplotlib histograms

@@ -435,5 +435,5 @@ Checkout the API reference of the specific classes to find detailed notes on the
 
 
 .. |binder| image:: https://mybinder.org/badge_logo.svg
-   :target: https://mybinder.org/v2/gh/riga/order/master?filepath=exampels%2Fintro.ipynb
+   :target: https://mybinder.org/v2/gh/riga/order/master?filepath=examples%2Fintro.ipynb
    :alt: Open in binder

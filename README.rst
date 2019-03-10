@@ -1,6 +1,7 @@
-.. raw:: html
-
-   <a href="https://github.com/riga/order"><img src="https://raw.githubusercontent.com/riga/order/master/logo.png" width="240px" alt="order logo"></a><br />
+.. figure:: https://raw.githubusercontent.com/riga/order/master/logo240.png
+   :target: https://github.com/riga/order
+   :align: center
+   :alt: order logo
 
 
 .. marker-after-logo

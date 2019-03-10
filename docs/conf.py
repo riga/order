@@ -29,7 +29,7 @@ pygments_style = "sphinx"
 add_module_names = False
 
 html_title = "{} v{}".format(project, version)
-html_logo = "../logo.png"
+html_logo = "../logo240.png"
 html_sidebars = {"**": [
     "about.html",
     "localtoc.html",

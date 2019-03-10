@@ -22,6 +22,10 @@
    :target: https://github.com/riga/order/blob/master/LICENSE
    :alt: License
 
+.. image:: https://mybinder.org/badge_logo.svg
+   :target: https://mybinder.org/v2/gh/riga/order/master?filepath=examples%2Fintro.ipynb
+   :alt: Open in binder
+
 
 If you're designing a high-energy physics analysis (e.g. with data recorded by an `LHC <https://home.cern/topics/large-hadron-collider>`__ experiment at `CERN <http://home.cern>`__), manual bookkeeping of external data can get complicated quite fast. *order* provides a pythonic class collection that helps you structuring
 

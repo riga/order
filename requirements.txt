@@ -1,2 +1,2 @@
-scinum>=0.2.0
+scinum>=1.0.2
 six

@@ -7,15 +7,11 @@
 #      to ""
 
 action() {
-    if [ ! -z "$ZSH_VERSION" ]; then
-        local this_file="${(%):-%x}"
-    else
-        local this_file="${BASH_SOURCE[0]}"
-    fi
+    local this_file="$( [ ! -z "$ZSH_VERSION" ] && echo "${(%):-%x}" || echo "${BASH_SOURCE[0]}" )"
     local this_dir="$( cd "$( dirname "$this_file" )" && pwd )"
     local repo_dir="$( cd "$( dirname "$this_dir" )" && pwd )"
 
-    local docker_image="python:3.7"
+    local docker_image="python:3.8"
     [ ! -z "$1" ] && docker_image="$1"
 
     local interactive="$2"

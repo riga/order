@@ -51,3 +51,14 @@ jobs:
         - docker pull $IMG
       script:
         - bash tests/docker.sh $IMG
+
+    - stage: test
+      services:
+        - docker
+      env:
+        - JOB=test_python38
+        - IMG=python:3.8
+      install:
+        - docker pull $IMG
+      script:
+        - bash tests/docker.sh $IMG

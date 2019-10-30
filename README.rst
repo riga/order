@@ -77,15 +77,15 @@ If you like to contribute, I'm happy to receive pull requests. Just make sure to
 
    python -m unittest tests
 
-In general, tests should be run for Python 2.7, 3.6 and 3.7. To run tests in a docker container, do
+In general, tests should be run for Python 2.7, 3.6, 3.7 and 3.8. To run tests in a docker container, do
 
 .. code-block:: shell
 
    # run the tests
-   ./tests/docker.sh python:3.7
+   ./tests/docker.sh python:3.8
 
    # or interactively by adding a flag "1" to the command
-   ./tests/docker.sh python:3.7 1
+   ./tests/docker.sh python:3.8 1
    > pip install -r requirements.txt
    > python -m unittest tests
 

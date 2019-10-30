@@ -363,10 +363,10 @@ class UniqueTreeTest(unittest.TestCase):
         self.assertTrue(n1.has_node(2))
         self.assertTrue(n2.has_parent_node(n1))
 
-        self.assertTrue(n1.is_root_node())
-        self.assertFalse(n1.is_leaf_node())
-        self.assertFalse(n2.is_root_node())
-        self.assertTrue(n2.is_leaf_node())
+        self.assertTrue(n1.is_root_node)
+        self.assertFalse(n1.is_leaf_node)
+        self.assertFalse(n2.is_root_node)
+        self.assertTrue(n2.is_leaf_node)
 
         n1.remove_node(2)
         self.assertEqual(len(n1.nodes), 0)

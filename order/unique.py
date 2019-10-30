@@ -848,7 +848,7 @@ def unique_tree(**kwargs):
         # decorator for registering new instance methods with proper name and doc string
         # functionality is almost similar to functools.wraps, except for the customized function
         # naming and automatic transfer to the unique_class to extend
-        def patch(name=None, **kwargs):
+        def patch(name=None, prop=False, **kwargs):
             def decorator(f):
                 _name = name
                 if _name is not None and hasattr(f, "__name__"):
@@ -858,6 +858,8 @@ def unique_tree(**kwargs):
                 if f.__doc__:
                     f.__doc__ = f.__doc__.format(name=_name, singular=singular, plural=plural,
                         **kwargs)
+                if prop:
+                    f = property(f)
                 # only patch when there is not attribute with that name
                 if not hasattr(unique_cls, _name) and _name not in skip:
                     setattr(unique_cls, _name, f)
@@ -986,7 +988,7 @@ def unique_tree(**kwargs):
             if unique_cls == cls:
 
                 # is leaf method
-                @patch("is_leaf_" + singular)
+                @patch("is_leaf_" + singular, prop=True)
                 def is_leaf(self):
                     """
                     Returns *True* when this {singular} has no child {plural}, *False* otherwise.
@@ -1193,7 +1195,7 @@ def unique_tree(**kwargs):
                 if unique_cls == cls:
 
                     # is_root method
-                    @patch("is_root_" + singular)
+                    @patch("is_root_" + singular, prop=True)
                     def is_root(self):
                         """
                         Returns *True* when this {singular} has no parent {plural}, *False*

@@ -314,6 +314,9 @@ class AuxDataMixin(object):
     **Arguments**
 
     *aux* can be a dictionary or a list of 2-tuples to initialize the auxiliary data container.
+    *proxy_default* refers to the default value of the attribute proxy object :py:attr:`x` and is
+    returned in case a requested auxiliary data field does not exist. When not set (the default), an
+    AttributeError is raised.
 
     **Example**
 
@@ -340,6 +343,12 @@ class AuxDataMixin(object):
        type: OrderedDict
 
        The dictionary of auxiliary data.
+
+    .. :py:attribute:: x
+        type: DotAccessProxy
+        read-only
+
+        An object that provides simple attribute access to auxiliary data.
     """
 
     _no_default = object()
@@ -347,7 +356,9 @@ class AuxDataMixin(object):
 
     copy_specs = ["aux"]
 
-    def __init__(self, aux=None):
+    def __init__(self, aux=None, proxy_default=_no_default):
+        """ __init__(aux=None, [proxy_default])
+        """
         super(AuxDataMixin, self).__init__()
 
         # instance members
@@ -357,6 +368,9 @@ class AuxDataMixin(object):
         if aux is not None:
             for key, data in collections.OrderedDict(aux).items():
                 self.set_aux(key, data)
+
+        # save a dot access proxy for easy access of values through the x property
+        self._x = DotAccessProxy(self, default=proxy_default)
 
     @typed
     def aux(self, aux):
@@ -405,16 +419,36 @@ class AuxDataMixin(object):
         """
         self.aux.clear()
 
-    def x(self, key, value=_no_value, default=_no_default):
-        """ x(key, [value], [default])
-        Shorthand to :py:meth:`get_aux` if value is not set, and to :py:meth:`set_aux` otherwise.
-        In the former case, *default* should be set via a keyword argument. In any case, the value
-        is returned.
-        """
-        if value == self._no_value:
-            return self.get_aux(key, default=default)
+    @property
+    def x(self):
+        return self._x
+
+
+class DotAccessProxy(object):
+    """
+    Proxy object that provides simple attribute access to the values hold by an
+    :py:class:`AuxDataMixin` instance *aux*. The *default* value is returned in case the requested
+    attribute is not present in the data container. See :py:meth:`AuxDataMixin.get_aux` for more
+    info.
+    """
+
+    def __init__(self, aux, default):
+        super(DotAccessProxy, self).__init__()
+
+        self._aux = aux
+        self._default = default
+
+    def __getattr__(self, attr):
+        try:
+            return self._aux.get_aux(attr, default=self._default)
+        except KeyError as e:
+            raise AttributeError(*e.args)
+
+    def __setattr__(self, attr, value):
+        if attr.startswith("__") or attr in ("_aux", "_default"):
+            super(DotAccessProxy, self).__setattr__(attr, value)
         else:
-            return self.set_aux(key, value)
+            self._aux.set_aux(attr, value)
 
 
 class TagMixin(object):

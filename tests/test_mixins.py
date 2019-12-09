@@ -195,12 +195,12 @@ class AuxDataMixinTest(unittest.TestCase):
 
     def test_x(self):
         c = AuxDataMixin(aux={"foo": "bar"})
+        self.assertEqual(c.x.foo, "bar")
+        with self.assertRaises(AttributeError):
+            c.x.nonexisting
 
-        self.assertEqual(c.x("foo"), "bar")
-        self.assertEqual(c.x("nonexisting", default="bar"), "bar")
-
-        self.assertEqual(c.x("foo", "baz"), "baz")
-        self.assertEqual(c.x("foo"), "baz")
+        d = AuxDataMixin(aux={"foo": "bar"}, proxy_default=123)
+        self.assertEqual(d.x.nonexisting, 123)
 
 
 class TagMixinTest(unittest.TestCase):

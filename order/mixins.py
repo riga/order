@@ -179,7 +179,7 @@ class CopyMixin(object):
 
     **Members**
 
-    .. :py:classattribute:: copy_specs
+    .. py:classattribute:: copy_specs
        type: list
 
        List of copy specifications per attribute.
@@ -339,12 +339,12 @@ class AuxDataMixin(object):
 
     **Members**
 
-    .. :py:attribute:: aux
+    .. py:attribute:: aux
        type: OrderedDict
 
        The dictionary of auxiliary data.
 
-    .. :py:attribute:: x
+    .. py:attribute:: x
         type: DotAccessProxy
         read-only
 

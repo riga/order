@@ -439,10 +439,13 @@ class DotAccessProxy(object):
         self._default = default
 
     def __getattr__(self, attr):
-        try:
-            return self._aux.get_aux(attr, default=self._default)
-        except KeyError as e:
-            raise AttributeError(*e.args)
+        if attr in ("_aux", "_default"):
+            return super(DotAccessProxy, self).__getattr__(attr)
+        else:
+            try:
+                return self._aux.get_aux(attr, default=self._default)
+            except KeyError as e:
+                raise AttributeError(*e.args)
 
     def __setattr__(self, attr, value):
         if attr.startswith("__") or attr in ("_aux", "_default"):

@@ -7,8 +7,9 @@ __all__ = ["CopyMixinTest", "AuxDataMixinTest", "TagMixinTest", "DataSourceMixin
 
 import unittest
 
-from order import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, LabelMixin, \
-    ColorMixin
+from order import (
+    CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, LabelMixin, ColorMixin,
+)
 
 
 class CopyMixinTest(unittest.TestCase):
@@ -350,7 +351,17 @@ class ColorMixinTest(unittest.TestCase):
         self.assertEqual(c.color_g, 0)
         self.assertEqual(c.color_b, 1)
 
-        with self.assertRaises(TypeError):
+        c = ColorMixin("#f0f")
+        self.assertEqual(c.color_r, 1)
+        self.assertEqual(c.color_g, 0)
+        self.assertEqual(c.color_b, 1)
+
+        c = ColorMixin("#ff00ff")
+        self.assertEqual(c.color_r, 1)
+        self.assertEqual(c.color_g, 0)
+        self.assertEqual(c.color_b, 1)
+
+        with self.assertRaises(ValueError):
             c = ColorMixin("foo")
 
         with self.assertRaises(ValueError):

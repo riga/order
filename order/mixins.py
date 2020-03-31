@@ -11,6 +11,7 @@ __all__ = [
 ]
 
 
+import re
 import copy
 import collections
 
@@ -1058,16 +1059,25 @@ class ColorMixin(object):
     @color.setter
     def color(self, color):
         # color setter
+        if isinstance(color, six.string_types):
+            m = re.match(r"^\#([abcdef0-9]{3}|[abcdef0-9]{6})$", color.lower())
+            if not m:
+                raise ValueError("invalid color value: {}".format(color))
+            s = m.group(1)
+            if len(s) == 3:
+                s = "".join(c1 + c2 for c1, c2 in zip(s, s))
+            color = [int(s[2 * i:2 * i + 2], base=16) for i in range(3)]
+
         if not isinstance(color, (tuple, list)):
             raise TypeError("invalid color type: {}".format(color))
         elif not len(color) in (3, 4):
             raise ValueError("invalid color value: {}".format(color))
-        else:
-            self.color_r = color[0]
-            self.color_g = color[1]
-            self.color_b = color[2]
-            if len(color) == 4:
-                self.color_alpha = color[3]
+
+        self.color_r = color[0]
+        self.color_g = color[1]
+        self.color_b = color[2]
+        if len(color) == 4:
+            self.color_alpha = color[3]
 
     @property
     def color_r_int(self):

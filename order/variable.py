@@ -138,6 +138,12 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
        A list of custom bin labels or *None*. When not *None*, its length must be the same as the
        number of bins.
 
+    .. py:attribute:: x_labels_root
+       type: list, None
+       read-only
+
+       A list of custom bin labels, converted to ROOT-style latex, or *None*.
+
     .. py:attribute:: unit
        type: string, None
 
@@ -357,6 +363,13 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
             raise ValueError("invalid x_labels length: {}".format(x_labels))
 
         return list(x_labels)
+
+    @property
+    def x_labels_root(self):
+        if self.x_labels is None:
+            return None
+        else:
+            return [to_root_latex(str(label)) for label in self.x_labels]
 
     @typed
     def log_x(self, log_x):

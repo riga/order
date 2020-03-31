@@ -6,6 +6,8 @@ __all__ = ["VariableTest"]
 
 import unittest
 
+import six
+
 from order import Variable
 
 
@@ -56,6 +58,11 @@ class VariableTest(unittest.TestCase):
             v.binning = {}
         with self.assertRaises(ValueError):
             v.binning = (10, 0.)
+
+        v.binning = (10., 0, 1)
+        self.assertTrue(isinstance(v.n_bins, six.integer_types))
+        self.assertTrue(isinstance(v.x_min, float))
+        self.assertTrue(isinstance(v.x_max, float))
 
         self.assertEqual(v.n_bins, 10)
         self.assertEqual(v.x_min, 0.)

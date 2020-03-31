@@ -251,12 +251,19 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     @typed
     def binning(self, binning):
         # binning parser
+        bin_types = six.integer_types + (float,)
         if isinstance(binning, list):
             if len(binning) < 2:
                 raise ValueError("minimum number of bin edges is 2: {}".format(binning))
+            elif not all(isinstance(b, bin_types) for b in binning):
+                raise TypeError("invalid bin edge types: {}".format(binning))
+            binning = [float(b) for b in binning]
         elif isinstance(binning, tuple):
             if len(binning) != 3:
                 raise ValueError("even binning must have length 3: {}".format(binning))
+            elif not all(isinstance(b, bin_types) for b in binning):
+                raise TypeError("invalid binning types: {}".format(binning))
+            binning = (int(binning[0]), float(binning[1]), float(binning[2]))
         else:
             raise TypeError("invalid binning type: {}".format(binning))
 

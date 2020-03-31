@@ -132,6 +132,12 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
        The short version of the title of the y-axis, converted to ROOT-style latex.
 
+    .. py:attribute:: x_labels
+       type: list, None
+
+       A list of custom bin labels or *None*. When not *None*, its length must be the same as the
+       number of bins.
+
     .. py:attribute:: unit
        type: string, None
 
@@ -192,8 +198,8 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         SelectionMixin.copy_specs
 
     def __init__(self, name, id=UniqueObject.AUTO_ID, expression=None, binning=(1, 0., 1.),
-            x_title="", x_title_short=None, y_title="Entries", y_title_short=None, log_x=False,
-            log_y=False, unit="1", unit_format="{title} / {unit}", selection=None,
+            x_title="", x_title_short=None, y_title="Entries", y_title_short=None, x_labels=None,
+            log_x=False, log_y=False, unit="1", unit_format="{title} / {unit}", selection=None,
             selection_mode=None, tags=None, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
@@ -208,6 +214,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         self._x_title_short = None
         self._y_title = None
         self._y_title_short = None
+        self._x_labels = None
         self._log_x = None
         self._log_y = None
         self._unit = None
@@ -220,6 +227,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         self.x_title_short = x_title_short
         self.y_title = y_title
         self.y_title_short = y_title_short
+        self.x_labels = x_labels
         self.log_x = log_x
         self.log_y = log_y
         self.unit = unit
@@ -338,6 +346,17 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     def y_title_short_root(self):
         # y_title_short_root getter
         return to_root_latex(self.y_title_short)
+
+    @typed
+    def x_labels(self, x_labels):
+        if x_labels is None:
+            return None
+        elif not isinstance(x_labels, (list, tuple)):
+            raise TypeError("invalid x_labels type: {}".format(x_labels))
+        elif len(x_labels) != self.n_bins:
+            raise ValueError("invalid x_labels length: {}".format(x_labels))
+
+        return list(x_labels)
 
     @typed
     def log_x(self, log_x):

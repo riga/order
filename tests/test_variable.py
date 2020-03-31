@@ -94,6 +94,14 @@ class VariableTest(unittest.TestCase):
         v.y_title_short = None
         self.assertEqual(v.y_title_short, "foo")
 
+        self.assertIsNone(v.x_labels)
+        v.x_labels = list("abcdefghij")
+        self.assertTrue(isinstance(v.x_labels, list))
+        with self.assertRaises(TypeError):
+            v.x_labels = {}
+        with self.assertRaises(ValueError):
+            v.x_labels = list("abc")
+
         v.log_x = True
         self.assertTrue(v.log_x)
         with self.assertRaises(TypeError):

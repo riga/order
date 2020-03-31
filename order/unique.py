@@ -163,7 +163,7 @@ class UniqueObjectIndex(CopyMixin):
         {"attr": "_indices", "manual": True},
     ]
 
-    def __init__(self, cls, default_context=None):
+    def __init__(self, cls, objects=None, default_context=None):
         CopyMixin.__init__(self)
 
         # set the cls using the typed parser
@@ -183,6 +183,10 @@ class UniqueObjectIndex(CopyMixin):
 
         # register indices for the default context
         self._indices[self.default_context]
+
+        # add initial objects
+        if objects is not None:
+            self.extend(objects)
 
     def _copy_attribute_manual(self, inst, obj, spec):
         if spec.dst == "_indices":

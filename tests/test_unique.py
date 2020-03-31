@@ -171,6 +171,9 @@ class UniqueObjectIndexTest(unittest.TestCase):
         idx2 = UniqueObjectIndex(C)
         self.assertEqual(idx2.cls, C)
 
+        idx3 = UniqueObjectIndex(C, [("foo", 1), ("bar", 2)])
+        self.assertEqual(len(idx3), 2)
+
     def test_add(self):
         C, idx = self.make_index()
         self.assertEqual(len(idx), 3)

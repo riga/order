@@ -11,14 +11,14 @@ __all__ = ["Dataset", "DatasetInfo"]
 import six
 
 from order.unique import UniqueObject, unique_tree
-from order.mixins import CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
+from order.mixins import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, LabelMixin
 from order.process import Process
 from order.shift import Shift
 from order.util import typed, make_list
 
 
 @unique_tree(cls=Process, plural="processes", parents=False, deep_children=True)
-class Dataset(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin):
+class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, LabelMixin):
     """ __init__(name, id, campaign=None, info=None, processes=None, label=None, label_short=None, is_data=False, aux=None, context=None, **kwargs)
     Dataset definition providing two kinds of information:
 
@@ -40,8 +40,9 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
 
     When *info* is does not contain a nominal :py:class:`DatasetInfo` object (mapped to the key
     :py:attr:`order.shift.Shift.NOMINAL`, i.e., ``"nominal"``), all *kwargs* are used to create
-    one. Otherwise, it should be a dictionary matching the format of the *info* mapping. *aux* is
-    forwarded to the :py:class:`~order.mixins.AuxDataMixin`, *is_data* to the
+    one. Otherwise, it should be a dictionary matching the format of the *info* mapping. *tags* is
+    forwarded to the :py:class:`~order.mixins.TagMixin`, *aux* to the
+    :py:class:`~order.mixins.AuxDataMixin`, *is_data* to the
     :py:class:`~order.mixins.DataSourceMixin`, *label* and *label_short* to the
     :py:class:`~order.mixins.LabelMixin`, and *name*, *id* and *context* to the
     :py:class:`~order.unique.UniqueObject` constructor.
@@ -141,10 +142,11 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
         AuxDataMixin.copy_specs + DataSourceMixin.copy_specs + LabelMixin.copy_specs
 
     def __init__(self, name, id, campaign=None, info=None, processes=None, label=None,
-            label_short=None, is_data=False, aux=None, context=None, **kwargs):
+            label_short=None, is_data=False, tags=None, aux=None, context=None, **kwargs):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
+        TagMixin.__init__(self, tags=tags)
         DataSourceMixin.__init__(self, is_data=is_data)
         LabelMixin.__init__(self, label=label, label_short=label_short)
 

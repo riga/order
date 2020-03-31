@@ -672,37 +672,101 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
         """
         return hash(self.__class__.__name__ + str(self))
 
-    def __eq__(self, other):
-        """
-        Compares a value to this instance. When *other* is a string (integer), the comparison is
-        *True* when it matches the *name* (*id*) if this instance. When *other* is a unique object
-        as well, the comparison is *True* when *__class__*, *context*, *name* and *id* match. In all
-        other cases, *False* is returned.
-        """
+    @classmethod
+    def _comp_values(cls, other):
+        # unique object of same class?
+        if isinstance(other, cls):
+            return other.name, other.id, other.context
+
         # name?
         try:
-            return self.name == self.__class__.name.fparse(self, other)
+            return cls.name.fparse(None, other), None, None
         except:
             pass
 
         # id?
         try:
-            return self.id == self.__class__.id.fparse(self, other)
+            return None, cls.id.fparse(None, other), None
         except:
             pass
 
-        # unique object of same class?
-        if isinstance(other, self.__class__):
-            return other.context == self.context and other.name == self.name \
-                and other.id == self.id
+        return None, None, None
 
-        return False
+    def __eq__(self, other):
+        """
+        Compares an *other* value to this instance. When *other* is a string (integer), the
+        comparison is *True* when it matches the *name* (*id*) if this instance. When *other* is a
+        unique object as well, the comparison is *True* when *__class__*, *context*, *name* and
+        *id* match. In all other cases, *False* is returned.
+        """
+        _other = self._comp_values(other)
+
+        if not any(v is None for v in _other):
+            return (self.name, self.id, self.context) == _other
+        elif _other[0] is not None:
+            return self.name == _other[0]
+        elif _other[1] is not None:
+            return self.id == _other[1]
+        else:
+            return False
 
     def __ne__(self, other):
         """
         Opposite of :py:meth:`__eq__`.
         """
         return not self.__eq__(other)
+
+    def __lt__(self, other):
+        """
+        Returns *True* when the id of this instance is lower than an *other* one. *other* can either
+        be an integer or a unique object.
+        """
+        _other = self._comp_values(other)
+
+        if _other[1] is None:
+            raise TypeError("unorderable types: {}() < {}()".format(self.__class__.__name__,
+                other.__class__.__name__))
+
+        return self.id < _other[1]
+
+    def __le__(self, other):
+        """
+        Returns *True* when the id of this instance is lower than or equal to an *other* one.
+        *other* can either be an integer or a unique object.
+        """
+        _other = self._comp_values(other)
+
+        if _other[1] is None:
+            raise TypeError("unorderable types: {}() <= {}()".format(self.__class__.__name__,
+                other.__class__.__name__))
+
+        return self.id <= _other[1]
+
+    def __gt__(self, other):
+        """
+        Returns *True* when the id of this instance is greater than an *other* one. *other* can
+        either be an integer or a unique object.
+        """
+        _other = self._comp_values(other)
+
+        if _other[1] is None:
+            raise TypeError("unorderable types: {}() > {}()".format(self.__class__.__name__,
+                other.__class__.__name__))
+
+        return self.id > _other[1]
+
+    def __ge__(self, other):
+        """
+        Returns *True* when the id of this instance is greater than or qual to an *other* one.
+        *other* can either be an integer or a unique object.
+        """
+        _other = self._comp_values(other)
+
+        if _other[1] is None:
+            raise TypeError("unorderable types: {}() >= {}()".format(self.__class__.__name__,
+                other.__class__.__name__))
+
+        return self.id >= _other[1]
 
     @typed(setter=False)
     def context(self, context):

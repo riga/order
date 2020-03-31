@@ -76,6 +76,18 @@ class UniqueObjectTest(unittest.TestCase):
         self.assertNotEqual(foo, 2)
         self.assertNotEqual(foo, bar)
 
+    def test_comps(self):
+        C = self.make_class()
+
+        foo = C("foo", 1)
+        bar = C("bar", 2)
+        self.assertTrue(foo < bar)
+        self.assertTrue(bar > foo)
+        self.assertTrue(foo <= 1)
+        self.assertTrue(foo >= 1)
+        self.assertTrue(bar > 1)
+        self.assertTrue(foo < 3)
+
     def test_instance_cache(self):
         C = self.make_class()
 

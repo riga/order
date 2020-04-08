@@ -1,8 +1,10 @@
 # coding: utf-8
 
 
-__all__ = ["CopyMixinTest", "AuxDataMixinTest", "TagMixinTest", "DataSourceMixinTest",
-           "SelectionMixinTest", "LabelMixinTest", "ColorMixinTest"]
+__all__ = [
+    "CopyMixinTest", "AuxDataMixinTest", "TagMixinTest", "DataSourceMixinTest",
+    "SelectionMixinTest", "LabelMixinTest", "ColorMixinTest",
+]
 
 
 import unittest
@@ -200,8 +202,9 @@ class AuxDataMixinTest(unittest.TestCase):
         with self.assertRaises(AttributeError):
             c.x.nonexisting
 
-        d = AuxDataMixin(aux={"foo": "bar"}, proxy_default=123)
-        self.assertEqual(d.x.nonexisting, 123)
+        self.assertEqual(c.x("foo"), "bar")
+        with self.assertRaises(KeyError):
+            c.x("nonexisting")
 
 
 class TagMixinTest(unittest.TestCase):

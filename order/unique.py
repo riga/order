@@ -414,6 +414,16 @@ class UniqueObjectIndex(CopyMixin):
         """
         return self.get(obj, default=_not_found, context=context) != _not_found
 
+    def index(self, obj, context=None):
+        """
+        Returns the position of an object in the index for *context*. When *context* is *None*, the
+        *default_context* is used. *obj* might be a *name*, *id*, or an instance of *cls*. When the
+        object is not found in the index, an error is raised.
+        """
+        obj = self.get(obj, context=context or self.default_context)
+        ids = list(self._indices[obj.context]["ids"].keys())
+        return ids.index(obj.id)
+
     def remove(self, obj, context=None, silent=False):
         """
         Removes an object from the index for *context*. *obj* might be a *name*, *id*, or an

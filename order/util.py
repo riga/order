@@ -7,7 +7,7 @@ Helpful utilities.
 
 __all__ = [
     "ROOT_DEFAULT", "typed", "make_list", "multi_match", "flatten", "to_root_latex",
-    "join_root_selection", "join_numexpr_selection", "class_id", "args_to_kwargs",
+    "join_root_selection", "join_numexpr_selection", "class_id", "args_to_kwargs", "DotAccessProxy",
 ]
 
 
@@ -308,3 +308,63 @@ def args_to_kwargs(func, args):
     else:
         arg_names = list(inspect.signature(func).parameters.keys())
     return dict(zip(arg_names[:len(args)], args))
+
+
+class DotAccessProxy(object):
+    """
+    Proxy object that provides simple attribute access to values that are retrieved by a *getter*
+    and optionally set through a *setter*. Example:
+
+    .. code-block:: python
+
+        my_dict = {"foo": 123}
+
+        proxy = DotAccessProxy(my_dict.__getattr__)
+        proxy.foo
+        # -> 123
+        proxy.bar
+        # -> AttributeError
+
+        proxy = DotAccessProxy(my_dict.get)
+        proxy.foo
+        # -> 123
+        proxy.bar
+        # -> None
+
+        proxy = DotAccessProxy(my_dict.get, my_dict.__setitem__)
+        proxy.foo
+        # -> 123
+        proxy.bar
+        # -> None
+        proxy.bar = 99
+        proxy.bar
+        # -> 99
+    """
+
+    def __init__(self, getter, setter=None):
+        super(DotAccessProxy, self).__init__()
+
+        self._getter = getter
+        self._setter = setter
+
+    def __call__(self, *args, **kwargs):
+        return self._getter(*args, **kwargs)
+
+    def __getattr__(self, attr):
+        if attr in ("_getter", "_setter"):
+            return super(DotAccessProxy, self).__getattr__(attr)
+        else:
+            try:
+                return self._getter(attr)
+            except KeyError as e:
+                raise AttributeError(*e.args)
+
+    def __setattr__(self, attr, value):
+        if attr.startswith("__") or attr in ("_getter", "_setter"):
+            super(DotAccessProxy, self).__setattr__(attr, value)
+        else:
+            setter = self._setter
+            if setter is None:
+                raise Exception("cannot set attribute, setter not defined on {}".format(
+                    self.__class__.__name__))
+            setter(attr, value)

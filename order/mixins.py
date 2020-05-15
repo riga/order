@@ -19,7 +19,7 @@ import six
 
 from order.util import (
     ROOT_DEFAULT, typed, make_list, multi_match, join_root_selection, join_numexpr_selection,
-    to_root_latex, args_to_kwargs,
+    to_root_latex, args_to_kwargs, DotAccessProxy,
 )
 
 
@@ -383,7 +383,7 @@ class AuxDataMixin(object):
                 self.set_aux(key, data)
 
         # save a dot access proxy for easy access of values through the x property
-        self._x = DotAccessProxy(self)
+        self._x = DotAccessProxy(self.get_aux, self.set_aux)
 
     @typed
     def aux(self, aux):
@@ -435,36 +435,6 @@ class AuxDataMixin(object):
     @property
     def x(self):
         return self._x
-
-
-class DotAccessProxy(object):
-    """
-    Proxy object that provides simple attribute access to the values hold by an
-    :py:class:`AuxDataMixin` instance *aux*. See :py:meth:`AuxDataMixin.get_aux` for more info.
-    """
-
-    def __init__(self, aux):
-        super(DotAccessProxy, self).__init__()
-
-        self._aux = aux
-
-    def __call__(self, *args, **kwargs):
-        return self._aux.get_aux(*args, **kwargs)
-
-    def __getattr__(self, attr):
-        if attr == "_aux":
-            return super(DotAccessProxy, self).__getattr__(attr)
-        else:
-            try:
-                return self._aux.get_aux(attr)
-            except KeyError as e:
-                raise AttributeError(*e.args)
-
-    def __setattr__(self, attr, value):
-        if attr.startswith("__") or attr == "_aux":
-            super(DotAccessProxy, self).__setattr__(attr, value)
-        else:
-            self._aux.set_aux(attr, value)
 
 
 class TagMixin(object):

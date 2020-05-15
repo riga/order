@@ -227,6 +227,16 @@ class UniqueObjectIndexTest(unittest.TestCase):
 
         self.assertEqual(idx.get("test", context="other"), 3)
 
+    def test_n(self):
+        C, idx = self.make_index()
+
+        self.assertIsInstance(idx.get("foo"), C)
+        self.assertEqual(idx.n.foo, 1)
+        self.assertEqual(idx.n.bar, "bar")
+
+        with self.assertRaises(ValueError):
+            idx.n.test
+
     def test_contains(self):
         C, idx = self.make_index()
 

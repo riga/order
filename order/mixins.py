@@ -395,6 +395,10 @@ class AuxDataMixin(object):
 
         return aux
 
+    @property
+    def x(self):
+        return self._x
+
     def set_aux(self, key, value):
         """
         Stores auxiliary *value* for a specific *key*. Returns *value*.
@@ -431,10 +435,6 @@ class AuxDataMixin(object):
         Clears the auxiliary data container.
         """
         self.aux.clear()
-
-    @property
-    def x(self):
-        return self._x
 
 
 class TagMixin(object):

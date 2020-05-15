@@ -17,7 +17,7 @@ import contextlib
 import six
 
 from order.mixins import CopyMixin
-from order.util import typed, make_list, class_id
+from order.util import typed, make_list, class_id, DotAccessProxy
 
 
 _no_default = object()
@@ -152,9 +152,15 @@ class UniqueObjectIndex(CopyMixin):
        type: string
 
        The default context that is used when no *context* argument is provided in most methods.
+
+    .. py:attribute:: n
+       type: DotAccessProxy
+       read-only
+
+       An object that provides simple attribute access to contained objects via name in the default
+       context.
     """
 
-    # yeah, I know ... but hey, why not
     ALL = all
 
     copy_specs = [
@@ -187,6 +193,9 @@ class UniqueObjectIndex(CopyMixin):
         # add initial objects
         if objects is not None:
             self.extend(objects)
+
+        # save a dot access proxy for easy access of objects via name in the default context
+        self._n = DotAccessProxy(self.get)
 
     def _copy_attribute_manual(self, inst, obj, spec):
         if spec.dst == "_indices":
@@ -258,6 +267,10 @@ class UniqueObjectIndex(CopyMixin):
             raise TypeError("invalid default_context type: {}".format(default_context))
 
         return default_context
+
+    @property
+    def n(self):
+        return self._n
 
     def len(self, context=None):
         """

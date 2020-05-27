@@ -58,9 +58,9 @@ class DuplicateNameException(DuplicateObjectException):
     An exception which is raised when trying to create a unique object whose name is already used in
     the same uniqueness context.
     """
-    def __init__(self, name, context):
-        msg = "an object with name '{}' already exists in the uniqueness context '{}'".format(
-            name, context)
+    def __init__(self, cls, name, context):
+        msg = "'{}.{}' object with name '{}' already exists in the uniqueness context '{}'".format(
+            cls.__module__, cls.__name__, name, context)
         super(DuplicateNameException, self).__init__(msg)
 
 
@@ -69,9 +69,9 @@ class DuplicateIdException(DuplicateObjectException):
     An exception which is raised when trying to create a unique object whose id is already used in
     the same uniqueness context.
     """
-    def __init__(self, id, context):
-        msg = "an object with id '{}' already exists in the uniqueness context '{}'".format(
-            id, context)
+    def __init__(self, cls, id, context):
+        msg = "'{}.{}' object with id '{}' already exists in the uniqueness context '{}'".format(
+            cls.__module__, cls.__name__, id, context)
         super(DuplicateIdException, self).__init__(msg)
 
 
@@ -534,12 +534,12 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
         # the name "foo" and the id 1 can no longer be used
         # (at least not within the same uniqueness context, which is the default one when not set)
         bar = UniqueObject("foo", 2)
-        # -> DuplicateNameException: an object with name 'foo' already exists in the uniqueness
-        #                            context 'uniqueobject'
+        # -> DuplicateNameException: 'order.unique.UniqueObject' object with name 'foo' already
+        #                            exists in the uniqueness context 'uniqueobject'
 
         bar = UniqueObject("bar", 1)
-        # -> DuplicateIdException: an object with id '1' already exists in the uniqueness context
-        #                          'uniqueobject'
+        # -> DuplicateIdException: 'order.unique.UniqueObject' object with id '1' already exists in
+        #                          the uniqueness context 'uniqueobject'
 
         # everything is fine when an other context is provided
         bar = UniqueObject("bar", 1, context="myNewContext")
@@ -628,7 +628,7 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
         # use the typed parser to check the passed name and check for duplicates
         name = cls.name.fparse(None, name)
         if name in cls._instances.names(context=context):
-            return DuplicateNameException(name, context)
+            return DuplicateNameException(cls, name, context)
 
         # check for auto_id
         if id == cls.AUTO_ID:
@@ -637,7 +637,7 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
         # use the typed parser to check the passed id, check for duplicates and store it
         id = cls.id.fparse(None, id)
         if id in cls._instances.ids(context=context):
-            return DuplicateIdException(id, context)
+            return DuplicateIdException(cls, id, context)
 
         return (name, id, context)
 

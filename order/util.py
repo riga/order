@@ -351,7 +351,7 @@ class DotAccessProxy(object):
         return self._getter(*args, **kwargs)
 
     def __getattr__(self, attr):
-        if attr in ("_getter", "_setter"):
+        if attr.startswith("__") or attr in ("_getter", "_setter"):
             return super(DotAccessProxy, self).__getattr__(attr)
         else:
             try:

@@ -296,7 +296,7 @@ class UniqueObjectIndex(CopyMixin):
         are returned and therefore, they might contain duplicate values.
         """
         if context != self.ALL:
-            return self._indices[context or self.default_context]["names"].keys()
+            return list(self._indices[context or self.default_context]["names"].keys())
         else:
             return sum((list(index["names"].keys()) for index in six.itervalues(self._indices)), [])
 
@@ -307,7 +307,7 @@ class UniqueObjectIndex(CopyMixin):
         are returned and therefore, they might contain duplicate values.
         """
         if context != self.ALL:
-            return self._indices[context or self.default_context]["ids"].keys()
+            return list(self._indices[context or self.default_context]["ids"].keys())
         else:
             return sum((list(index["ids"].keys()) for index in six.itervalues(self._indices)), [])
 
@@ -315,10 +315,12 @@ class UniqueObjectIndex(CopyMixin):
         """
         Returns pairs containing *name* and *id* of the currently contained objects in the index
         stored for *context*. When *None*, the *default_context* is used. When *context* is *all*,
-        tuples (*name*, *id*, *index*) are returned with objects from all indices.
+        tuples (*name*, *id*, *context*) are returned with objects from all indices. Note that the
+        returned *context* refers to the one the object is stored in, rather then the uniqueness
+        context of the object itself.
         """
         if context != self.ALL:
-            return zip(self.names(context=context), self.ids(context=context))
+            return list(zip(self.names(context=context), self.ids(context=context)))
         else:
             keys = []
             for context, index in six.iteritems(self._indices):
@@ -340,84 +342,92 @@ class UniqueObjectIndex(CopyMixin):
         Returns a list of pairs containing key and value of the objects in the index stored for
         *context*. Internally, *context* forwarded to both :py:meth:`keys` and :py:meth:`values`.
         """
-        return zip(self.keys(context=context), self.values(context=context))
+        return list(zip(self.keys(context=context), self.values(context=context)))
 
     def add(self, *args, **kwargs):
         """
-        Adds a new object to the index. When the first *arg* is not an instance of *cls*, all *args*
-        and *kwargs* are passed to the *cls* constructor to create a new object. Otherwise, the
-        first *arg* is considered the object to add. In both cases the added object is returned.
+        Adds a new object to the index for a certain context. When the first *arg* is not an
+        instance of *cls*, all *args* and *kwargs* are passed to the *cls* constructor to create a
+        new object. In this case, the *kwargs* may contain *index_context* to define the *context*
+        if the index in which the newly created object should be stored. When not set,
+        *default_context* is used. Otherwise, when the first *arg* is already an object and to be
+        added, the context is either *index_context* or *contex*. The former has priority for
+        consistency with the case described above. In both cases the added object is returned.
         """
         # determine the object to add
         if len(args) == 1 and isinstance(args[0], self.cls):
+            context = kwargs.get("index_context") or kwargs.get("context") or self.default_context
             obj = args[0]
         else:
+            context = kwargs.pop("index_context", None) or self.default_context
             obj = self.cls(*args, **kwargs)
 
         # add to the index
-        self._indices[obj.context]["names"][obj.name] = obj
-        self._indices[obj.context]["ids"][obj.id] = obj
+        self._indices[context]["names"][obj.name] = obj
+        self._indices[context]["ids"][obj.id] = obj
 
         return obj
 
-    def extend(self, objs):
+    def extend(self, objs, context=None):
         """
-        Adds multiple new objects to the index. All elements of the sequence *objs* are forwarded to
-        :py:meth:`add` and the list of return values is returned. When an object is a dictionary or
-        a tuple, it is expanded for the invocation of :py:meth:`add`.
+        Adds multiple new objects to the index for *context*. All elements of the sequence *objs*
+        are forwarded to :py:meth:`add` and the list of return values is returned. When an object is
+        a dictionary or a tuple, it is expanded for the invocation of :py:meth:`add`. When *context*
+        is *None*, the *default_context* is used.
         """
         results = []
 
-        objs = objs.values() if isinstance(objs, UniqueObjectIndex) else make_list(objs)
+        if isinstance(objs, UniqueObjectIndex):
+            objs = objs.value(context=context)
+
         for obj in objs:
             if isinstance(obj, dict):
                 obj = self.add(**obj)
             elif isinstance(obj, tuple):
                 obj = self.add(*obj)
             else:
-                obj = self.add(obj)
+                obj = self.add(obj, context=context)
             results.append(obj)
 
         return results
 
-    def get(self, obj, default=_no_default, context=None):
+    def get(self, obj, default=_no_default, context=None, return_context=False):
         """ get(obj, [default], [context])
         Returns an object that is stored in the index for *context*. *obj* might be a *name*, *id*,
         or an instance of *cls*. If *default* is given, it is used as the default return value if no
         such object could be found. Otherwise, an error is raised. When *context* is *None*, the
         *default_context* is used.
         """
-        # when it's an object, fetch the object to compare names
+        # when it's already an object, do the lookup by it's name
         if isinstance(obj, self._cls):
-            name_index = self._indices[obj.context]["names"]
-            if obj.name in name_index and obj == name_index[obj.name]:
-                return obj
+            obj = obj.name
 
+        context = context or self.default_context
+        if context == self.ALL:
+            contexts = self.contexts()
         else:
-            context = context or self.default_context
-            if context == self.ALL:
-                contexts = self.contexts()
-            else:
-                contexts = [context]
+            contexts = [context]
 
-            for context in contexts:
-                # name?
-                try:
-                    return self._indices[context]["names"][self.cls.name.fparse(self, obj)]
-                except:
-                    pass
+        for context in contexts:
+            # name?
+            try:
+                obj = self._indices[context]["names"][self.cls.name.fparse(self, obj)]
+                return (obj, context) if return_context else obj
+            except:
+                pass
 
-                # id?
-                try:
-                    return self._indices[context]["ids"][self.cls.id.fparse(self, obj)]
-                except:
-                    pass
+            # id?
+            try:
+                obj = self._indices[context]["ids"][self.cls.id.fparse(self, obj)]
+                return (obj, context) if return_context else obj
+            except:
+                pass
 
         if default != _no_default:
-            return default
+            return (default, None) if return_context else default
         else:
             raise ValueError("object '{}' not known to index '{}' for context '{}'".format(
-                obj, self, context))
+                obj, self, "ALL" if context == self.ALL else context))
 
     def has(self, obj, context=None):
         """
@@ -433,28 +443,26 @@ class UniqueObjectIndex(CopyMixin):
         *default_context* is used. *obj* might be a *name*, *id*, or an instance of *cls*. When the
         object is not found in the index, an error is raised.
         """
-        obj = self.get(obj, context=context or self.default_context)
-        ids = list(self._indices[obj.context]["ids"].keys())
-        return ids.index(obj.id)
+        obj, context = self.get(obj, context=context, return_context=True)
+        return self.ids(context=context).index(obj.id)
 
     def remove(self, obj, context=None, silent=False):
         """
         Removes an object from the index for *context*. *obj* might be a *name*, *id*, or an
         instance of *cls*. Returns the removed object. Unless *silent* is *True*, an error is raised
-        if the object could not be found. When *context* is *None*, the *default_context* is
-        used.
+        if the object could not be found. When *context* is *None*, the *default_context* is used.
         """
-        obj = self.get(obj, default=_not_found, context=context)
+        obj, _context = self.get(obj, default=_not_found, context=context, return_context=True)
         if obj != _not_found:
-            del(self._indices[obj.context]["names"][obj.name])
-            del(self._indices[obj.context]["ids"][obj.id])
+            del(self._indices[_context]["names"][obj.name])
+            del(self._indices[_context]["ids"][obj.id])
             return obj
         elif silent:
             return None
         else:
             context = context or self.default_context
             raise ValueError("object '{}' not known to index '{}' for context '{}'".format(
-                obj, self, context))
+                obj, self, "ALL" if context == self.ALL else context))
 
     def clear(self, context=None):
         """
@@ -628,7 +636,7 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
         # use the typed parser to check the passed name and check for duplicates
         name = cls.name.fparse(None, name)
         if name in cls._instances.names(context=context):
-            return DuplicateNameException(cls, name, context)
+            raise DuplicateNameException(cls, name, context)
 
         # check for auto_id
         if id == cls.AUTO_ID:
@@ -637,7 +645,7 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
         # use the typed parser to check the passed id, check for duplicates and store it
         id = cls.id.fparse(None, id)
         if id in cls._instances.ids(context=context):
-            return DuplicateIdException(cls, id, context)
+            raise DuplicateIdException(cls, id, context)
 
         return (name, id, context)
 
@@ -649,16 +657,11 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
         self._id = None
         self._context = None
 
-        # check if this instance can be created, or if a duplicate name or id is detected
-        ret = self.check_duplicate(name, id, context=context)
-        if isinstance(ret, Exception):
-            raise ret
-
-        # store name, id and context
-        self._name, self._id, self._context = ret
+        # store name, id and context when duplicate check passed
+        self._name, self._id, self._context = self.check_duplicate(name, id, context=context)
 
         # add the instance to the cache
-        self._instances.add(self)
+        self._instances.add(self, context=self._context)
 
     def __del__(self):
         # remove from the instance cache

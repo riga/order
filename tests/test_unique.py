@@ -139,9 +139,11 @@ class UniqueObjectTest(unittest.TestCase):
             copy_specs = ["name", "id", "context"]
 
         a = D("foo", 1)
+        self.assertEqual(D._instances.len(all), 1)
 
         a.copy("bar", 2)
         a.copy(context="other")
+        self.assertEqual(D._instances.len(all), 3)
 
         with self.assertRaises(DuplicateIdException):
             a.copy("baz")
@@ -151,6 +153,7 @@ class UniqueObjectTest(unittest.TestCase):
 
         with uniqueness_context("other2"):
             a.copy()
+        self.assertEqual(D._instances.len(all), 4)
 
         with self.assertRaises(DuplicateObjectException):
             with uniqueness_context("other"):
@@ -166,7 +169,7 @@ class UniqueObjectIndexTest(unittest.TestCase):
         idx = UniqueObjectIndex(cls=C)
         idx.add("foo", 1)
         idx.add("bar", 2)
-        idx.add("test", 3, context="other")
+        idx.add("test", 3, context="other", index_context="other")
 
         return C, idx
 
@@ -296,7 +299,7 @@ class UniqueObjectIndexTest(unittest.TestCase):
         self.assertTrue("foo" in idx)
         self.assertTrue(idx.has("foo"))
 
-        idx.add("test", 1, context="newindex")
+        idx.add("test", 1, context="newindex", index_context="newindex")
         self.assertTrue("test" in idx)
         self.assertFalse(idx.has("test"))
 

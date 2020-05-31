@@ -22,10 +22,10 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
     **Arguments**
 
-    *expression* and *selection* can be used for projection statements. When empty, *expression*
-    defaults to *name*. Other options that are relevant for plotting are *binning*, *x_title*,
-    *x_title_short*, *y_title*, *y_title_short*, and *unit*. See the attribute listing below for
-    further information.
+    *expression* can be a string (for projection statements) or function that defines the variable
+    expression. When empty, it defaults to *name*. *selection* is expected to be a string. Other
+    options that are relevant for plotting are *binning*, *x_title*, *x_title_short*, *y_title*,
+    *y_title_short*, and *unit*. See the attribute listing below for further information.
 
     *selection* and *selection_mode* are passed to the :py:class:`~order.mixins.SelectionMixin`,
     *tags* to the :py:class:`~order.mixins.TagMixin`, *aux* to the
@@ -255,12 +255,14 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
             self._expression = None
             return
 
-        if not isinstance(expression, six.string_types):
+        if isinstance(expression, six.string_types):
+            if not expression:
+                raise ValueError("expression must not be empty")
+            expression = str(expression)
+        elif not callable(expression):
             raise TypeError("invalid expression type: {}".format(expression))
-        elif not expression:
-            raise ValueError("expression must not be empty")
 
-        self._expression = str(expression)
+        self._expression = expression
 
     @typed
     def binning(self, binning):

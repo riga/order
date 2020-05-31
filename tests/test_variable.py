@@ -36,6 +36,11 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(v.expression, "foo")
         with self.assertRaises(TypeError):
             v.expression = 1
+        with self.assertRaises(ValueError):
+            v.expression = ""
+        v.expression = lambda: 123
+        self.assertEqual(v.expression(), 123)
+        v.expression = "foo"
 
         v.selection = "foo"
         self.assertEqual(v.selection, "foo")

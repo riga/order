@@ -429,6 +429,36 @@ class UniqueObjectIndex(CopyMixin):
             raise ValueError("object '{}' not known to index '{}' for context '{}'".format(
                 obj, self, "ALL" if context == self.ALL else context))
 
+    def get_first(self, default=_no_default, context=None):
+        """ get_first([default], [context])
+        Returns the first object that is stored in the index for *context*. If *default* is given,
+        it is used as the default return value if no object could be found. Otherwise, an error is
+        raised. When *context* is *None*, the *default_context* is used.
+        """
+        context = context or self.default_context
+        objs = self.values(context=context)
+        if objs:
+            return objs[0]
+        elif default != _no_default:
+            return default
+        else:
+            raise ValueError("index '{}' does not contain any object".format(context))
+
+    def get_last(self, default=_no_default, context=None):
+        """ get_last([default], [context])
+        Returns the last object that is stored in the index for *context*. If *default* is given,
+        it is used as the default return value if no object could be found. Otherwise, an error is
+        raised. When *context* is *None*, the *default_context* is used.
+        """
+        context = context or self.default_context
+        objs = self.values(context=context)
+        if objs:
+            return objs[-1]
+        elif default != _no_default:
+            return default
+        else:
+            raise ValueError("index '{}' does not contain any object".format(context))
+
     def has(self, obj, context=None):
         """
         Checks if an object is contained in the index for *context*. *obj* might be a *name*, *id*,

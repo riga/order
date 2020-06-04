@@ -230,6 +230,16 @@ class UniqueObjectIndexTest(unittest.TestCase):
 
         self.assertEqual(idx.get("test", context="other"), 3)
 
+    def test_get_first_last(self):
+        C, idx = self.make_index()
+
+        self.assertEqual(idx.get_first(), "foo")
+        self.assertEqual(idx.get_last(), "bar")
+
+        idx.clear()
+        with self.assertRaises(ValueError):
+            idx.get_first()
+
     def test_n(self):
         C, idx = self.make_index()
 

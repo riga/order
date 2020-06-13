@@ -398,10 +398,13 @@ class UniqueTreeTest(unittest.TestCase):
         self.assertTrue(all(hasattr(Node, attr % "parent_") for attr in common_attrs3))
 
     def test_tree_methods(self):
-        Node = self.make_class(deep_children=True, deep_parents=True)
+        Node = self.make_class(deep_children=True, deep_parents=True, parents=-1)
 
         n1 = Node("a", 1)
         n2 = n1.add_node("b", 2)
+        n3 = n2.add_node("c", 3)
+        n4 = n2.add_node("d", 4)
+        n5 = n4.add_parent_node("e", 5)
 
         self.assertEqual(len(n1.nodes), 1)
         self.assertEqual(len(n2.parent_nodes), 1)
@@ -412,13 +415,41 @@ class UniqueTreeTest(unittest.TestCase):
         self.assertTrue(n2.has_parent_node(n1))
 
         self.assertTrue(n1.is_root_node)
+        self.assertTrue(n1.has_nodes)
         self.assertFalse(n1.has_parent_nodes)
         self.assertFalse(n1.is_leaf_node)
-        self.assertTrue(n1.has_nodes)
+
         self.assertFalse(n2.is_root_node)
+        self.assertFalse(n2.is_leaf_node)
         self.assertTrue(n2.has_parent_nodes)
-        self.assertTrue(n2.is_leaf_node)
-        self.assertFalse(n2.has_nodes)
+        self.assertTrue(n2.has_nodes)
+
+        self.assertFalse(n3.is_root_node)
+        self.assertTrue(n3.is_leaf_node)
+        self.assertTrue(n3.has_parent_nodes)
+        self.assertFalse(n3.has_nodes)
+
+        self.assertFalse(n4.is_root_node)
+        self.assertTrue(n4.is_leaf_node)
+        self.assertTrue(n4.has_parent_nodes)
+        self.assertFalse(n4.has_nodes)
+
+        self.assertTrue(n5.is_root_node)
+        self.assertFalse(n5.is_leaf_node)
+        self.assertFalse(n5.has_parent_nodes)
+        self.assertTrue(n5.has_nodes)
+
+        self.assertEqual(len(n1.get_leaf_nodes()), 2)
+        self.assertEqual(len(n2.get_leaf_nodes()), 2)
+        self.assertEqual(len(n3.get_leaf_nodes()), 0)
+        self.assertEqual(len(n4.get_leaf_nodes()), 0)
+        self.assertEqual(len(n5.get_leaf_nodes()), 1)
+
+        self.assertEqual(len(n1.get_root_nodes()), 0)
+        self.assertEqual(len(n2.get_root_nodes()), 1)
+        self.assertEqual(len(n3.get_root_nodes()), 1)
+        self.assertEqual(len(n4.get_root_nodes()), 2)
+        self.assertEqual(len(n5.get_root_nodes()), 0)
 
         n1.remove_node(2)
         self.assertEqual(len(n1.nodes), 0)

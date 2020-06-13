@@ -947,10 +947,11 @@ def unique_tree(**kwargs):
     itself. *singular* and *plural* are used to name attributes and methods. They default to
     ``cls.__name__.lower()`` and ``singular + "s"``, respectively. When *parents* is *False*, the
     additional features are reduced to provide only child relations. When *parents* is an integer,
-    it is interpreted as the maximim number of parents a child can have. Additional convenience
-    methods are added when *parents* is exactly 1. When *deep_children* (*deep_parents*) is *True*,
-    *get_\** and *has_\** child (parent) methods will have recursive features. When *skip* is a
-    sequence, it can contain names of attributes to skip that would normally be created.
+    it is interpreted as the maximim number of parents a child can have. Negative numbers mean that
+    an unlimited amount of parents is allowed. Additional convenience methods are added when
+    *parents* is *True* or exactly 1. When *deep_children* (*deep_parents*) is *True*, *get_\** and
+    *has_\** child (parent) methods will have recursive features. When *skip* is a sequence, it can
+    contain names of attributes to skip that would normally be created.
 
     A class can be decorated multiple times. Internally, the objects are stored in a separated
     :py:class:`UniqueObjectIndex` instance per added tree functionality.
@@ -969,6 +970,12 @@ def unique_tree(**kwargs):
         deep_children = kwargs.get("deep_children", False)
         deep_parents = kwargs.get("deep_parents", False)
         skip = make_list(kwargs.get("skip", None) or [])
+
+        # special treatment of parents
+        if not isinstance(parents, six.integer_types):
+            parents = bool(parents)
+        if isinstance(parents, bool):
+            parents = int(parents)
 
         # decorator for registering new instance methods with proper name and doc string
         # functionality is almost similar to functools.wraps, except for the customized function
@@ -1126,11 +1133,22 @@ def unique_tree(**kwargs):
 
                     lookup.extend((obj, depth + 1) for obj in objs)
 
+            # get leaves method
+            @patch("get_leaf_" + plural)
+            def get_leaves(self, context=None):
+                """
+                Returns all child {plural} from the :py:attr:`{plural}` index for *context* that
+                have no child {plural} themselves in a recursive fashion. When *context* is *None*,
+                the *default_context* of the :py:attr:`{plural}` index is used.
+                """
+                walker = getattr(self, "walk_" + plural)(context=context)
+                return [obj for obj, _, objs in walker if not objs]
+
         #
         # child methods, disabled parents
         #
 
-        if not parents:
+        if parents == 0:
 
             # add child method
             @patch("add_" + singular)
@@ -1209,7 +1227,7 @@ def unique_tree(**kwargs):
                     index = getattr(self, plural)
                     obj = index.add(*args, **kwargs)
                     parent_index = getattr(obj, "parent_" + plural)
-                    if len(parent_index) >= parents:
+                    if parents > 0 and len(parent_index) >= parents:
                         index.remove(obj)
                         raise Exception("number of parents exceeded: {}".format(parents))
                     parent_index.add(self)
@@ -1339,6 +1357,18 @@ def unique_tree(**kwargs):
 
                         lookup.extend((obj, depth + 1) for obj in objs)
 
+                # get roots method
+                @patch("get_root_" + plural)
+                def get_roots(self, context=None):
+                    """
+                    Returns all parent {plural} from the :py:attr:`parent_{plural}` index for
+                    *context* that have no parent {plural} themselves in a recursive fashion. When
+                    *context* is *None*, the *default_context* of the :py:attr:`parent_{plural}`
+                    index is used.
+                    """
+                    walker = getattr(self, "walk_parent_" + plural)(context=context)
+                    return [obj for obj, _, objs in walker if not objs]
+
         #
         # parent methods, unlimited number
         #
@@ -1370,7 +1400,7 @@ def unique_tree(**kwargs):
                     added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
                     """
                     parent_index = getattr(self, "parent_" + plural)
-                    if len(parent_index) >= parents:
+                    if parents > 0 and len(parent_index) >= parents:
                         raise Exception("number of parents exceeded: {}".format(parents))
                     obj = parent_index.add(*args, **kwargs)
                     getattr(obj, plural).add(self)
@@ -1380,7 +1410,7 @@ def unique_tree(**kwargs):
         # convenient parent methods, exactly 1 parent
         #
 
-                if not isinstance(parents, bool) and parents == 1:
+                if parents == 1:
 
                     # direct parent access
                     @patch(name="parent_" + singular, prop=True)

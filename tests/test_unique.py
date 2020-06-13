@@ -363,15 +363,15 @@ class UniqueTreeTest(unittest.TestCase):
     def test_constructor(self):
         common_attrs = ["%snodes", "has_%snode", "add_%snode", "remove_%snode", "get_%snode"]
         deep_common_attrs = ["walk_%snodes"]
-        child_attrs = ["is_leaf_node"]
-        parent_attrs = ["is_root_node"]
+        child_attrs = ["has_nodes", "is_leaf_node"]
+        parent_attrs = ["has_parent_nodes", "is_root_node"]
         conv_attrs = ["parent_nodes"]
 
         Node = self.make_class()
         self.assertTrue(all(hasattr(Node, attr % "") for attr in common_attrs))
         self.assertTrue(all(hasattr(Node, attr % "parent_") for attr in common_attrs))
-        self.assertTrue(all(not hasattr(Node, attr) for attr in child_attrs))
-        self.assertTrue(all(not hasattr(Node, attr) for attr in parent_attrs))
+        self.assertTrue(all(hasattr(Node, attr) for attr in child_attrs))
+        self.assertTrue(all(hasattr(Node, attr) for attr in parent_attrs))
 
         Node = self.make_class(deep_children=True, deep_parents=True)
         self.assertTrue(all(hasattr(Node, attr % "") for attr in common_attrs + deep_common_attrs))
@@ -412,9 +412,13 @@ class UniqueTreeTest(unittest.TestCase):
         self.assertTrue(n2.has_parent_node(n1))
 
         self.assertTrue(n1.is_root_node)
+        self.assertFalse(n1.has_parent_nodes)
         self.assertFalse(n1.is_leaf_node)
+        self.assertTrue(n1.has_nodes)
         self.assertFalse(n2.is_root_node)
+        self.assertTrue(n2.has_parent_nodes)
         self.assertTrue(n2.is_leaf_node)
+        self.assertFalse(n2.has_nodes)
 
         n1.remove_node(2)
         self.assertEqual(len(n1.nodes), 0)

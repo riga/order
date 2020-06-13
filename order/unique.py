@@ -921,13 +921,14 @@ def unique_tree(**kwargs):
             default_context = "myclass"
 
         # now, MyNode has the following attributes and methods:
-        # nodes,          parent_nodes
-        # has_node(),     has_parent_node()
-        # add_node(),     add_parent_node()
-        # remove_node(),  remove_parent_node()
-        # walk_nodes(),   walk_parent_nodes()
-        # get_node(),     get_parent_node()
-        # is_leaf_node(), is_root_node()
+        # nodes,          parent_nodes,
+        # has_node(),     has_parent_node(),
+        # add_node(),     add_parent_node(),
+        # remove_node(),  remove_parent_node(),
+        # walk_nodes(),   walk_parent_nodes(),
+        # get_node(),     get_parent_node(),
+        # has_nodes,      has_parent_nodes,
+        # is_leaf_node,   is_root_node
 
         c1 = MyNode("nodeA", 1)
         c2 = c1.add_node("nodeB", 2)
@@ -1029,6 +1030,22 @@ def unique_tree(**kwargs):
         def get_index(self):
             pass
 
+        # has children property
+        @patch("has_" + plural, prop=True)
+        def has_index(self):
+            """
+            Returns *True* when this {singular} has child {plural}, *False* otherwise.
+            """
+            return len(getattr(self, plural)) > 0
+
+        # is leaf property
+        @patch("is_leaf_" + singular, prop=True)
+        def is_leaf(self):
+            """
+            Returns *True* when this {singular} has no child {plural}, *False* otherwise.
+            """
+            return len(getattr(self, plural)) == 0
+
         if not deep_children:
 
             # has child method
@@ -1044,7 +1061,7 @@ def unique_tree(**kwargs):
             # get child method
             @patch("get_" + singular)
             def get(self, obj, default=_no_default, context=None):
-                """ get(obj, default=no_default, context=None)
+                """ get_{singular}(obj, default=no_default, context=None)
                 Returns a child {singular} given by *obj*, which might be a *name*, *id*, or an
                 instance from the :py:attr:`{plural}` index for *context*. When no {singular} is
                 found, *default* is returned when set. Otherwise, an error is raised. When *context*
@@ -1069,7 +1086,7 @@ def unique_tree(**kwargs):
             # get child method
             @patch("get_" + singular)
             def get(self, obj, deep=True, default=_no_default, context=None):
-                """ get(obj, deep=True, default=no_default, context=None)
+                """ get_{singular}(obj, deep=True, default=no_default, context=None)
                 Returns a child {singular} given by *obj*, which might be a *name*, *id*, or an
                 instance from the :py:attr:`{plural}` index for *context*. If *deep* is *True*, the
                 lookup is recursive. When no {singular} is found, *default* is returned when set.
@@ -1108,16 +1125,6 @@ def unique_tree(**kwargs):
                     yield (obj, depth, objs)
 
                     lookup.extend((obj, depth + 1) for obj in objs)
-
-            if unique_cls == cls:
-
-                # is leaf method
-                @patch("is_leaf_" + singular, prop=True)
-                def is_leaf(self):
-                    """
-                    Returns *True* when this {singular} has no child {plural}, *False* otherwise.
-                    """
-                    return len(getattr(self, plural)) == 0
 
         #
         # child methods, disabled parents
@@ -1218,6 +1225,22 @@ def unique_tree(**kwargs):
             def get_index(self):
                 pass
 
+            # has parent index property
+            @patch("has_parent_" + plural, prop=True)
+            def has_parent_index(self):
+                """
+                Returns *True* when this {singular} has parent {plural}, *False* otherwise.
+                """
+                return len(getattr(self, "parent_" + plural)) > 0
+
+            # is_root property
+            @patch("is_root_" + singular, prop=True)
+            def is_root(self):
+                """
+                Returns *True* when this {singular} has no parent {plural}, *False* otherwise.
+                """
+                return len(getattr(self, "parent_" + plural)) == 0
+
             # remove parent method
             @patch("remove_parent_" + singular)  # noqa: F811
             def remove(self, obj, context=None, silent=False):
@@ -1248,7 +1271,7 @@ def unique_tree(**kwargs):
                 # get child method
                 @patch("get_parent_" + singular)  # noqa: F811
                 def get(self, obj, default=_no_default, context=None):
-                    """ get(obj, default=no_default, context=None)
+                    """ get_parent_{singular}(obj, default=no_default, context=None)
                     Returns a parent {singular} given by *obj*, which might be a *name*, *id*, or an
                     instance from the :py:attr:`parent_{plural}` index for *context*. When no
                     {singular} is found, *default* is returned when set. Otherwise, an error is
@@ -1275,7 +1298,7 @@ def unique_tree(**kwargs):
                 # get parent method
                 @patch("get_parent_" + singular)
                 def get(self, obj, deep=True, default=_no_default, context=None):
-                    """ get(obj, deep=True, default=no_default, context=None)
+                    """ get_parent_{singular}(obj, deep=True, default=no_default, context=None)
                     Returns a parent {singular} given by *obj*, which might be a *name*, *id*, or an
                     instance from the :py:attr:`parent_{plural}` index for *context*. If *deep* is
                     *True*, the lookup is recursive. When no {singular} is found, *default* is
@@ -1315,17 +1338,6 @@ def unique_tree(**kwargs):
                         yield (obj, depth, objs)
 
                         lookup.extend((obj, depth + 1) for obj in objs)
-
-                if unique_cls == cls:
-
-                    # is_root method
-                    @patch("is_root_" + singular, prop=True)
-                    def is_root(self):
-                        """
-                        Returns *True* when this {singular} has no parent {plural}, *False*
-                        otherwise.
-                        """
-                        return len(getattr(self, "parent_" + plural)) == 0
 
         #
         # parent methods, unlimited number
@@ -1371,8 +1383,7 @@ def unique_tree(**kwargs):
                 if not isinstance(parents, bool) and parents == 1:
 
                     # direct parent access
-                    @patch(name="parent_" + singular)
-                    @property
+                    @patch(name="parent_" + singular, prop=True)
                     def parent(self):
                         index = getattr(self, "parent_" + plural)
                         return None if len(index) != 1 else list(index.values(context=index.ALL))[0]

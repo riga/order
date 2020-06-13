@@ -392,7 +392,7 @@ class UniqueObjectIndex(CopyMixin):
         return results
 
     def get(self, obj, default=_no_default, context=None, return_context=False):
-        """ get(obj, [default], [context])
+        """ get(obj, default=no_default, context=None)
         Returns an object that is stored in the index for *context*. *obj* might be a *name*, *id*,
         or an instance of *cls*. If *default* is given, it is used as the default return value if no
         such object could be found. Otherwise, an error is raised. When *context* is *None*, the
@@ -430,7 +430,7 @@ class UniqueObjectIndex(CopyMixin):
                 obj, self, "ALL" if context == self.ALL else context))
 
     def get_first(self, default=_no_default, context=None):
-        """ get_first([default], [context])
+        """ get_first(default=no_default, context=None)
         Returns the first object that is stored in the index for *context*. If *default* is given,
         it is used as the default return value if no object could be found. Otherwise, an error is
         raised. When *context* is *None*, the *default_context* is used.
@@ -445,7 +445,7 @@ class UniqueObjectIndex(CopyMixin):
             raise ValueError("index '{}' does not contain any object".format(context))
 
     def get_last(self, default=_no_default, context=None):
-        """ get_last([default], [context])
+        """ get_last(default=no_default, context=None)
         Returns the last object that is stored in the index for *context*. If *default* is given,
         it is used as the default return value if no object could be found. Otherwise, an error is
         raised. When *context* is *None*, the *default_context* is used.
@@ -639,7 +639,7 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
 
     @classmethod
     def get_instance(cls, obj, default=_no_default, context=None):
-        """ get_instance(obj, [default], context=None)
+        """ get_instance(obj, default=no_default, context=None)
         Returns an object that was instantiated by this class before. *obj* might be a *name*, *id*,
         or an instance of *cls*. If *default* is given, it is used as the default return value if no
         such object was found. Otherwise, an error is raised. *context* defaults to the
@@ -1044,7 +1044,7 @@ def unique_tree(**kwargs):
             # get child method
             @patch("get_" + singular)
             def get(self, obj, default=_no_default, context=None):
-                """
+                """ get(obj, default=no_default, context=None)
                 Returns a child {singular} given by *obj*, which might be a *name*, *id*, or an
                 instance from the :py:attr:`{plural}` index for *context*. When no {singular} is
                 found, *default* is returned when set. Otherwise, an error is raised. When *context*
@@ -1068,8 +1068,8 @@ def unique_tree(**kwargs):
 
             # get child method
             @patch("get_" + singular)
-            def get(self, obj, default=_no_default, deep=True, context=None):
-                """
+            def get(self, obj, deep=True, default=_no_default, context=None):
+                """ get(obj, deep=True, default=no_default, context=None)
                 Returns a child {singular} given by *obj*, which might be a *name*, *id*, or an
                 instance from the :py:attr:`{plural}` index for *context*. If *deep* is *True*, the
                 lookup is recursive. When no {singular} is found, *default* is returned when set.
@@ -1248,7 +1248,7 @@ def unique_tree(**kwargs):
                 # get child method
                 @patch("get_parent_" + singular)  # noqa: F811
                 def get(self, obj, default=_no_default, context=None):
-                    """
+                    """ get(obj, default=no_default, context=None)
                     Returns a parent {singular} given by *obj*, which might be a *name*, *id*, or an
                     instance from the :py:attr:`parent_{plural}` index for *context*. When no
                     {singular} is found, *default* is returned when set. Otherwise, an error is
@@ -1274,8 +1274,8 @@ def unique_tree(**kwargs):
 
                 # get parent method
                 @patch("get_parent_" + singular)
-                def get(self, obj, default=_no_default, deep=True, context=None):
-                    """
+                def get(self, obj, deep=True, default=_no_default, context=None):
+                    """ get(obj, deep=True, default=no_default, context=None)
                     Returns a parent {singular} given by *obj*, which might be a *name*, *id*, or an
                     instance from the :py:attr:`parent_{plural}` index for *context*. If *deep* is
                     *True*, the lookup is recursive. When no {singular} is found, *default* is

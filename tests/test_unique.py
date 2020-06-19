@@ -12,6 +12,11 @@ from order import (
 )
 
 
+# dynamically created classes can't be pickeled
+class C2(UniqueObject):
+    pass
+
+
 class UniqueObjectTest(unittest.TestCase):
 
     def make_class(self):
@@ -37,16 +42,21 @@ class UniqueObjectTest(unittest.TestCase):
         with self.assertRaises(DuplicateIdException):
             C("bar", 1)
 
-    def test_destructor(self):
-        C = self.make_class()
+    def test_vanish(self):
+        try:
+            import cloudpickle as cp
+        except ImportError as e:
+            raise unittest.SkipTest(e)
+        import gc
 
-        foo = C("foo", 1)
+        x = C2("foo", 222)
 
-        with self.assertRaises(DuplicateNameException):
-            C("foo", 2)
+        y = cp.loads(cp.dumps(x))
+        self.assertEqual(y, C2.get_instance("foo"))
+        del y
+        gc.collect()
 
-        foo._remove()
-        C("foo", 2)
+        self.assertEqual(x, C2.get_instance("foo"))
 
     def test_get_instance(self):
         C = self.make_class()
@@ -95,9 +105,6 @@ class UniqueObjectTest(unittest.TestCase):
         self.assertEqual(C.get_instance("foo"), foo)
         self.assertEqual(C.get_instance(1), foo)
         self.assertEqual(C.get_instance(foo), foo)
-
-        foo._remove()
-        self.assertIsNone(C.get_instance("foo", default=None))
 
     def test_auto_id(self):
         C = self.make_class()

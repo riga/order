@@ -41,7 +41,7 @@ class Analysis(UniqueObject, AuxDataMixin):
 
         # set initial configs
         if configs is not None:
-            self.configs.extend(configs)
+            self.extend_configs(configs)
 
     def get_channels(self, config):
         """

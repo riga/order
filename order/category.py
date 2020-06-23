@@ -152,7 +152,7 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
 
         # set initial child categories
         if categories is not None:
-            self.categories.extend(categories)
+            self.extend_categories(categories)
 
     @property
     def channel(self):
@@ -267,7 +267,7 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
 
         # set initial categories
         if categories is not None:
-            self.categories.extend(categories)
+            self.extend_categories(categories)
 
     def add_category(self, *args, **kwargs):
         """

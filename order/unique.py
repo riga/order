@@ -519,17 +519,15 @@ class UniqueObjectIndex(CopyMixin):
 
     def clear(self, context=None):
         """
-        Clears the index for *context* by removing all elements. When *None*, the
-        *default_context* is used. When *context* is *all*, the indices for all contexts are
-        cleared.
+        Clears the index for *context* by removing all elements. When *None*, the *default_context*
+        is used. When *context* is *all*, the indices for all contexts are cleared.
         """
         if context != self.ALL:
-            self._indices[context or self.default_context]["names"].clear()
-            self._indices[context or self.default_context]["ids"].clear()
+            for name in self.names(context=context):
+                self.remove(name, context=context)
         else:
-            for index in six.itervalues(self._indices):
-                index["names"].clear()
-                index["ids"].clear()
+            for name, context_ in self.names(context=self.ALL):
+                self.remove(name, context=context_)
 
 
 class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
@@ -981,15 +979,16 @@ def unique_tree(**kwargs):
 
     Doc strings are automatically created.
     """
-    def decorator(unique_cls):
-        if not issubclass(unique_cls, UniqueObject):
-            raise TypeError("decorated class must inherit from UniqueObject: {}".format(unique_cls))
+    def decorator(decorated_cls):
+        if not issubclass(decorated_cls, UniqueObject):
+            raise TypeError("decorated class must inherit from UniqueObject: {}".format(
+                decorated_cls))
 
         # determine configuration defaults
-        cls = kwargs.get("cls", unique_cls)
+        cls = kwargs.get("cls", decorated_cls)
         singular = kwargs.get("singular", cls.__name__).lower()
         plural = kwargs.get("plural", singular + "s").lower()
-        parents = kwargs.get("parents", True)
+        parents = kwargs.get("parents", 1)
         deep_children = kwargs.get("deep_children", False)
         deep_parents = kwargs.get("deep_parents", False)
         skip = make_list(kwargs.get("skip", None) or [])
@@ -999,6 +998,11 @@ def unique_tree(**kwargs):
             parents = bool(parents)
         if isinstance(parents, bool):
             parents = int(parents)
+
+        # parents are logically possible only when the decorated and tree class are identical
+        if parents and decorated_cls != cls:
+            raise TypeError("when parents are enabled, decorated class and tree class must be "
+                "identical, found {} and {}".format(decorated_cls, cls))
 
         # decorator for registering new instance methods with proper name and doc string
         # functionality is almost similar to functools.wraps, except for the customized function
@@ -1016,24 +1020,24 @@ def unique_tree(**kwargs):
                 if prop:
                     f = property(f)
                 # only patch when there is not attribute with that name
-                if not hasattr(unique_cls, _name) and _name not in skip:
-                    setattr(unique_cls, _name, f)
+                if not hasattr(decorated_cls, _name) and _name not in skip:
+                    setattr(decorated_cls, _name, f)
                 return f
             return decorator
 
         # patch the init method
-        orig_init = unique_cls.__init__
+        orig_init = decorated_cls.__init__
         def __init__(self, *args, **kwargs):
             # register the child and parent indexes
             setattr(self, "_" + plural, UniqueObjectIndex(cls=cls))
             if parents:
                 setattr(self, "_parent_" + plural, UniqueObjectIndex(cls=cls))
             orig_init(self, *args, **kwargs)
-        unique_cls.__init__ = __init__
+        decorated_cls.__init__ = __init__
 
         # add attribute docs
-        if unique_cls.__doc__:
-            unique_cls.__doc__ += """
+        if decorated_cls.__doc__:
+            decorated_cls.__doc__ += """
     .. py:attribute:: {plural}
        type: UniqueObjectIndex
        read-only
@@ -1042,13 +1046,41 @@ def unique_tree(**kwargs):
     """.format(plural=plural)
 
             if parents:
-                unique_cls.__doc__ += """
+                decorated_cls.__doc__ += """
     .. py:attribute:: parent_{plural}
        type: UniqueObjectIndex
        read-only
 
        The :py:class:`~order.unique.UniqueObjectIndex` of parent {plural}.
     """.format(plural=plural)
+
+        #
+        # helpers for child and parent methods
+        #
+
+        # extend helper
+        def _extend(self, add_fn, index, objs, context=None):
+            results = []
+            for obj in objs:
+                if isinstance(obj, dict):
+                    obj = dict(obj)
+                    obj.setdefault("context", context)
+                    obj = add_fn(**obj)
+                elif isinstance(obj, tuple):
+                    obj = add_fn(*obj, context=context)
+                else:
+                    obj = add_fn(obj, context=context)
+                results.append(obj)
+            return results
+
+        # clear helper
+        def _clear(self, remove_fn, index, context=None):
+            if context != index.ALL:
+                for name in index.names(context=context):
+                    remove_fn(name, context=context)
+            else:
+                for name, context_ in index.names(context=index.ALL):
+                    remove_fn(name, context=context_)
 
         #
         # child methods, independent of parents
@@ -1099,7 +1131,7 @@ def unique_tree(**kwargs):
                 """
                 return getattr(self, plural).get(obj, default=default, context=context)
 
-        else:
+        else:  # deep_children
 
             # has child method
             @patch("has_" + singular)
@@ -1177,9 +1209,21 @@ def unique_tree(**kwargs):
             @patch("add_" + singular)
             def add(self, *args, **kwargs):
                 """
-                Adds a child {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
+                Adds a child {singular} to the :py:attr:`{plural}` index and returns it. See
+                :py:meth:`UniqueObjectIndex.add` for more info.
                 """
                 return getattr(self, plural).add(*args, **kwargs)
+
+            # extend children
+            @patch("extend_" + plural)
+            def extend(self, objs, context=None):
+                """
+                Adds multiple child {plural} to the :py:attr:`{plural}` index for *context* and
+                returns the added objects in a list. When *context* is *None*, the *default_context*
+                of the :py:attr:`{plural}` index is used.
+                """
+                _extend(self, getattr(self, "add_" + singular), getattr(self, plural), objs,
+                    context=context)
 
             # remove child method
             @patch("remove_" + singular)
@@ -1193,13 +1237,23 @@ def unique_tree(**kwargs):
                 """
                 return getattr(self, plural).remove(obj, context=context, silent=silent)
 
+            # clear children
+            @patch("clear_" + plural)
+            def clear(self, context=None):
+                """
+                Removes all child {plural} from the :py:attr:`{plural}` index for *context*. When
+                *context* is *None*, the *default_context* of the :py:attr:`{plural}` index is used.
+                """
+                _clear(self, getattr(self, "remove_" + singular), getattr(self, plural),
+                    context=context)
+
         #
         # child methods, enabled parents
         #
 
-        else:
+        else:  # parents != 0
 
-            # remove child method with limited number of parents
+            # remove child method
             @patch("remove_" + singular)
             def remove(self, obj, context=None, silent=False):
                 """
@@ -1216,45 +1270,85 @@ def unique_tree(**kwargs):
                         silent=silent)
                 return obj
 
-        #
-        # child methods, enabled and unlimited parents
-        #
-
-            if isinstance(parents, six.integer_types):
-
-                # add child method with infinite number of parents
-                @patch("add_" + singular)
-                def add(self, *args, **kwargs):
-                    """
-                    Adds a child {singular}. Also adds *this* {singular} to the parent index of the
-                    added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
-                    """
-                    obj = getattr(self, plural).add(*args, **kwargs)
-                    getattr(obj, "parent_" + plural).add(self)
-                    return obj
+            # clear children
+            @patch("clear_" + plural)
+            def clear(self, context=None):
+                """
+                Removes all child {plural} from the :py:attr:`{plural}` index for *context*. Also
+                removes *this* {singular} instance from the :py:attr:`parent_{plural}` index of all
+                removed {plural}. When *context* is *None*, the *default_context* of the
+                :py:attr:`{plural}` index is used
+                """
+                _clear(self, getattr(self, "remove_" + singular), getattr(self, plural),
+                    context=context)
 
         #
-        # child methods, enabled but limited parents
+        # child methods, enabled but limited number of parents
         #
 
-            else:
+            if parents >= 1:
 
                 # add child method with limited number of parents
                 @patch("add_" + singular)
                 def add(self, *args, **kwargs):
                     """
-                    Adds a child {singular}. Also adds *this* {singular} to the parent index of the
-                    added {singular}. An exception is raised when the number of allowed parents is
-                    exceeded. See :py:meth:`UniqueObjectIndex.add` for more info.
+                    Adds a child {singular} to the :py:attr:`{plural}` index and returns it. Also
+                    adds *this* {singular} to the :py:attr:`parent_{plural}` index of the added
+                    {singular}. An exception is raised when the number of allowed parents of a child
+                    {singular} is exceeded. See :py:meth:`UniqueObjectIndex.add` for more info.
                     """
                     index = getattr(self, plural)
                     obj = index.add(*args, **kwargs)
                     parent_index = getattr(obj, "parent_" + plural)
-                    if parents > 0 and len(parent_index) >= parents:
+                    if len(parent_index) >= parents:
                         index.remove(obj)
                         raise Exception("number of parents exceeded: {}".format(parents))
                     parent_index.add(self)
                     return obj
+
+                # extend children
+                @patch("extend_" + plural)
+                def extend(self, objs, context=None):
+                    """
+                    Adds multiple child {plural} to the :py:attr:`{plural}` index for *context* and
+                    returns the added objects in a list. Also adds *this* {singular} to the
+                    :py:attr:`parent_{plural}` index of the added {singular}. An exception is raised
+                    when the number of allowed parents of a child {singular} is exceeded. When
+                    *context* is *None*, the *default_context* of the :py:attr:`{plural}` index is
+                    used.
+                    """
+                    _extend(self, getattr(self, "add_" + singular), getattr(self, plural),
+                        objs, context=context)
+
+        #
+        # child methods, enabled and unlimited number of parents
+        #
+
+            else:  # parents < 0
+
+                # add child method with infinite number of parents
+                @patch("add_" + singular)
+                def add(self, *args, **kwargs):
+                    """
+                    Adds a child {singular} to the :py:attr:`{plural}` index and returns it. Also
+                    adds *this* {singular} to the :py:attr:`parent_{plural}` index of the added
+                    {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
+                    """
+                    obj = getattr(self, plural).add(*args, **kwargs)
+                    getattr(obj, "parent_" + plural).add(self)
+                    return obj
+
+                # extend children
+                @patch("extend_" + plural)
+                def extend(self, objs, context=None):
+                    """
+                    Adds multiple child {plural} to the :py:attr:`{plural}` index for *context* and
+                    returns the added objects in a list. Also adds *this* {singular} to the
+                    :py:attr:`parent_{plural}` index of the added {singular}. When *context* is
+                    *None*, the *default_context* of the :py:attr:`{plural}` index is used.
+                    """
+                    _extend(self, getattr(self, "add_" + singular), getattr(self, plural),
+                        objs, context=context)
 
         #
         # parent methods, independent of number
@@ -1282,21 +1376,16 @@ def unique_tree(**kwargs):
                 """
                 return len(getattr(self, "parent_" + plural)) == 0
 
-            # remove parent method
-            @patch("remove_parent_" + singular)  # noqa: F811
-            def remove(self, obj, context=None, silent=False):
+            # clear parents
+            @patch("clear_parent_" + plural)  # noqa: F811
+            def clear(self, context=None):
                 """
-                Removes a parent {singular} *obj* which might be a *name*, *id*, or an instance from
-                the :py:attr:`parent_{plural}` index for *context*. Also removes *this* instance
-                from the child index of the removed {singular}. Returns the removed object. When
-                *context* is *None*, the *default_context* of the :py:attr:`parent_{plural}` index
-                is used. Unless *silent* is *True*, an error is raised if the object was not found.
-                See :py:meth:`UniqueObjectIndex.remove` for more info.
+                Removes all parent {plural} from the :py:attr:`parent_{plural}` index for
+                *context*. Also removes *this* {singular} instance from the :py:attr:`{plural}`
+                index of all removed {singular}.
                 """
-                obj = getattr(self, "parent_" + plural).remove(obj, context=context, silent=silent)
-                if obj is not None:
-                    getattr(obj, plural).remove(self, context=obj.context, silent=silent)
-                return obj
+                _clear(self, getattr(self, "remove_parent_" + singular),
+                    getattr(self, "parent_" + plural), context=context)
 
             if not deep_parents:
 
@@ -1322,7 +1411,7 @@ def unique_tree(**kwargs):
                     return getattr(self, "parent_" + plural).get(obj, default=default,
                         context=context)
 
-            else:
+            else:  # deep_parents
 
                 # has child method
                 @patch("has_parent_" + singular)
@@ -1393,57 +1482,134 @@ def unique_tree(**kwargs):
                     return [obj for obj, _, objs in walker if not objs]
 
         #
-        # parent methods, unlimited number
+        # parent methods, exactly 1 parent
         #
 
-            if not isinstance(parents, six.integer_types):
+            if parents == 1:
 
-                # add parent method with inf number of parents
-                @patch("add_parent_" + singular)  # noqa: F811
-                def add(self, *args, **kwargs):
+                # direct parent access
+                @patch(name="parent_" + singular, prop=True)
+                def parent(self):
+                    index = getattr(self, "parent_" + plural)
+                    if len(index) != 1:
+                        return None
+                    else:
+                        return list(index.values(context=index.ALL))[0][0]
+
+                # remove parent method
+                @patch("remove_parent_" + singular)  # noqa: F811
+                def remove(self, obj=None, context=None, silent=False):
                     """
-                    Adds a parent {singular}. Also adds *this* {singular} to the child index of the
-                    added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
+                    Removes the parent {singular} *obj* the :py:attr:`parent_{plural}` index for
+                    *context*. When *obj* is not *None*, it can be a *name*, *id*, or an instance
+                    referring to the parent {singular} for validation purposes. Also removes *this*
+                    instance from the :py:attr:`{plural}` index of the removed parent {singular}.
+                    Returns the removed object. When *context* is *None*, the *default_context* of
+                    the :py:attr:`parent_{plural}` index is used. Unless *silent* is *True*, an
+                    error is raised if the object was not found. See
+                    :py:meth:`UniqueObjectIndex.remove` for more info.
                     """
-                    obj = getattr(self, "parent_" + plural).add(*args, **kwargs)
-                    getattr(obj, plural).add(self)
+                    if obj is None:
+                        obj = getattr(self, "parent_" + singular)
+                    obj = getattr(self, "parent_" + plural).remove(obj, context=context,
+                        silent=silent)
+                    if obj is not None:
+                        getattr(obj, plural).remove(self, context=obj.context, silent=silent)
+                    return obj
+
+        #
+        # parent methods, more than 1 parent
+        #
+
+            else:  # parents != 1
+
+                # remove parent method
+                @patch("remove_parent_" + singular)  # noqa: F811
+                def remove(self, obj, context=None, silent=False):
+                    """
+                    Removes a parent {singular} *obj* which might be a *name*, *id*, or an instance
+                    from the :py:attr:`parent_{plural}` index for *context*. Also removes *this*
+                    instance from the :py:attr:`{plural}` index of the removed parent {singular}.
+                    Returns the removed object. When *context* is *None*, the *default_context* of
+                    the :py:attr:`parent_{plural}` index is used. Unless *silent* is *True*, an
+                    error is raised if the object was not found. See
+                    :py:meth:`UniqueObjectIndex.remove` for more info.
+                    """
+                    obj = getattr(self, "parent_" + plural).remove(obj, context=context,
+                        silent=silent)
+                    if obj is not None:
+                        getattr(obj, plural).remove(self, context=obj.context, silent=silent)
                     return obj
 
         #
         # parent methods, limited number
         #
 
-            else:
+            if parents >= 1:
 
-                # add parent method with inf number of parents
-                @patch("add_parent_" + singular)
+                # add parent method with limited number of parents
+                @patch("add_parent_" + singular)  # noqa: F811
                 def add(self, *args, **kwargs):
                     """
-                    Adds a parent {singular}. Also adds *this* {singular} to the child index of the
-                    added {singular}. See :py:meth:`UniqueObjectIndex.add` for more info.
+                    Adds a parent {singular} to the :py:attr:`parent_{plural}` index and returns it.
+                    Also adds *this* {singular} to the :py:attr:`{plural}` index of the added
+                    {singular}. An exception is raised when the number of allowed parents is
+                    exceeded. When *context* is *None*, the *default_context* of the
+                    :py:attr:`{plural}` index is used. See :py:meth:`UniqueObjectIndex.add` for more
+                    info.
                     """
                     parent_index = getattr(self, "parent_" + plural)
-                    if parents > 0 and len(parent_index) >= parents:
+                    if len(parent_index) >= parents:
                         raise Exception("number of parents exceeded: {}".format(parents))
                     obj = parent_index.add(*args, **kwargs)
                     getattr(obj, plural).add(self)
                     return obj
 
+                # extend parents
+                @patch("extend_parent_" + plural)  # noqa: F811
+                def extend(self, objs, context=None):
+                    """
+                    Adds multiple parent {plural} to the :py:attr:`parent_{plural}` index for
+                    *context* and returns the added objects in a list. Also adds *this* {singular}
+                    to the :py:attr:`{plural}` index of the added {singular}. An exception is raised
+                    when the number of allowed parent {plural} is exceeded. When *context* is
+                    *None*, the *default_context* of the :py:attr:`{plural}` index is used.
+                    """
+                    _extend(self, getattr(self, "add_parent_" + singular),
+                        getattr(self, "parent_" + plural), objs, context=context)
+
         #
-        # convenient parent methods, exactly 1 parent
+        # parent methods, limited number
         #
 
-                if parents == 1:
+            else:  # parents < 0
 
-                    # direct parent access
-                    @patch(name="parent_" + singular, prop=True)
-                    def parent(self):
-                        index = getattr(self, "parent_" + plural)
-                        if len(index) != 1:
-                            return None
-                        else:
-                            return list(index.values(context=index.ALL))[0][0]
+                # add parent method with unlimited number of parents
+                @patch("add_parent_" + singular)
+                def add(self, *args, **kwargs):
+                    """
+                    Adds a parent {singular} to the :py:attr:`parent_{plural}` index and returns it.
+                    Also adds *this* {singular} to the :py:attr:`{plural}` index of the added
+                    {singular}. When *context* is *None*, the *default_context* of the
+                    :py:attr:`{plural}` index is used. See :py:meth:`UniqueObjectIndex.add` for more
+                    info.
+                    """
+                    obj = getattr(self, "parent_" + plural).add(*args, **kwargs)
+                    getattr(obj, plural).add(self)
+                    return obj
 
-        return unique_cls
+                # extend parents
+                @patch("extend_parent_" + plural)  # noqa: F811
+                def extend(self, objs, context=None):
+                    """
+                    Adds multiple parent {plural} to the :py:attr:`parent_{plural}` index for
+                    *context* and returns the added objects in a list. Also adds *this* {singular}
+                    to the :py:attr:`{plural}` index of the added {singular}. When *context* is
+                    *None*, the *default_context* of the :py:attr:`{plural}` index is used.
+                    """
+                    _extend(self, getattr(self, "add_parent_" + singular),
+                        getattr(self, "parent_" + plural), objs, context=context)
+
+        return decorated_cls
 
     return decorator

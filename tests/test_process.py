@@ -57,3 +57,13 @@ class ProcessTest(unittest.TestCase):
         self.assertEqual(p2.get_xsec(13), 5)
         self.assertEqual(p2.color, p.color)
         self.assertEqual(list(p2.aux.keys())[0], 3)
+
+    def test_parent_processes(self):
+        c = Process("child", 10)
+
+        p1 = Process("parent1", 11)
+        p1.add_process(c)
+        self.assertIn(p1, c.parent_processes)
+
+        p2 = Process("parent2", 12, processes=[c])
+        self.assertIn(p2, c.parent_processes)

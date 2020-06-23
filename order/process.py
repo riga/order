@@ -105,7 +105,7 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
 
         # set initial child processes
         if processes is not None:
-            self.processes.extend(processes)
+            self.extend_processes(processes)
 
     @typed
     def xsecs(self, xsecs):

@@ -87,7 +87,7 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin):
             self.bx = bx
 
         if datasets is not None:
-            self.datasets.extend(datasets)
+            self.extend_datasets(datasets)
 
     @typed
     def ecm(self, ecm):
@@ -244,22 +244,22 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin):
             self.analysis = analysis
 
         if datasets is not None:
-            self.datasets.extend(datasets)
+            self.extend_datasets(datasets)
 
         if processes is not None:
-            self.processes.extend(processes)
+            self.extend_processes(processes)
 
         if channels is not None:
-            self.channels.extend(channels)
+            self.extend_channels(channels)
 
         if categories is not None:
-            self.categories.extend(categories)
+            self.extend_categories(categories)
 
         if variables is not None:
-            self.variables.extend(variables)
+            self.extend_variables(variables)
 
         if shifts is not None:
-            self.shifts.extend(shifts)
+            self.extend_shifts(shifts)
 
     @typed
     def campaign(self, campaign):

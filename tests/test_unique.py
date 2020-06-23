@@ -362,41 +362,51 @@ class UniqueTreeTest(unittest.TestCase):
         return Node
 
     def test_constructor(self):
-        common_attrs = ["%snodes", "has_%snode", "add_%snode", "remove_%snode", "get_%snode"]
+        common_attrs = [
+            "%snodes", "has_%snode", "add_%snode", "extend_%snodes", "remove_%snode",
+            "clear_%snodes", "get_%snode",
+        ]
         deep_common_attrs = ["walk_%snodes"]
         child_attrs = ["has_nodes", "is_leaf_node"]
         parent_attrs = ["has_parent_nodes", "is_root_node"]
         conv_attrs = ["parent_nodes"]
 
         Node = self.make_class()
-        self.assertTrue(all(hasattr(Node, attr % "") for attr in common_attrs))
-        self.assertTrue(all(hasattr(Node, attr % "parent_") for attr in common_attrs))
-        self.assertTrue(all(hasattr(Node, attr) for attr in child_attrs))
-        self.assertTrue(all(hasattr(Node, attr) for attr in parent_attrs))
+        for attr in common_attrs:
+            self.assertIsNotNone(getattr(Node, attr % "", None))
+            self.assertIsNotNone(getattr(Node, attr % "parent_", None))
+        for attr in child_attrs + parent_attrs:
+            self.assertIsNotNone(getattr(Node, attr, None))
 
         Node = self.make_class(deep_children=True, deep_parents=True)
-        self.assertTrue(all(hasattr(Node, attr % "") for attr in common_attrs + deep_common_attrs))
-        self.assertTrue(all(hasattr(Node, attr % "parent_") for attr in common_attrs + deep_common_attrs))
-        self.assertTrue(all(hasattr(Node, attr) for attr in child_attrs))
-        self.assertTrue(all(hasattr(Node, attr) for attr in parent_attrs))
+        for attr in common_attrs + deep_common_attrs:
+            self.assertIsNotNone(getattr(Node, attr % "", None))
+            self.assertIsNotNone(getattr(Node, attr % "parent_", None))
+        for attr in child_attrs + parent_attrs:
+            self.assertIsNotNone(getattr(Node, attr, None))
 
         Node = self.make_class(parents=False)
-        self.assertTrue(all(hasattr(Node, attr % "") for attr in common_attrs))
-        self.assertTrue(all(not hasattr(Node, attr % "parent_") for attr in common_attrs))
+        for attr in common_attrs:
+            self.assertIsNotNone(getattr(Node, attr % "", None))
+            self.assertIsNone(getattr(Node, attr % "parent_", None))
 
         Node = self.make_class(parents=1)
-        self.assertTrue(all(hasattr(Node, attr % "") for attr in common_attrs))
-        self.assertTrue(all(hasattr(Node, attr) for attr in conv_attrs))
+        for attr in common_attrs:
+            self.assertIsNotNone(getattr(Node, attr % "", None))
+        for attr in conv_attrs:
+            self.assertIsNotNone(getattr(Node, attr, None))
 
         Node = self.make_class(singular="foo")
         common_attrs2 = [attr.replace("node", "foo") for attr in common_attrs]
-        self.assertTrue(all(hasattr(Node, attr % "") for attr in common_attrs2))
-        self.assertTrue(all(hasattr(Node, attr % "parent_") for attr in common_attrs2))
+        for attr in common_attrs2:
+            self.assertIsNotNone(getattr(Node, attr % "", None))
+            self.assertIsNotNone(getattr(Node, attr % "parent_", None))
 
         Node = self.make_class(plural="foo")
         common_attrs3 = [attr.replace("nodes", "foo") for attr in common_attrs]
-        self.assertTrue(all(hasattr(Node, attr % "") for attr in common_attrs3))
-        self.assertTrue(all(hasattr(Node, attr % "parent_") for attr in common_attrs3))
+        for attr in common_attrs3:
+            self.assertIsNotNone(getattr(Node, attr % "", None))
+            self.assertIsNotNone(getattr(Node, attr % "parent_", None))
 
     def test_tree_methods(self):
         Node = self.make_class(deep_children=True, deep_parents=True, parents=-1)
@@ -455,6 +465,23 @@ class UniqueTreeTest(unittest.TestCase):
         n1.remove_node(2)
         self.assertEqual(len(n1.nodes), 0)
         self.assertEqual(len(n2.parent_nodes), 0)
+
+        n2.clear_nodes()
+        self.assertEqual(len(n2.nodes), 0)
+        self.assertEqual(len(n3.parent_nodes), 0)
+
+        self.assertEqual(len(n4.parent_nodes), 1)
+        n4.clear_parent_nodes()
+        self.assertEqual(len(n4.parent_nodes), 0)
+        self.assertEqual(len(n5.nodes), 0)
+
+        n1.extend_nodes([n2])
+        self.assertEqual(len(n1.nodes), 1)
+        self.assertEqual(len(n2.parent_nodes), 1)
+
+        n4.extend_parent_nodes([n2, n5])
+        self.assertEqual(len(n4.parent_nodes), 2)
+        self.assertEqual(len(n5.nodes), 1)
 
     def test_tree_methods_single_parent(self):
         Node = self.make_class(parents=1)

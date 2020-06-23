@@ -13,7 +13,7 @@ from order.mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, Labe
 from order.util import to_root_latex
 
 
-@unique_tree(plural="categories", deep_children=True, deep_parents=True)
+@unique_tree(plural="categories", parents=-1, deep_children=True, deep_parents=True)
 class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin):
     """ __init__(name, id="+", channel=None, categories=None, label=None, label_short=None, selection=None, selection_mode=None, tags=None, aux=None, context=None)
     Class that describes an analysis category. This is not to be confused with an analysis

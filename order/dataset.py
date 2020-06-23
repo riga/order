@@ -332,4 +332,4 @@ class DatasetInfo(CopyMixin, AuxDataMixin):
 
 
 # prevent circular imports
-from .config import Campaign
+from order.config import Campaign

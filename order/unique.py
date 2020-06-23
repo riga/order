@@ -395,20 +395,19 @@ class UniqueObjectIndex(CopyMixin):
     def extend(self, objs, context=None):
         """
         Adds multiple new objects to the index for *context*. All elements of the sequence *objs*
-        are forwarded to :py:meth:`add` and the list of return values is returned. When an object is
-        a dictionary or a tuple, it is expanded for the invocation of :py:meth:`add`. When *context*
+        are forwarded to :py:meth:`add` and returns the added objects in a list. When an object is a
+        dictionary or a tuple, it is expanded for the invocation of :py:meth:`add`. When *context*
         is *None*, the *default_context* is used.
         """
         results = []
 
-        if isinstance(objs, UniqueObjectIndex):
-            objs = objs.values(context=context)
-
         for obj in objs:
             if isinstance(obj, dict):
+                obj = dict(obj)
+                obj.setdefault("context", context)
                 obj = self.add(**obj)
             elif isinstance(obj, tuple):
-                obj = self.add(*obj)
+                obj = self.add(*obj, context=context)
             else:
                 obj = self.add(obj, context=context)
             results.append(obj)
@@ -934,7 +933,7 @@ def uniqueness_context(context):
 
 
 def unique_tree(**kwargs):
-    r""" unique_tree(cls=None, singular=None, plural=None, parents=True, deep_chilren=False, deep_parents=False, skip=None)
+    r""" unique_tree(cls=None, singular=None, plural=None, parents=1, deep_chilren=False, deep_parents=False, skip=None)
     Decorator that adds attributes and methods to the decorated class to provide tree features,
     i.e., *parent-child* relations. Example:
 
@@ -1440,7 +1439,10 @@ def unique_tree(**kwargs):
                     @patch(name="parent_" + singular, prop=True)
                     def parent(self):
                         index = getattr(self, "parent_" + plural)
-                        return None if len(index) != 1 else list(index.values(context=index.ALL))[0]
+                        if len(index) != 1:
+                            return None
+                        else:
+                            return list(index.values(context=index.ALL))[0][0]
 
         return unique_cls
 

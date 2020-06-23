@@ -292,4 +292,4 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin):
 
 
 # prevent circular imports
-from .analysis import Analysis
+from order.analysis import Analysis

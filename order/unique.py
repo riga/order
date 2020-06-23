@@ -292,31 +292,39 @@ class UniqueObjectIndex(CopyMixin):
     def names(self, context=None):
         """
         Returns the names of the contained objects in the index stored for *context*. When *None*,
-        the *default_context* is used. When *context* is *all*, the names of objects in all indices
-        are returned and therefore, they might contain duplicate values.
+        the *default_context* is used. When *context* is *all*, a list of tuples (*name*, *context*)
+        are returned with names from all indices. Note that the returned *context* refers to the one
+        the object is stored in, rather than the uniqueness context of the object itself.
         """
         if context != self.ALL:
             return list(self._indices[context or self.default_context]["names"].keys())
         else:
-            return sum((list(index["names"].keys()) for index in six.itervalues(self._indices)), [])
+            names = []
+            for context, index in six.iteritems(self._indices):
+                names.extend([(name, context) for name in index["names"]])
+            return names
 
     def ids(self, context=None):
         """
         Returns the names of the contained objects in the index stored for *context*. When *None*,
-        the *default_context* is used. When *context* is *all*, the ids of objects in all indices
-        are returned and therefore, they might contain duplicate values.
+        the *default_context* is used. When *context* is *all*, a list of tuples (*id*, *context*)
+        are returned with ids from all indices. Note that the returned *context* refers to the one
+        the object is stored in, rather than the uniqueness context of the object itself.
         """
         if context != self.ALL:
             return list(self._indices[context or self.default_context]["ids"].keys())
         else:
-            return sum((list(index["ids"].keys()) for index in six.itervalues(self._indices)), [])
+            ids = []
+            for context, index in six.iteritems(self._indices):
+                ids.extend([(id, context) for id in index["ids"]])
+            return ids
 
     def keys(self, context=None):
         """
         Returns pairs containing *name* and *id* of the currently contained objects in the index
         stored for *context*. When *None*, the *default_context* is used. When *context* is *all*,
         tuples (*name*, *id*, *context*) are returned with objects from all indices. Note that the
-        returned *context* refers to the one the object is stored in, rather then the uniqueness
+        returned *context* refers to the one the object is stored in, rather than the uniqueness
         context of the object itself.
         """
         if context != self.ALL:
@@ -330,19 +338,35 @@ class UniqueObjectIndex(CopyMixin):
     def values(self, context=None):
         """
         Returns all contained objects in the index stored for *context*. When *None*, the
-        *default_context* is used. When *context* is *all*, the objects of all indices are returned.
+        *default_context* is used. When *context* is *all*, tuples (*value*, *context*) are returned
+        with objects from all indices. Note that the returned *context* refers to the one the object
+        is stored in, rather than the uniqueness context of the object itself.
         """
         if context != self.ALL:
             return list(self._indices[context or self.default_context]["ids"].values())
         else:
-            return sum((list(index["ids"].values()) for index in six.itervalues(self._indices)), [])
+            values = []
+            for context, index in six.iteritems(self._indices):
+                values.extend([(value, context) for value in six.itervalues(index["names"])])
+            return values
 
     def items(self, context=None):
         """
-        Returns a list of pairs containing key and value of the objects in the index stored for
-        *context*. Internally, *context* forwarded to both :py:meth:`keys` and :py:meth:`values`.
+        Returns a list of (nested) tuples ((*name*, *id*), *value*) of all objects in the index
+        stored for *context*. When *context* is *all*, tuples ((*name*, *id*), *value*, *context*)
+        are returned with objects from all indices. Note that the returned *context* refers to the
+        one the object is stored in, rather than the uniqueness context of the object itself.
         """
-        return list(zip(self.keys(context=context), self.values(context=context)))
+        if context != self.ALL:
+            return list(zip(self.keys(context=context), self.values(context=context)))
+        else:
+            items = []
+            for context, index in six.iteritems(self._indices):
+                items.extend([
+                    ((name, id), index["names"][name], context)
+                    for name, id in zip(index["names"], index["ids"])
+                ])
+            return items
 
     def add(self, *args, **kwargs):
         """
@@ -378,7 +402,7 @@ class UniqueObjectIndex(CopyMixin):
         results = []
 
         if isinstance(objs, UniqueObjectIndex):
-            objs = objs.value(context=context)
+            objs = objs.values(context=context)
 
         for obj in objs:
             if isinstance(obj, dict):

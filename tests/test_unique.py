@@ -330,11 +330,12 @@ class UniqueObjectIndexTest(unittest.TestCase):
 
         self.assertEqual(tuple(idx.names()), ("foo", "bar"))
         self.assertEqual(tuple(idx.names(context="other")), ("test",))
-        self.assertEqual(tuple(idx.names(context=idx.ALL)), ("foo", "bar", "test"))
+        self.assertEqual(tuple(idx.names(context=idx.ALL)),
+            (("foo", "c"), ("bar", "c"), ("test", "other")))
 
         self.assertEqual(tuple(idx.ids()), (1, 2))
         self.assertEqual(tuple(idx.ids(context="other")), (3,))
-        self.assertEqual(tuple(idx.ids(context=idx.ALL)), (1, 2, 3))
+        self.assertEqual(tuple(idx.ids(context=idx.ALL)), ((1, "c"), (2, "c"), (3, "other")))
 
         self.assertEqual(tuple(idx.keys()), (("foo", 1), ("bar", 2)))
         self.assertEqual(tuple(idx.keys(context="other")), (("test", 3),))
@@ -343,12 +344,12 @@ class UniqueObjectIndexTest(unittest.TestCase):
 
         self.assertEqual(tuple(idx.values()), (1, 2))
         self.assertEqual(tuple(idx.values(context="other")), (3,))
-        self.assertEqual(tuple(idx.values(context=idx.ALL)), (1, 2, 3))
+        self.assertEqual(tuple(idx.values(context=idx.ALL)), ((1, "c"), (2, "c"), (3, "other")))
 
         self.assertEqual(tuple(idx.items()), ((("foo", 1), 1), (("bar", 2), 2)))
         self.assertEqual(tuple(idx.items(context="other")), ((("test", 3), 3),))
         self.assertEqual(tuple(idx.items(context=idx.ALL)),
-            ((("foo", 1, "c"), 1), (("bar", 2, "c"), 2), (("test", 3, "other"), 3)))
+            ((("foo", 1), 1, "c"), (("bar", 2), 2, "c"), (("test", 3), 3, "other")))
 
 
 class UniqueTreeTest(unittest.TestCase):

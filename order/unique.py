@@ -714,13 +714,6 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
         # add the instance to the cache
         self._instances.add(self, context=self._context)
 
-    def __del__(self):
-        # remove from the instance cache
-        try:
-            self._remove()
-        except:
-            pass
-
     def _repr_parts(self):
         return [
             ("name", self.name),
@@ -871,10 +864,7 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
 
     def _remove(self):
         """
-        Removes this instance from the instance cache if this class. This happens automatically in
-        the destructor, so in most cases one might not want to call this method manually. However,
-        the destructor is triggered when the reference count becomes 0, and not necessarily when
-        *del* is invoked.
+        Explicitly removes this instance from the instance cache of this class.
         """
         self._instances.remove(self)
 

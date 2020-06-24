@@ -841,6 +841,12 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
 
         return int(id)
 
+    def _remove(self):
+        """
+        Explicitly removes this instance from the instance cache of this class.
+        """
+        self._instances.remove(self)
+
     def _copy_ref(self, kwargs, cls, specs):
         """
         This method implements the :py:meth:`CopyMixing._copy_ref` in case an inheriting class also

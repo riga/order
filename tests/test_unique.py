@@ -5,6 +5,7 @@ __all__ = ["UniqueObjectTest", "UniqueObjectIndexTest", "UniqueTreeTest"]
 
 
 import unittest
+from test.support import import_module
 
 from order import (
     UniqueObject, UniqueObjectIndex, uniqueness_context, unique_tree, DuplicateNameException,
@@ -42,11 +43,19 @@ class UniqueObjectTest(unittest.TestCase):
         with self.assertRaises(DuplicateIdException):
             C("bar", 1)
 
+    def test_uncache(self):
+        C = self.make_class()
+
+        foo = C("foo", 1)
+
+        with self.assertRaises(DuplicateNameException):
+            C("foo", 2)
+
+        foo._remove()
+        C("foo", 2)
+
     def test_vanish(self):
-        try:
-            import cloudpickle as cp
-        except ImportError as e:
-            raise unittest.SkipTest(e)
+        cp = import_module("cloudpickle")
         import gc
 
         x = C2("foo", 222)
@@ -105,6 +114,9 @@ class UniqueObjectTest(unittest.TestCase):
         self.assertEqual(C.get_instance("foo"), foo)
         self.assertEqual(C.get_instance(1), foo)
         self.assertEqual(C.get_instance(foo), foo)
+
+        foo._remove()
+        self.assertIsNone(C.get_instance("foo", default=None))
 
     def test_auto_id(self):
         C = self.make_class()

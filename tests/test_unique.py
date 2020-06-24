@@ -5,7 +5,6 @@ __all__ = ["UniqueObjectTest", "UniqueObjectIndexTest", "UniqueTreeTest"]
 
 
 import unittest
-from test.support import import_module
 
 from order import (
     UniqueObject, UniqueObjectIndex, uniqueness_context, unique_tree, DuplicateNameException,
@@ -55,7 +54,10 @@ class UniqueObjectTest(unittest.TestCase):
         C("foo", 2)
 
     def test_vanish(self):
-        cp = import_module("cloudpickle")
+        try:
+            import cloudpickle as cp
+        except ImportError as e:
+            raise unittest.SkipTest(e)
         import gc
 
         x = C2("foo", 222)

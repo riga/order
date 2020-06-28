@@ -9,13 +9,13 @@ __all__ = ["Analysis"]
 
 
 from order.unique import UniqueObject, unique_tree
-from order.mixins import AuxDataMixin
+from order.mixins import AuxDataMixin, TagMixin
 from order.config import Config
 
 
 @unique_tree(cls=Config, parents=False)
-class Analysis(UniqueObject, AuxDataMixin):
-    """ __init__(name, id, configs=None, aux=None, context=None)
+class Analysis(UniqueObject, AuxDataMixin, TagMixin):
+    """
     The analysis class which represents the central object of a physics analysis. Yet, it is quite
     lightweight as most information is contained in :py:class:`~order.config.Config` objects in the
     scope of a :py:class:`~order.config.Campaign`. In addition, it provides some convenience methods
@@ -23,9 +23,9 @@ class Analysis(UniqueObject, AuxDataMixin):
 
     **Arguments**
 
-    The configuration objects are initialized with *configs*. *aux* is forwarded to the
-    :py:class:`~order.mixins.AuxDataMixin`, *name*, *id* and *context* to the
-    :py:class:`~order.unique.UniqueObject` constructor.
+    The configuration objects are initialized with *configs*. *tags* are forwarded to the
+    :py:class:`~order.mixins.TagMixin`, *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and
+    *name*, *id* and *context* to the :py:class:`~order.unique.UniqueObject` constructor.
 
     **Example**
 
@@ -35,9 +35,10 @@ class Analysis(UniqueObject, AuxDataMixin):
     **Members**
     """
 
-    def __init__(self, name, id, configs=None, aux=None, context=None):
+    def __init__(self, name, id, configs=None, tags=None, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
         AuxDataMixin.__init__(self, aux=aux)
+        TagMixin.__init__(self, tags=tags)
 
         # set initial configs
         if configs is not None:

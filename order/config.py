@@ -10,7 +10,7 @@ __all__ = ["Campaign", "Config"]
 
 
 from order.unique import UniqueObject, unique_tree
-from order.mixins import CopyMixin, AuxDataMixin
+from order.mixins import CopyMixin, AuxDataMixin, TagMixin
 from order.shift import Shift
 from order.dataset import Dataset
 from order.process import Process
@@ -20,8 +20,8 @@ from order.util import typed
 
 
 @unique_tree(cls=Dataset, parents=False)
-class Campaign(UniqueObject, CopyMixin, AuxDataMixin):
-    """ __init__(name, id, ecm=None, bx=None, datasets=None, aux=None, context=None)
+class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
+    """
     Class that provides data that is subject to a campaign, i.e., a well-defined range of
     data-taking, detector alignment, MC production settings, datasets, etc. Common, generic
     information is available via dedicated attributes, specialized data can be stored as auxiliary
@@ -29,9 +29,9 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin):
 
     **Arguments**
 
-    *ecm* is the center-of-mass energy, *bx* the bunch-crossing. *aux* is forwarded to the
-    :py:class:`~order.mixins.AuxDataMixin`, *name*, *id* and *context* to the
-    :py:class:`~order.unique.UniqueObject` constructor.
+    *ecm* is the center-of-mass energy, *bx* the bunch-crossing. *tags* are forwarded to the
+    :py:class:`~order.mixins.TagMixin`, *aux* to the :py:class:`~order.mixins.AuxDataMixin`, *name*,
+    *id* and *context* to the :py:class:`~order.unique.UniqueObject` constructor.
 
     **Copy behavior**
 
@@ -70,11 +70,14 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin):
        The bunch crossing in arbitrary units.
     """
 
-    copy_specs = ["ecm", "bx"] + UniqueObject.copy_specs + AuxDataMixin.copy_specs
+    copy_specs = ["ecm", "bx"] + UniqueObject.copy_specs + AuxDataMixin.copy_specs + \
+        TagMixin.copy_specs
 
-    def __init__(self, name, id, ecm=None, bx=None, datasets=None, aux=None, context=None):
+    def __init__(self, name, id, ecm=None, bx=None, datasets=None, tags=None, aux=None,
+            context=None):
         UniqueObject.__init__(self, name, id, context=context)
         AuxDataMixin.__init__(self, aux=aux)
+        TagMixin.__init__(self, tags=tags)
 
         # instance members
         self._ecm = None
@@ -138,8 +141,8 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin):
 @unique_tree(cls=Category, plural="categories", parents=False, deep_children=True)
 @unique_tree(cls=Variable, parents=False)
 @unique_tree(cls=Shift, parents=False)
-class Config(UniqueObject, CopyMixin, AuxDataMixin):
-    """ __init__(campaign, name=None, id=None, analysis=None, datasets=None, processes=None, channels=None, categories=None, variables=None, shifts=None, aux=None, context=None)
+class Config(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
+    """
     Class holding analysis information that is related to a :py:class:`Campaign` instance. Most of
     the analysis configuration happens here.
 
@@ -154,7 +157,8 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin):
     :py:class:`~order.unique.UniqueObject` constructor. *name* and *id* default to the values of the
     *campaign* instance. Specialized data such as integrated luminosities, triggers, etc, can be
     stored as auxiliary data *aux*, which are forwarded to the
-    :py:class:`~order.mixins.AuxDataMixin`.
+    :py:class:`~order.mixins.AuxDataMixin`. *tags* are forwarded to the
+    :py:class:`~order.mixins.TagMixin`.
 
     **Copy behavior**
 
@@ -215,11 +219,11 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin):
     """
 
     copy_specs = [{"attr": "campaign", "ref": True}, {"attr": "analysis", "ref": True}] + \
-        UniqueObject.copy_specs + AuxDataMixin.copy_specs
+        UniqueObject.copy_specs + AuxDataMixin.copy_specs + TagMixin.copy_specs
 
     def __init__(self, campaign=None, name=None, id=None, analysis=None, datasets=None,
-            processes=None, channels=None, categories=None, variables=None, shifts=None, aux=None,
-            context=None):
+            processes=None, channels=None, categories=None, variables=None, shifts=None, tags=None,
+            aux=None, context=None):
         # instance members
         self._campaign = None
         self._analysis = None
@@ -238,6 +242,7 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin):
 
         UniqueObject.__init__(self, name=name, id=id, context=context)
         AuxDataMixin.__init__(self, aux=aux)
+        TagMixin.__init__(self, tags=tags)
 
         # set initial values
         if analysis is not None:

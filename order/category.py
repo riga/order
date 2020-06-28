@@ -201,7 +201,7 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
 @unique_tree(parents=1, deep_children=True, deep_parents=True)
 @unique_tree(cls=Category, plural="categories", parents=False, deep_children=True)
 class Channel(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
-    """ __init__(name, id, categories=None, label=None, label_short=None, tags=None, aux=None, context=None)
+    """
     An object that descibes an analysis channel, often defined by a particular decay *channel* that
     results in distinct final state objects. A channel can have parent-child relations to other
     channels with one parent per child, and child relations to categories.

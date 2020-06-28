@@ -11,13 +11,14 @@ __all__ = ["Process"]
 from scinum import Number
 
 from order.unique import UniqueObject, unique_tree
-from order.mixins import CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixin
+from order.mixins import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, LabelMixin, ColorMixin
 from order.util import typed
 
 
 @unique_tree(plural="processes", parents=-1, deep_children=True, deep_parents=True)
-class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin, ColorMixin):
-    r""" __init__(name, id, xsecs=None, processes=None, color=None, label=None, label_short=None, is_data=False, aux=None, context=None)
+class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, LabelMixin,
+        ColorMixin):
+    r"""
     Definition of a phyiscs process.
 
     **Arguments**
@@ -27,8 +28,9 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
 
     *color* is forwarded to the :py:class:`~order.mixins.ColorMixin`, *label* and *label_short* to
     the :py:class:`~order.mixins.LabelMixin`, *is_data* to the
-    :py:class:`~order.mixins.DataSourceMixin`, *aux* to the :py:class:`~order.mixins.AuxDataMixin`,
-    and *name*, *id* and *context* to the :py:class:`~order.unique.UniqueObject` constructor.
+    :py:class:`~order.mixins.DataSourceMixin`,*tags* to the :py:class:`~order.mixins.TagMixin`,
+    *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and *name*, *id* and *context* to the
+    :py:class:`~order.unique.UniqueObject` constructor.
 
     A process can have parent-child relations to other processes. Initial child processes are set
     to *processes*.
@@ -85,13 +87,15 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, DataSourceMixin, LabelMixin
 
     # attributes for copying
     copy_specs = ["xsecs"] + UniqueObject.copy_specs + AuxDataMixin.copy_specs + \
-        DataSourceMixin.copy_specs + LabelMixin.copy_specs + ColorMixin.copy_specs
+        TagMixin.copy_specs + DataSourceMixin.copy_specs + LabelMixin.copy_specs + \
+        ColorMixin.copy_specs
 
     def __init__(self, name, id, xsecs=None, processes=None, color=None, label=None,
-            label_short=None, is_data=False, aux=None, context=None):
+            label_short=None, is_data=False, tags=None, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
+        TagMixin.__init__(self, tags=tags)
         DataSourceMixin.__init__(self, is_data=is_data)
         LabelMixin.__init__(self, label=label, label_short=label_short)
         ColorMixin.__init__(self, color=color)

@@ -11,11 +11,11 @@ __all__ = ["Shift"]
 import scinum as sn
 
 from order.unique import UniqueObject
-from order.mixins import CopyMixin, LabelMixin
+from order.mixins import CopyMixin, AuxDataMixin, TagMixin, LabelMixin
 from order.util import typed
 
 
-class Shift(UniqueObject, CopyMixin, LabelMixin):
+class Shift(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
     """
     Description of a systematic shift.
 
@@ -26,9 +26,10 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
     the shift's effect, which is either only rate-changing (*RATE*) or also shape-changing
     (*SHAPE*). When *None*, *UNKNOWN* is used.
 
-    *label* and *label_short* are forwarded to the :py:class:`~order.mixins.LabelMixin`, *name*,
-    *id* (defaulting to an auto id) and *context* to the :py:class:`~order.unique.UniqueObject`
-    constructor.
+    *label* and *label_short* are forwarded to the :py:class:`~order.mixins.LabelMixin`, *tags* to
+    the :py:class:`~order.mixins.TagMixin`, *aux* to the :py:class:`~order.mixins.AuxDataMixin`
+    *name*, *id* (defaulting to an auto id) and *context* to the
+    :py:class:`~order.unique.UniqueObject` constructor.
 
     **Copy behavior**
 
@@ -162,7 +163,8 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
     RATE_SHAPE = "rate_shape"
 
     # attributes for copying
-    copy_specs = ["type"] + UniqueObject.copy_specs + LabelMixin.copy_specs
+    copy_specs = ["type"] + UniqueObject.copy_specs + AuxDataMixin.copy_specs + \
+        TagMixin.copy_specs + LabelMixin.copy_specs
 
     @classmethod
     def split_name(cls, name):
@@ -215,9 +217,12 @@ class Shift(UniqueObject, CopyMixin, LabelMixin):
         else:
             raise ValueError("unknown shift direction: {}".format(direction))
 
-    def __init__(self, name, id, type=None, label=None, label_short=None, context=None):
+    def __init__(self, name, id, type=None, label=None, label_short=None, tags=None, aux=None,
+            context=None):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
+        AuxDataMixin.__init__(self, aux=aux)
+        TagMixin.__init__(self, tags=tags)
         LabelMixin.__init__(self, label=label, label_short=label_short)
 
         # register empty attributes

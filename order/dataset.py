@@ -19,7 +19,7 @@ from order.util import typed, make_list
 
 @unique_tree(cls=Process, plural="processes", parents=False, deep_children=True)
 class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, LabelMixin):
-    """ __init__(name, id, campaign=None, info=None, processes=None, label=None, label_short=None, is_data=False, aux=None, context=None, **kwargs)
+    """
     Dataset definition providing two kinds of information:
 
     1. (systematic) shift-dependent, and
@@ -40,11 +40,10 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
 
     When *info* is does not contain a nominal :py:class:`DatasetInfo` object (mapped to the key
     :py:attr:`order.shift.Shift.NOMINAL`, i.e., ``"nominal"``), all *kwargs* are used to create
-    one. Otherwise, it should be a dictionary matching the format of the *info* mapping. *tags* is
-    forwarded to the :py:class:`~order.mixins.TagMixin`, *aux* to the
-    :py:class:`~order.mixins.AuxDataMixin`, *is_data* to the
-    :py:class:`~order.mixins.DataSourceMixin`, *label* and *label_short* to the
-    :py:class:`~order.mixins.LabelMixin`, and *name*, *id* and *context* to the
+    one. Otherwise, it should be a dictionary matching the format of the *info* mapping. *label* and
+    *label_short* are forwarded to the :py:class:`~order.mixins.LabelMixin`, *is_data* to the
+    :py:class:`~order.mixins.DataSourceMixin`, *tags* to the :py:class:`~order.mixins.TagMixin`,
+    *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and *name*, *id* and *context* to the
     :py:class:`~order.unique.UniqueObject` constructor.
 
     **Copy behavior**
@@ -139,7 +138,8 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
 
     # attributes for copying
     copy_specs = [{"attr": "campaign", "ref": True}, "info"] + UniqueObject.copy_specs + \
-        AuxDataMixin.copy_specs + DataSourceMixin.copy_specs + LabelMixin.copy_specs
+        AuxDataMixin.copy_specs + TagMixin.copy_specs + DataSourceMixin.copy_specs + \
+        LabelMixin.copy_specs
 
     def __init__(self, name, id, campaign=None, info=None, processes=None, label=None,
             label_short=None, is_data=False, tags=None, aux=None, context=None, **kwargs):
@@ -246,7 +246,7 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
         return self.info[Shift.NOMINAL].n_events
 
 
-class DatasetInfo(CopyMixin, AuxDataMixin):
+class DatasetInfo(CopyMixin, AuxDataMixin, TagMixin):
     """
     Container class holding information on particular dataset variations. Instances of *this* class
     are typically used in :py:class:`Dataset` objects to store shift-dependent information, such as
@@ -255,7 +255,8 @@ class DatasetInfo(CopyMixin, AuxDataMixin):
     **Arguments**
 
     *keys* denote the identifiers or *origins* of a dataset. *n_files* and *n_events* can be used
-    for further bookkeeping.
+    for further bookkeeping.  *tags* are forwarded to the :py:class:`~order.mixins.TagMixin`, and
+    *aux* to the :py:class:`~order.mixins.AuxDataMixin`.
 
     **Copy behavior**
 
@@ -282,9 +283,10 @@ class DatasetInfo(CopyMixin, AuxDataMixin):
 
     copy_specs = ["keys", "n_files", "n_events"] + AuxDataMixin.copy_specs
 
-    def __init__(self, keys=None, n_files=-1, n_events=-1, aux=None):
+    def __init__(self, keys=None, n_files=-1, n_events=-1, tags=None, aux=None):
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
+        TagMixin.__init__(self, tags=tags)
 
         # instance members
         self._keys = []

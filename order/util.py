@@ -238,13 +238,17 @@ def _join_selection(selection, op, bracket):
         return joined
 
 
+_root_ops = {"and": "&&", "or": "||", "mul": "*", "div": "/", "plus": "+", "minus": "-"}
+_numexpr_ops = {"and": "&", "or": "|", "mul": "*", "div": "/", "plus": "+", "minus": "-"}
+
+
 def join_root_selection(*selection, **kwargs):
     """ join_root_selection(*selection, op="&&", bracket=False)
     Returns a concatenation of root *selection* strings, which is done by default via logical *AND*.
     (*op*). When *bracket* is *True*, the final selection string is placed into brackets.
     """
     op = kwargs.get("op", "&&")
-    op = {"and": "&&", "or": "||", "mul": "*", "div": "/"}.get(op.lower(), op)
+    op = _root_ops.get(op.lower(), op)
     bracket = kwargs.get("bracket", False)
     return _join_selection(selection, op, bracket)
 
@@ -255,7 +259,7 @@ def join_numexpr_selection(*selection, **kwargs):
     *AND*. (*op*). When *bracket* is *True*, the final selection string is placed into brackets.
     """
     op = kwargs.get("op", "&")
-    op = {"and": "&", "or": "|", "mul": "*", "div": "/"}.get(op.lower(), op)
+    op = _numexpr_ops.get(op.lower(), op)
     bracket = kwargs.get("bracket", False)
     return _join_selection(selection, op, bracket)
 

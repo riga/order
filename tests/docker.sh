@@ -19,7 +19,7 @@ action() {
             bash
     else
         docker run --rm -t -v "$repo_dir":/root/order -w /root/order "$docker_image" \
-            bash -c "pip install -r requirements.txt && python -m unittest tests"
+            bash -c "pip install -r requirements_test.txt && python -m unittest tests"
     fi
 }
 action "$@"

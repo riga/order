@@ -6,7 +6,10 @@ __all__ = ["PickleTest"]
 
 import unittest
 
+import six
 import order
+
+from .util import skip_if, has_module
 
 
 def mk_obj(cls, arg0=None, name=None, id=123):
@@ -44,13 +47,12 @@ class PickleTest(unittest.TestCase):
             x2 = pickle.loads(y)
             self.assertEqual(x, x2)
 
+    @skip_if(six.PY2)
     def test_pickle(self):
         import pickle
         self.do_test(pickle)
 
+    @skip_if(not has_module("cloudpickle"))
     def test_cloudpickle(self):
-        try:
-            import cloudpickle
-        except ImportError as msg:
-            raise unittest.SkipTest(str(msg))
+        import cloudpickle
         self.do_test(cloudpickle)

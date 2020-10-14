@@ -22,3 +22,4 @@ from .test_process import *
 from .test_dataset import *
 from .test_config import *
 from .test_analysis import *
+from .test_pickle import *

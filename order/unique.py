@@ -182,10 +182,7 @@ class UniqueObjectIndex(CopyMixin):
 
         # seperate dicts to map names and ids to unique objects,
         # stored in a dict mapped to contexts
-        self._indices = collections.defaultdict(lambda: {
-            "names": collections.OrderedDict(),
-            "ids": collections.OrderedDict(),
-        })
+        self._indices = collections.defaultdict(self._indices_default_factory)
 
         # register indices for the default context
         self._indices[self.default_context]
@@ -196,6 +193,13 @@ class UniqueObjectIndex(CopyMixin):
 
         # save a dot access proxy for easy access of objects via name in the default context
         self._n = DotAccessProxy(self.get)
+
+    @staticmethod
+    def _indices_default_factory():
+        return {
+            "names": collections.OrderedDict(),
+            "ids": collections.OrderedDict(),
+        }
 
     def _copy_attribute_manual(self, inst, obj, spec):
         if spec.dst == "_indices":

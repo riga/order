@@ -375,7 +375,8 @@ class DotAccessProxy(object):
             
             
 def pprint_processes(xs_key=13):
-    todo = [(p, 0) for p in od.Process._instances.values() if p.is_root_process]
+    from order.process import Process
+    todo = [(p, 0) for p in Process._instances.values() if p.is_root_process]
     while todo:
         proc, depth = todo.pop(0)
         prefix = ("" if depth else "\n") + "| " * depth + "> "

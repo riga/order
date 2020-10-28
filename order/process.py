@@ -8,9 +8,11 @@ Classes to define physics processes.
 __all__ = ["Process"]
 
 
+import sys
+
 from scinum import Number
 
-from order.unique import UniqueObject, unique_tree
+from order.unique import UniqueObject, UniqueObjectIndex, unique_tree
 from order.mixins import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, LabelMixin, ColorMixin
 from order.util import typed
 
@@ -90,6 +92,25 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
         TagMixin.copy_specs + DataSourceMixin.copy_specs + LabelMixin.copy_specs + \
         ColorMixin.copy_specs
 
+    @classmethod
+    def pretty_print_all(cls, *args, **kwargs):
+        """ pretty_print_all(*args, contenxt=None, **kwargs)
+        Calls :py:meth:`pretty_print` of all root processes in the instance cache for *context* and
+        forwards all *args* and *kwargs*. When *context* is *all*, root processes of all indices are
+        printed.
+        """
+        context = kwargs.pop("context", None)
+        stream = kwargs.get("stream") or sys.stdout
+        first = True
+        for process in cls._instances.values(context=context):
+            if context == UniqueObjectIndex.ALL:
+                process = process[0]
+            if process.is_root_process:
+                if first:
+                    stream.write("\n".encode())
+                first = False
+                process.pretty_print(*args, **kwargs)
+
     def __init__(self, name, id, xsecs=None, processes=None, color=None, label=None,
             label_short=None, is_data=False, tags=None, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
@@ -150,3 +171,33 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
         ecm, xsec = list(self.__class__.xsecs.fparse(self, {ecm: xsec}).items())[0]
         self.xsecs[ecm] = xsec
         return xsec
+
+    def pretty_print(self, ecm=None, offset=40, max_depth=-1, stream=None, _depth=0, **kwargs):
+        """ pretty_print(ecm=None, offset=40, max_depth=-1, stream=None, **kwargs)
+        Prints this process and potentially its subprocesses down to a maximum depth *max_depth* in
+        a structured fashion. When *ecm* is set, process cross section values are shown as well
+        with a maximum horizontal distance of *offset*. *stream* can be a file object and defaults
+        to *sys.stdout*. All *kwargs* are forwarded to the :py:meth:`Number.str` methods of the
+        cross section numbers.
+        """
+        if not stream:
+            stream = sys.stdout
+
+        # start the entry to print
+        entry = "| " * _depth + "> {} ({})".format(self.name, self.id)
+
+        # add cross-section values following an offset when ecm is set
+        if ecm is not None:
+            entry += " " * (offset - len(entry))
+            xsec = self.xsecs.get(ecm)
+            entry += "  " * _depth + (xsec.str(**kwargs) if xsec else "no cross-section")
+
+        stream.write((entry + "\n").encode())
+
+        # stop here when max_depth is reached
+        if 0 <= max_depth <= _depth:
+            return
+
+        for proc in self.processes:
+            proc.pretty_print(ecm=ecm, offset=offset, max_depth=max_depth, stream=stream,
+                _depth=_depth + 1, **kwargs)

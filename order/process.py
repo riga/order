@@ -107,7 +107,7 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
                 process = process[0]
             if process.is_root_process:
                 if first:
-                    stream.write("\n")
+                    stream.write("\n".encode())
                 first = False
                 process.pretty_print(*args, **kwargs)
 
@@ -192,7 +192,7 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
             xsec = self.xsecs.get(ecm)
             entry += "  " * _depth + (xsec.str(**kwargs) if xsec else "no cross-section")
 
-        stream.write(entry + "\n")
+        stream.write((entry + "\n").encode())
 
         # stop here when max_depth is reached
         if 0 <= max_depth <= _depth:

@@ -76,5 +76,5 @@ class ProcessTest(unittest.TestCase):
         output = BytesIO()
         a.pretty_print(13, offset=10, stream=output)
 
-        self.assertEqual(output.getvalue(),
+        self.assertEqual(output.getvalue().decode("utf-8"),
             "> a (100) 12.0 (no uncertainties)\n| > b (101)  1.0 (no uncertainties)\n")

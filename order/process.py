@@ -93,8 +93,9 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
     @classmethod
     def pretty_print_all(cls, *args, **kwargs):
         """ pretty_print_all(*args, contenxt=None, **kwargs)
-        Calls :py:meth:`pretty_print` of all root processes in the instance cache for *context*.
-        When *context* is *all*, root processes of all indices are printed.
+        Calls :py:meth:`pretty_print` of all root processes in the instance cache for *context* and
+        forwards all *args* and *kwargs*. When *context* is *all*, root processes of all indices are
+        printed.
         """
         context = kwargs.pop("context", None)
         first = True

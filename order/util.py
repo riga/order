@@ -372,13 +372,3 @@ class DotAccessProxy(object):
                 raise Exception("cannot set attribute, setter not defined on {}".format(
                     self.__class__.__name__))
             setter(attr, value)
-            
-            
-def pprint_processes(xs_key=13):
-    from order.process import Process
-    todo = [(p, 0) for p in Process._instances.values() if p.is_root_process]
-    while todo:
-        proc, depth = todo.pop(0)
-        prefix = ("" if depth else "\n") + "| " * depth + "> "
-        print("%-50s %s" % (prefix + proc.name, proc.xsecs.get(xs_key, None)))
-        todo = [(p, depth + 1) for p in proc.processes.values()] + todo

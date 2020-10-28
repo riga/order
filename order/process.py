@@ -8,6 +8,8 @@ Classes to define physics processes.
 __all__ = ["Process"]
 
 
+import sys
+
 from scinum import Number
 
 from order.unique import UniqueObject, UniqueObjectIndex, unique_tree
@@ -98,13 +100,14 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
         printed.
         """
         context = kwargs.pop("context", None)
+        stream = kwargs.get("stream") or sys.stdout
         first = True
         for process in cls._instances.values(context=context):
             if context == UniqueObjectIndex.ALL:
                 process = process[0]
             if process.is_root_process:
                 if first:
-                    print("")
+                    stream.write("\n")
                 first = False
                 process.pretty_print(*args, **kwargs)
 
@@ -169,13 +172,17 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
         self.xsecs[ecm] = xsec
         return xsec
 
-    def pretty_print(self, ecm=None, offset=40, max_depth=-1, _depth=0, **kwargs):
-        """
+    def pretty_print(self, ecm=None, offset=40, max_depth=-1, stream=None, _depth=0, **kwargs):
+        """ pretty_print(ecm=None, offset=40, max_depth=-1, stream=None, **kwargs)
         Prints this process and potentially its subprocesses down to a maximum depth *max_depth* in
         a structured fashion. When *ecm* is set, process cross section values are shown as well
-        with a maximum horizontal distance of *offset*. All *kwargs* are forwarded to the
-        :py:meth:`Number.str` methods of the cross section numbers.
+        with a maximum horizontal distance of *offset*. *stream* can be a file object and defaults
+        to *sys.stdout*. All *kwargs* are forwarded to the :py:meth:`Number.str` methods of the
+        cross section numbers.
         """
+        if not stream:
+            stream = sys.stdout
+
         # start the entry to print
         entry = "| " * _depth + "> {} ({})".format(self.name, self.id)
 
@@ -185,12 +192,12 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
             xsec = self.xsecs.get(ecm)
             entry += "  " * _depth + (xsec.str(**kwargs) if xsec else "no cross-section")
 
-        print(entry)
+        stream.write(entry + "\n")
 
         # stop here when max_depth is reached
         if 0 <= max_depth <= _depth:
             return
 
         for proc in self.processes:
-            proc.pretty_print(ecm=ecm, offset=offset, max_depth=max_depth, _depth=_depth + 1,
-                **kwargs)
+            proc.pretty_print(ecm=ecm, offset=offset, max_depth=max_depth, stream=stream,
+                _depth=_depth + 1, **kwargs)

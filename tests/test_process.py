@@ -4,6 +4,7 @@
 __all__ = ["ProcessTest"]
 
 
+from io import BytesIO
 import unittest
 
 from order import Process
@@ -67,3 +68,13 @@ class ProcessTest(unittest.TestCase):
 
         p2 = Process("parent2", 12, processes=[c])
         self.assertIn(p2, c.parent_processes)
+
+    def test_pretty_print(self):
+        a = Process("a", 100, xsecs={13: 12})
+        a.add_process("b", 101, xsecs={13: 1})
+
+        output = BytesIO()
+        a.pretty_print(13, offset=10, stream=output)
+
+        self.assertEqual(output.getvalue(),
+            "> a (100) 12.0 (no uncertainties)\n| > b (101)  1.0 (no uncertainties)\n")

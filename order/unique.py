@@ -1171,9 +1171,9 @@ def unique_tree(**kwargs):
                 a child {singular}, its depth relative to *this* {singular}, and its child {plural}
                 in a list that can be modified to alter the walking. When *context* is *None*, the
                 *default_context* of the :py:attr:`{plural}` index is used. When *context* is *all*,
-                all indices are traversed. If *depth_first* is truthy iterate depth-first instead
-                of the default breadth-first. If *include_self* is truthy also include the
-                {singular} itself in the output (with *depth* of 0).
+                all indices are traversed. When *depth_first* is *True*, iterate depth-first instead
+                of the default breadth-first. When *include_self* is *True*, also yield this
+                {singular} instance with a depth of 0.
                 """
                 lookup = collections.deque([(self, 0)])
                 while lookup:
@@ -1460,9 +1460,9 @@ def unique_tree(**kwargs):
                     and its parent {plural} in a list that can be modified to alter the walking.
                     When *context* is *None*, the *default_context* of the
                     :py:attr:`parent_{plural}` index is used. When *context* is *all*, all indices
-                    are traversed. If *depth_first* is truthy iterate depth-first instead of the
-                    default breadth-first. If *include_self* is truthy also include the {singular}
-                    itself in the output (with *depth* of 0).
+                    are traversed. When *depth_first* is *True*, iterate depth-first instead
+                    of the default breadth-first. When *include_self* is *True*, also yield this
+                    {singular} instance with a depth of 0.
                     """
                     lookup = collections.deque([(self, 0)])
                     while lookup:

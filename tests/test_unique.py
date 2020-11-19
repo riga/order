@@ -555,6 +555,22 @@ class UniqueTreeTest(unittest.TestCase):
                 self.assertEqual(n, n1)
                 self.assertEqual(len(nodes), 0)
 
+        def walk(depth, this):
+            return [n for n, _, _ in n1.walk_nodes(
+                depth_first=depth,
+                include_self=this
+            )]
+
+        self.assertListEqual(walk(False, False), [n2, n3, n4])
+        self.assertListEqual(walk(False, True), [n1, n2, n3, n4])
+        self.assertListEqual(walk(True, False), [n2, n4, n3])
+        self.assertListEqual(walk(True, True), [n1, n2, n4, n3])
+
+        self.assertListEqual(
+            [n for n, _, _ in n4.walk_parent_nodes(include_self=True)],
+            [n4, n2, n1]
+        )
+
     def test_lookup(self):
         Node = self.make_class(deep_children=True, deep_parents=True)
         Node.default_uniqueness_context = "node_lookup"

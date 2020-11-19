@@ -1165,22 +1165,30 @@ def unique_tree(**kwargs):
 
             # walk children method
             @patch("walk_" + plural)
-            def walk(self, context=None):
+            def walk(self, context=None, depth_first=False, include_self=False):
                 """
                 Walks through the :py:attr:`{plural}` index for *context* and per iteration, yields
                 a child {singular}, its depth relative to *this* {singular}, and its child {plural}
                 in a list that can be modified to alter the walking. When *context* is *None*, the
                 *default_context* of the :py:attr:`{plural}` index is used. When *context* is *all*,
-                all indices are traversed.
+                all indices are traversed. If *depth_first* is truthy iterate depth-first instead
+                of the default breadth-first. If *include_self* is truthy also include the
+                {singular} itself in the output (with *depth* of 0).
                 """
-                lookup = [(obj, 1) for obj in getattr(self, plural).values(context=context)]
+                lookup = collections.deque([(self, 0)])
                 while lookup:
-                    obj, depth = lookup.pop(0)
+                    obj, depth = lookup.popleft()
                     objs = list(getattr(obj, plural).values(context=context))
 
-                    yield (obj, depth, objs)
+                    if include_self:
+                        yield (obj, depth, objs)
+                    else:
+                        include_self = True
 
-                    lookup.extend((obj, depth + 1) for obj in objs)
+                    if depth_first:
+                        lookup.extendleft((obj, depth + 1) for obj in reversed(objs))
+                    else:
+                        lookup.extend((obj, depth + 1) for obj in objs)
 
             # get leaves method
             @patch("get_leaf_" + plural)
@@ -1445,23 +1453,31 @@ def unique_tree(**kwargs):
 
                 # walk parents method
                 @patch("walk_parent_" + plural)  # noqa: F811
-                def walk(self, context=None):
+                def walk(self, context=None, depth_first=False, include_self=False):
                     """
                     Walks through the :py:attr:`parent_{plural}` index for *context* and per
                     iteration, yields a parent {singular}, its depth relative to *this* {singular},
                     and its parent {plural} in a list that can be modified to alter the walking.
                     When *context* is *None*, the *default_context* of the
                     :py:attr:`parent_{plural}` index is used. When *context* is *all*, all indices
-                    are traversed.
+                    are traversed. If *depth_first* is truthy iterate depth-first instead of the
+                    default breadth-first. If *include_self* is truthy also include the {singular}
+                    itself in the output (with *depth* of 0).
                     """
-                    lookup = [(obj, 1) for obj in getattr(self, "parent_" + plural).values()]
+                    lookup = collections.deque([(self, 0)])
                     while lookup:
-                        obj, depth = lookup.pop(0)
-                        objs = list(getattr(obj, "parent_" + plural).values())
+                        obj, depth = lookup.popleft()
+                        objs = list(getattr(obj, "parent_" + plural).values(context=context))
 
-                        yield (obj, depth, objs)
+                        if include_self:
+                            yield (obj, depth, objs)
+                        else:
+                            include_self = True
 
-                        lookup.extend((obj, depth + 1) for obj in objs)
+                        if depth_first:
+                            lookup.extendleft((obj, depth + 1) for obj in reversed(objs))
+                        else:
+                            lookup.extend((obj, depth + 1) for obj in objs)
 
                 # get roots method
                 @patch("get_root_" + plural)

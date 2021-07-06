@@ -7,9 +7,9 @@
 .. marker-after-logo
 
 
-.. image:: https://img.shields.io/travis/riga/order/master.svg?style=flat
-   :target: https://travis-ci.org/riga/order
-   :alt: Build status
+.. image:: https://github.com/riga/order/actions/workflows/lint_and_test.yml/badge.svg
+   :target: https://github.com/riga/order/actions/workflows/lint_and_test.yml
+   :alt: Lint and test
 
 .. image:: https://readthedocs.org/projects/python-order/badge/?version=latest
    :target: http://python-order.readthedocs.io/en/latest

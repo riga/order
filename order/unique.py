@@ -1357,9 +1357,9 @@ def unique_tree(**kwargs):
         #
 
             # direct parent index access
-            @patch()  # noqa: F811
+            @patch()
             @typed(setter=False, name="parent_" + plural)
-            def get_index(self):
+            def get_index(self):  # noqa: F811
                 pass
 
             # has parent index property
@@ -1379,8 +1379,8 @@ def unique_tree(**kwargs):
                 return len(getattr(self, "parent_" + plural)) == 0
 
             # clear parents
-            @patch("clear_parent_" + plural)  # noqa: F811
-            def clear(self, context=None):
+            @patch("clear_parent_" + plural)
+            def clear(self, context=None):  # noqa: F811
                 """
                 Removes all parent {plural} from the :py:attr:`parent_{plural}` index for
                 *context*. Also removes *this* {singular} instance from the :py:attr:`{plural}`
@@ -1391,8 +1391,8 @@ def unique_tree(**kwargs):
 
             if not deep_parents:
 
-                @patch("has_parent_" + singular)  # noqa: F811
-                def has(self, obj, context=None):
+                @patch("has_parent_" + singular)
+                def has(self, obj, context=None):  # noqa: F811
                     """
                     Checks if the :py:attr:`parent_{plural}` index for *context* contains an *obj*
                     which might be a *name*, *id*, or an instance. When *context* is *None*, the
@@ -1401,8 +1401,8 @@ def unique_tree(**kwargs):
                     return getattr(self, "parent_" + plural).has(obj, context=context)
 
                 # get child method
-                @patch("get_parent_" + singular)  # noqa: F811
-                def get(self, obj, default=_no_default, context=None):
+                @patch("get_parent_" + singular)
+                def get(self, obj, default=_no_default, context=None):  # noqa: F811
                     """ get_parent_{singular}(obj, default=no_default, context=None)
                     Returns a parent {singular} given by *obj*, which might be a *name*, *id*, or an
                     instance from the :py:attr:`parent_{plural}` index for *context*. When no
@@ -1452,8 +1452,8 @@ def unique_tree(**kwargs):
                             raise ValueError("unknown {}: {}".format(singular, obj))
 
                 # walk parents method
-                @patch("walk_parent_" + plural)  # noqa: F811
-                def walk(self, context=None, depth_first=False, include_self=False):
+                @patch("walk_parent_" + plural)
+                def walk(self, context=None, depth_first=False, include_self=False):  # noqa: F811
                     """
                     Walks through the :py:attr:`parent_{plural}` index for *context* and per
                     iteration, yields a parent {singular}, its depth relative to *this* {singular},
@@ -1507,8 +1507,8 @@ def unique_tree(**kwargs):
                         return list(index.values(context=index.ALL))[0][0]
 
                 # remove parent method
-                @patch("remove_parent_" + singular)  # noqa: F811
-                def remove(self, obj=None, context=None, silent=False):
+                @patch("remove_parent_" + singular)
+                def remove(self, obj=None, context=None, silent=False):  # noqa: F811
                     """
                     Removes the parent {singular} *obj* the :py:attr:`parent_{plural}` index for
                     *context*. When *obj* is not *None*, it can be a *name*, *id*, or an instance
@@ -1558,8 +1558,8 @@ def unique_tree(**kwargs):
             if parents >= 1:
 
                 # add parent method with limited number of parents
-                @patch("add_parent_" + singular)  # noqa: F811
-                def add(self, *args, **kwargs):
+                @patch("add_parent_" + singular)
+                def add(self, *args, **kwargs):  # noqa: F811
                     """
                     Adds a parent {singular} to the :py:attr:`parent_{plural}` index and returns it.
                     Also adds *this* {singular} to the :py:attr:`{plural}` index of the added
@@ -1576,8 +1576,8 @@ def unique_tree(**kwargs):
                     return obj
 
                 # extend parents
-                @patch("extend_parent_" + plural)  # noqa: F811
-                def extend(self, objs, context=None):
+                @patch("extend_parent_" + plural)
+                def extend(self, objs, context=None):  # noqa: F811
                     """
                     Adds multiple parent {plural} to the :py:attr:`parent_{plural}` index for
                     *context* and returns the added objects in a list. Also adds *this* {singular}

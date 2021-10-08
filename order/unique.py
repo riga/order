@@ -10,7 +10,8 @@ __all__ = [
     "DuplicateIdException", "uniqueness_context", "unique_tree",
 ]
 
-
+import sys
+import warnings
 import collections
 import contextlib
 
@@ -19,6 +20,8 @@ import six
 from order.mixins import CopyMixin
 from order.util import typed, make_list, class_id, DotAccessProxy
 
+
+this = sys.modules[__name__]
 
 _no_default = object()
 
@@ -53,6 +56,16 @@ class DuplicateObjectException(Exception):
     """
 
 
+class DuplicateObjectWarning:
+    """
+    Base class for exceptions that are raised when a unique object cannot be created due to
+    duplicate name or id in the same uniqueness context.
+    """
+
+    def __init__(self, msg):
+        warnings.warn(msg)
+
+
 class DuplicateNameException(DuplicateObjectException):
     """
     An exception which is raised when trying to create a unique object whose name is already used in
@@ -64,6 +77,19 @@ class DuplicateNameException(DuplicateObjectException):
         super(DuplicateNameException, self).__init__(msg)
 
 
+class DuplicateNameWarning(DuplicateObjectWarning):
+    """
+    A warning which is thrown when trying to create a unique object whose name is already used in
+    the same uniqueness context.
+    """
+
+    def __init__(self, cls, name, context):
+        msg = "'{}.{}' object with name '{}' already exists in the uniqueness context '{}'".format(
+            cls.__module__, cls.__name__, name, context
+        )
+        super(DuplicateNameWarning, self).__init__(msg)
+
+
 class DuplicateIdException(DuplicateObjectException):
     """
     An exception which is raised when trying to create a unique object whose id is already used in
@@ -73,6 +99,19 @@ class DuplicateIdException(DuplicateObjectException):
         msg = "'{}.{}' object with id '{}' already exists in the uniqueness context '{}'".format(
             cls.__module__, cls.__name__, id, context)
         super(DuplicateIdException, self).__init__(msg)
+
+
+class DuplicateIdWarning(DuplicateObjectWarning):
+    """
+    A warning which is thrown when trying to create a unique object whose id is already used in
+    the same uniqueness context.
+    """
+
+    def __init__(self, cls, id, context):
+        msg = "'{}.{}' object with id '{}' already exists in the uniqueness context '{}'".format(
+            cls.__module__, cls.__name__, id, context
+        )
+        super(DuplicateIdWarning, self).__init__(msg)
 
 
 class UniqueObject(object):
@@ -691,7 +730,10 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
         # use the typed parser to check the passed name and check for duplicates
         name = cls.name.fparse(None, name)
         if name in cls._instances.names(context=context):
-            raise DuplicateNameException(cls, name, context)
+            if getattr(this, "soft_check", False):
+                DuplicateNameWarning(cls, name, context)
+            else:
+                raise DuplicateNameException(cls, name, context)
 
         # check for auto_id
         if id == cls.AUTO_ID:
@@ -700,8 +742,10 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
         # use the typed parser to check the passed id, check for duplicates and store it
         id = cls.id.fparse(None, id)
         if id in cls._instances.ids(context=context):
-            raise DuplicateIdException(cls, id, context)
-
+            if getattr(this, "soft_check", False):
+                DuplicateIdWarning(cls, id, context)
+            else:
+                raise DuplicateIdException(cls, id, context)
         return (name, id, context)
 
     def __init__(self, name, id, context=None):

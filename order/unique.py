@@ -895,7 +895,7 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
         if "name" in kwargs or "id" in kwargs:
             return False
 
-        return True
+        raise ValueError("Can't copy {} without providing name or id.".format(type(self).__name__))
 
 
 @contextlib.contextmanager

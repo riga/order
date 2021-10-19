@@ -20,8 +20,6 @@ from order.mixins import CopyMixin
 from order.util import typed, make_list, class_id, DotAccessProxy
 
 
-soft_checking = False
-
 _no_default = object()
 
 _not_found = object()
@@ -200,6 +198,8 @@ class UniqueObjectIndex(CopyMixin):
     """
 
     ALL = all
+
+    soft_checking = False
 
     copy_specs = [
         {"attr": "cls", "ref": True},
@@ -729,7 +729,7 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
         # use the typed parser to check the passed name and check for duplicates
         name = cls.name.fparse(None, name)
         if name in cls._instances.names(context=context):
-            if soft_checking:
+            if cls._instances.soft_checking:
                 DuplicateNameWarning(cls, name, context)
             else:
                 raise DuplicateNameException(cls, name, context)
@@ -741,7 +741,7 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
         # use the typed parser to check the passed id, check for duplicates and store it
         id = cls.id.fparse(None, id)
         if id in cls._instances.ids(context=context):
-            if soft_checking:
+            if cls._instances.soft_checking:
                 DuplicateIdWarning(cls, id, context)
             else:
                 raise DuplicateIdException(cls, id, context)

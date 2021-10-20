@@ -416,21 +416,6 @@ class UniqueObjectIndex(CopyMixin):
                 ])
             return items
 
-    def check_duplicate(self, name, id, context=None):
-        # use the typed parser to check the passed name and check for duplicates
-        if name in self.names(context=context):
-            if self.soft_checking:
-                DuplicateNameWarning(self, name, context)
-            else:
-                raise DuplicateNameException(self, name, context)
-
-        # use the typed parser to check the passed id, check for duplicates and store it
-        if id in self.ids(context=context):
-            if self.soft_checking:
-                DuplicateIdWarning(self, id, context)
-            else:
-                raise DuplicateIdException(self, id, context)
-
     def add(self, *args, **kwargs):
         """
         Adds a new object to the index for a certain context. When the first *arg* is not an
@@ -449,8 +434,13 @@ class UniqueObjectIndex(CopyMixin):
             context = kwargs.pop("index_context", None) or self.default_context
             obj = self.cls(*args, **kwargs)
 
-        # check for duplicates
-        self.check_duplicate(obj.name, obj.id, context=context)
+        # check for duplicates in names
+        if obj.name in self.names(context=context):
+            raise DuplicateNameException(self, obj.name, context)
+
+        # check for duplicates in ids
+        if obj.id in self.ids(context=context):
+            raise DuplicateIdException(self, obj.id, context)
 
         # add to the index
         self._indices[context]["names"][obj.name] = obj
@@ -608,8 +598,19 @@ class UniqueObjectIndexSoft(UniqueObjectIndex):
             context = kwargs.pop("index_context", None) or self.default_context
             obj = self.cls(*args, **kwargs)
 
-        # check for duplicates
-        self.check_duplicate(obj.name, obj.id, context=context)
+        # check for duplicates in names
+        if obj.name in self.names(context=context):
+            if self.soft_checking:
+                DuplicateNameWarning(self, obj.name, context)
+            else:
+                raise DuplicateNameException(self, obj.name, context)
+
+        # check for duplicates in ids
+        if obj.id in self.ids(context=context):
+            if self.soft_checking:
+                DuplicateIdWarning(self, obj.id, context)
+            else:
+                raise DuplicateIdException(self, obj.id, context)
 
         # add to the index
         # invalidate if name already exists in index
@@ -625,6 +626,8 @@ class UniqueObjectIndexSoft(UniqueObjectIndex):
             self._indices[context]["ids"][obj.id] = obj
 
         return obj
+
+
 class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
     """
     An unique object defined by a *name* and an *id*. The purpose of this class is to provide a

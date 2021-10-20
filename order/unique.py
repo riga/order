@@ -431,7 +431,7 @@ class UniqueObjectIndex(CopyMixin):
             context = kwargs.get("index_context") or kwargs.get("context") or self.default_context
             obj = args[0]
         else:
-            context = kwargs.pop("index_context", None) or self.default_context
+            context = kwargs.pop("index_context", None) or self.cls.get_default_context()
             obj = self.cls(*args, **kwargs)
 
         # check for duplicates in names
@@ -780,15 +780,16 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
     def __init__(self, name, id, context=None):
         super(UniqueObject, self).__init__()
 
+        # check if default context needed
+        if context is None:
+            context = self.get_default_context()
+        self._context = context
+
         self._name = self.__class__.name.fparse(None, name)
         # check for auto_id
         if id == self.AUTO_ID:
             id = self.auto_id(name, context)
         self._id = self.__class__.id.fparse(None, id)
-        # check if default context needed
-        if context is None:
-            context = self.get_default_context()
-        self._context = context
 
         # add the instance to the cache
         self._instances.add(self, context=self._context)

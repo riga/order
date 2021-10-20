@@ -777,6 +777,9 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
     def __init__(self, name, id, context=None):
         super(UniqueObject, self).__init__()
 
+        self._name = None
+        self._id = None
+
         self._name = self.name.fparse(None, name)
         # check for auto_id
         if id == self.AUTO_ID:

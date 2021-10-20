@@ -780,14 +780,11 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
     def __init__(self, name, id, context=None):
         super(UniqueObject, self).__init__()
 
-        self._name = None
-        self._id = None
-
-        self._name = self.name.fparse(None, name)
+        self._name = self.__class__.name.fparse(None, name)
         # check for auto_id
         if id == self.AUTO_ID:
             id = self.auto_id(name, context)
-        self._id = self.id.fparse(None, id)
+        self._id = self.__class__.id.fparse(None, id)
         # check if default context needed
         if context is None:
             context = self.get_default_context()

@@ -6,8 +6,14 @@ Classes that define unique objects and the index to store them.
 
 
 __all__ = [
-    "UniqueObject", "UniqueObjectIndex", "DuplicateObjectException", "DuplicateNameException",
-    "DuplicateIdException", "uniqueness_context", "unique_tree",
+    "UniqueObject",
+    "UniqueObjectIndex",
+    "UniqueObjectIndexSoft",
+    "DuplicateObjectException",
+    "DuplicateNameException",
+    "DuplicateIdException",
+    "uniqueness_context",
+    "unique_tree",
 ]
 
 import warnings
@@ -41,7 +47,7 @@ class UniqueObjectMeta(type):
         cls = super(UniqueObjectMeta, meta_cls).__new__(meta_cls, class_name, bases, class_dict)
 
         # add an unique object index as an instance cache
-        cls._instances = UniqueObjectIndex(cls=cls)
+        cls._instances = UniqueObjectIndexSoft(cls=cls)
 
         return cls
 
@@ -572,6 +578,33 @@ class UniqueObjectIndex(CopyMixin):
                 self.remove(name, context=context_)
 
 
+class UniqueObjectIndexSoft(UniqueObjectIndex):
+    soft_checking = False
+
+    def add(self, *args, **kwargs):
+        # determine the object to add
+        if len(args) == 1 and isinstance(args[0], self.cls):
+            context = kwargs.get("index_context") or kwargs.get("context") or self.default_context
+            obj = args[0]
+        else:
+            context = kwargs.pop("index_context", None) or self.default_context
+            obj = self.cls(*args, **kwargs)
+
+        # add to the index
+
+        # invalidate if name already exists in index
+        if obj.name in self._indices[context]["names"]:
+            self._indices[context]["names"][obj.name] = None
+        else:
+            self._indices[context]["names"][obj.name] = obj
+
+        # invalidate if id already exists in index
+        if obj.name in self._indices[context]["ids"]:
+            self._indices[context]["ids"][obj.id] = None
+        else:
+            self._indices[context]["ids"][obj.id] = obj
+
+        return obj
 class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
     """
     An unique object defined by a *name* and an *id*. The purpose of this class is to provide a

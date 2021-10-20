@@ -436,11 +436,11 @@ class UniqueObjectIndex(CopyMixin):
 
         # check for duplicates in names
         if obj.name in self.names(context=context):
-            raise DuplicateNameException(self, obj.name, context)
+            raise DuplicateNameException(self.cls, obj.name, context)
 
         # check for duplicates in ids
         if obj.id in self.ids(context=context):
-            raise DuplicateIdException(self, obj.id, context)
+            raise DuplicateIdException(self.cls, obj.id, context)
 
         # add to the index
         self._indices[context]["names"][obj.name] = obj
@@ -601,16 +601,16 @@ class UniqueObjectIndexSoft(UniqueObjectIndex):
         # check for duplicates in names
         if obj.name in self.names(context=context):
             if self.soft_checking:
-                DuplicateNameWarning(self, obj.name, context)
+                DuplicateNameWarning(self.cls, obj.name, context)
             else:
-                raise DuplicateNameException(self, obj.name, context)
+                raise DuplicateNameException(self.cls, obj.name, context)
 
         # check for duplicates in ids
         if obj.id in self.ids(context=context):
             if self.soft_checking:
-                DuplicateIdWarning(self, obj.id, context)
+                DuplicateIdWarning(self.cls, obj.id, context)
             else:
-                raise DuplicateIdException(self, obj.id, context)
+                raise DuplicateIdException(self.cls, obj.id, context)
 
         # add to the index
         # invalidate if name already exists in index

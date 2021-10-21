@@ -431,7 +431,7 @@ class UniqueObjectIndex(CopyMixin):
             context = kwargs.get("index_context") or kwargs.get("context") or self.default_context
             obj = args[0]
         else:
-            context = kwargs.pop("index_context", None) or self.cls.get_default_context()
+            context = kwargs.pop("index_context", None) or self.default_context
             obj = self.cls(*args, **kwargs)
 
         # check for duplicates in names

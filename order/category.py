@@ -13,7 +13,7 @@ from order.mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, Labe
 from order.util import to_root_latex
 
 
-@unique_tree(plural="categories", parents=-1, deep_children=True, deep_parents=True)
+@unique_tree(parents=-1, deep_children=True, deep_parents=True)
 class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin):
     """ __init__(name, id="+", channel=None, categories=None, label=None, label_short=None, selection=None, selection_mode=None, tags=None, aux=None, context=None)
     Class that describes an analysis category. This is not to be confused with an analysis
@@ -127,6 +127,9 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
        The short label of this category, prefix with the short channel label if a channel is set,
        converted to ROOT-style latex.
     """
+
+    cls_name_singular = "category"
+    cls_name_plural = "categories"
 
     # attributes for copying
     copy_specs = [{"attr": "channel", "ref": True}] + UniqueObject.copy_specs + \
@@ -252,6 +255,9 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
 
     **Members**
     """
+
+    cls_name_singular = "channel"
+    cls_name_plural = "channels"
 
     # attributes for copying
     copy_specs = UniqueObject.copy_specs + AuxDataMixin.copy_specs + TagMixin.copy_specs + \

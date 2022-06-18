@@ -196,6 +196,9 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
        A list of the *n_bins* + 1 bin edges.
     """
 
+    cls_name_singular = "variable"
+    cls_name_plural = "variables"
+
     # attributes for copying
     copy_specs = [
         "expression", "binning", "x_title", ("_x_title_short", "x_title_short"), "y_title",

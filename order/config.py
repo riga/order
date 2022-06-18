@@ -70,6 +70,9 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
        The bunch crossing in arbitrary units.
     """
 
+    cls_name_singular = "campaign"
+    cls_name_plural = "campaigns"
+
     copy_specs = ["ecm", "bx"] + UniqueObject.copy_specs + AuxDataMixin.copy_specs + \
         TagMixin.copy_specs
 
@@ -136,9 +139,9 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
 
 
 @unique_tree(cls=Dataset, parents=False)
-@unique_tree(cls=Process, plural="processes", parents=False, deep_children=True)
+@unique_tree(cls=Process, parents=False, deep_children=True)
 @unique_tree(cls=Channel, parents=False, deep_children=True)
-@unique_tree(cls=Category, plural="categories", parents=False, deep_children=True)
+@unique_tree(cls=Category, parents=False, deep_children=True)
 @unique_tree(cls=Variable, parents=False)
 @unique_tree(cls=Shift, parents=False)
 class Config(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
@@ -217,6 +220,9 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
        The :py:class:`~order.analysis.Analysis` instance this config belongs to. When set, *this*
        config is added to the index of configs of the analysis object.
     """
+
+    cls_name_singular = "config"
+    cls_name_plural = "configs"
 
     copy_specs = [{"attr": "campaign", "ref": True}, {"attr": "analysis", "ref": True}] + \
         UniqueObject.copy_specs + AuxDataMixin.copy_specs + TagMixin.copy_specs

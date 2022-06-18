@@ -35,6 +35,9 @@ class Analysis(UniqueObject, AuxDataMixin, TagMixin):
     **Members**
     """
 
+    cls_name_singular = "analysis"
+    cls_name_plural = "analyses"
+
     def __init__(self, name, id, configs=None, tags=None, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
         AuxDataMixin.__init__(self, aux=aux)

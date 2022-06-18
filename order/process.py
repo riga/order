@@ -17,7 +17,7 @@ from order.mixins import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, Lab
 from order.util import typed
 
 
-@unique_tree(plural="processes", parents=-1, deep_children=True, deep_parents=True)
+@unique_tree(parents=-1, deep_children=True, deep_parents=True)
 class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, LabelMixin,
         ColorMixin):
     r"""
@@ -86,6 +86,9 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
 
        Cross sections mapped to a center-of-mass energies with arbitrary units.
     """
+
+    cls_name_singular = "process"
+    cls_name_plural = "processes"
 
     # attributes for copying
     copy_specs = ["xsecs"] + UniqueObject.copy_specs + AuxDataMixin.copy_specs + \

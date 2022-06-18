@@ -150,6 +150,9 @@ class Shift(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
        Flag denoting if the shift type is rate- and shape-changing.
     """
 
+    cls_name_singular = "shift"
+    cls_name_plural = "shifts"
+
     # nominal flag
     NOMINAL = sn.Number.NOMINAL
 

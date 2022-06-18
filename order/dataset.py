@@ -17,7 +17,7 @@ from order.shift import Shift
 from order.util import typed, make_list
 
 
-@unique_tree(cls=Process, plural="processes", parents=False, deep_children=True)
+@unique_tree(cls=Process, parents=False, deep_children=True)
 class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, LabelMixin):
     """
     Dataset definition providing two kinds of information:
@@ -135,6 +135,9 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
 
        The number of events of the nominal :py:class:`DatasetInfo` object.
     """
+
+    cls_name_singular = "dataset"
+    cls_name_plural = "datasets"
 
     # attributes for copying
     copy_specs = [{"attr": "campaign", "ref": True}, "info"] + UniqueObject.copy_specs + \

@@ -633,6 +633,16 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
        instances are only allowed to have the same name *or* the same id if their classes have
        different contexts. This member is not inherited when creating a sub-class.
 
+    .. py:classattribute:: cls_name_singular
+       type: str
+
+       The name of the unique object class in singular form, e.g. for producing automatic messages.
+
+    .. py:classattribute:: cls_name_plural
+       type: str
+
+       The name of the unique object class in plural form, e.g. for producing automatic messages.
+
     .. py:attribute:: context
        type: arbitrary (hashable)
 
@@ -650,6 +660,9 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta, UniqueObject)):
 
        The unique id.
     """
+
+    cls_name_singular = "unique_object"
+    cls_name_plural = "unique_objects"
 
     AUTO_ID = "+"
 
@@ -925,14 +938,16 @@ def uniqueness_context(context):
 
 
 def unique_tree(**kwargs):
-    r""" unique_tree(cls=None, singular=None, plural=None, parents=1, deep_chilren=False, deep_parents=False, skip=None)
+    r""" unique_tree(cls=None, parents=1, deep_children=False, deep_parents=False, skip=None)
     Decorator that adds attributes and methods to the decorated class to provide tree features,
     i.e., *parent-child* relations. Example:
 
     .. code-block:: python
 
-        @unique_tree(singular="node")
+        @unique_tree()
         class MyNode(UniqueObject):
+            cls_name_singular = "node"
+            cls_name_plural = "nodes"
             default_context = "myclass"
 
         # now, MyNode has the following attributes and methods:
@@ -959,14 +974,13 @@ def unique_tree(**kwargs):
         # -> False
 
     *cls* denotes the type of instances the tree should hold and defaults to the decorated class
-    itself. *singular* and *plural* are used to name attributes and methods. They default to
-    ``cls.__name__.lower()`` and ``singular + "s"``, respectively. When *parents* is *False*, the
-    additional features are reduced to provide only child relations. When *parents* is an integer,
-    it is interpreted as the maximim number of parents a child can have. Negative numbers mean that
-    an unlimited amount of parents is allowed. Additional convenience methods are added when
-    *parents* is *True* or exactly 1. When *deep_children* (*deep_parents*) is *True*, *get_\** and
-    *has_\** child (parent) methods will have recursive features. When *skip* is a sequence, it can
-    contain names of attributes to skip that would normally be created.
+    itself. When *parents* is *False*, the additional features are reduced to provide only child
+    relations. When *parents* is an integer, it is interpreted as the maximim number of parents a
+    child can have. Negative numbers mean that an unlimited amount of parents is allowed. Additional
+    convenience methods are added when *parents* is *True* or exactly 1. When *deep_children*
+    (*deep_parents*) is *True*, *get_\** and *has_\** child (parent) methods will have recursive
+    features. When *skip* is a sequence, it can contain names of attributes to skip that would
+    normally be created.
 
     A class can be decorated multiple times. Internally, the objects are stored in a separated
     :py:class:`UniqueObjectIndex` instance per added tree functionality.
@@ -980,12 +994,14 @@ def unique_tree(**kwargs):
 
         # determine configuration defaults
         cls = kwargs.get("cls", decorated_cls)
-        singular = kwargs.get("singular", cls.__name__).lower()
-        plural = kwargs.get("plural", singular + "s").lower()
         parents = kwargs.get("parents", 1)
         deep_children = kwargs.get("deep_children", False)
         deep_parents = kwargs.get("deep_parents", False)
         skip = make_list(kwargs.get("skip", None) or [])
+
+        # singular and plural names
+        singular = cls.cls_name_singular
+        plural = cls.cls_name_plural
 
         # special treatment of parents
         if not isinstance(parents, six.integer_types):
@@ -1028,6 +1044,24 @@ def unique_tree(**kwargs):
                 setattr(self, "_parent_" + plural, UniqueObjectIndex(cls=cls))
             orig_init(self, *args, **kwargs)
         decorated_cls.__init__ = __init__
+
+        # add info about children, parents and whether they are deep
+        if getattr(decorated_cls, "_child_classes", None) is None:
+            decorated_cls._child_classes = []
+        if getattr(decorated_cls, "_parent_classes", None) is None:
+            decorated_cls._parent_classes = []
+        if getattr(decorated_cls, "_deep_parent_classes", None) is None:
+            decorated_cls._deep_parent_classes = []
+        if getattr(decorated_cls, "_deep_child_classes", None) is None:
+            decorated_cls._deep_child_classes = []
+
+        decorated_cls._child_classes.append(cls)
+        if deep_children:
+            decorated_cls._deep_child_classes.append(cls)
+        if parents:
+            decorated_cls._parent_classes.append(cls)
+        if deep_parents:
+            decorated_cls._deep_child_classes.append(cls)
 
         # add attribute docs
         if decorated_cls.__doc__:

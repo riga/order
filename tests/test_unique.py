@@ -378,6 +378,8 @@ class UniqueTreeTest(unittest.TestCase):
     def make_class(self, **kwargs):
         @unique_tree(**kwargs)
         class Node(UniqueObject):
+            cls_name_singular = "node"
+            cls_name_plural = "nodes"
             default_uniqueness_context = "node"
 
         return Node
@@ -416,18 +418,6 @@ class UniqueTreeTest(unittest.TestCase):
             self.assertIsNotNone(getattr(Node, attr % "", None))
         for attr in conv_attrs:
             self.assertIsNotNone(getattr(Node, attr, None))
-
-        Node = self.make_class(singular="foo")
-        common_attrs2 = [attr.replace("node", "foo") for attr in common_attrs]
-        for attr in common_attrs2:
-            self.assertIsNotNone(getattr(Node, attr % "", None))
-            self.assertIsNotNone(getattr(Node, attr % "parent_", None))
-
-        Node = self.make_class(plural="foo")
-        common_attrs3 = [attr.replace("nodes", "foo") for attr in common_attrs]
-        for attr in common_attrs3:
-            self.assertIsNotNone(getattr(Node, attr % "", None))
-            self.assertIsNotNone(getattr(Node, attr % "parent_", None))
 
     def test_tree_methods(self):
         Node = self.make_class(deep_children=True, deep_parents=True, parents=-1)

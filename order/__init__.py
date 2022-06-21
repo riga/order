@@ -3,9 +3,10 @@
 
 
 __all__ = [
-    "UniqueObject", "UniqueObjectIndex", "DuplicateObjectException", "DuplicateNameException",
-    "DuplicateIdException", "uniqueness_context", "unique_tree", "CopyMixin", "AuxDataMixin",
-    "TagMixin", "DataSourceMixin", "SelectionMixin", "LabelMixin", "ColorMixin", "CopySpec",
+    "UniqueObject", "UniqueObjectIndex", "UniqueObjectMeta", "DuplicateObjectException",
+    "DuplicateNameException", "DuplicateIdException", "uniqueness_context", "unique_tree",
+    "CopyMixin", "AuxDataMixin", "TagMixin", "DataSourceMixin", "SelectionMixin", "LabelMixin",
+    "ColorMixin", "CopySpec",
     "Channel", "Category", "Variable", "Shift", "Process", "Dataset", "DatasetInfo", "Campaign",
     "Config", "Analysis",
 ]
@@ -20,8 +21,8 @@ from order.__version__ import (
 # provisioning imports
 import order.util
 from order.unique import (
-    UniqueObject, UniqueObjectIndex, DuplicateObjectException, DuplicateNameException,
-    DuplicateIdException, uniqueness_context, unique_tree,
+    UniqueObject, UniqueObjectIndex, UniqueObjectMeta, DuplicateObjectException,
+    DuplicateNameException, DuplicateIdException, uniqueness_context, unique_tree,
 )
 from order.mixins import (
     CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, SelectionMixin, LabelMixin, ColorMixin,

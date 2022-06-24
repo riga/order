@@ -476,8 +476,8 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
             unit.append(str(self.unit))
         if bin_width:
             unit.insert(0, str(bin_width))
-        if unit:
-            title = self.unit_format.format(title=title, unit=" ".join(unit))
+            if unit:
+                title = self.unit_format.format(title=title, unit=" ".join(unit))
 
         return to_root_latex(title) if root else title
 

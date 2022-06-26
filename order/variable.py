@@ -25,7 +25,8 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     *expression* can be a string (for projection statements) or function that defines the variable
     expression. When empty, it defaults to *name*. *selection* is expected to be a string. Other
     options that are relevant for plotting are *binning*, *x_title*, *x_title_short*, *y_title*,
-    *y_title_short*, and *unit*. See the attribute listing below for further information.
+    *y_title_short*, *unit*, *unit_format* and *null_value*. See the attribute listing below for
+    further information.
 
     *selection* and *selection_mode* are passed to the :py:class:`~order.mixins.SelectionMixin`,
     *tags* to the :py:class:`~order.mixins.TagMixin`, *aux* to the
@@ -49,6 +50,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
             binning=(20, 0., 10.),
             x_title=r"$\mu p_{T}$",
             unit="GeV",
+            null_value=-999.0,
         )
 
         v1.x_title_root
@@ -155,6 +157,12 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
        The format string for concatenating axis titles and units, e.g. ``"{title} / {unit}"``. The
        format string must contain the fields *title* and *unit*.
 
+    .. py:attribute:: null_value
+       type: int, float, None
+
+       A configurable NULL value for this variable, possibly denoting missing values. *None* is
+       considered as "non-configured".
+
     .. py:attribute:: log_x
        type: boolean
 
@@ -202,14 +210,14 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     # attributes for copying
     copy_specs = [
         "expression", "binning", "x_title", ("_x_title_short", "x_title_short"), "y_title",
-        ("_y_title_short", "y_title_short"), "log_x", "log_y", "unit", "unit_format",
+        ("_y_title_short", "y_title_short"), "log_x", "log_y", "unit", "unit_format", "null_value",
     ] + UniqueObject.copy_specs + AuxDataMixin.copy_specs + TagMixin.copy_specs + \
         SelectionMixin.copy_specs
 
     def __init__(self, name, id=UniqueObject.AUTO_ID, expression=None, binning=(1, 0., 1.),
             x_title="", x_title_short=None, y_title="Entries", y_title_short=None, x_labels=None,
-            log_x=False, log_y=False, unit="1", unit_format="{title} / {unit}", selection=None,
-            selection_mode=None, tags=None, aux=None, context=None):
+            log_x=False, log_y=False, unit="1", unit_format="{title} / {unit}", null_value=None,
+            selection=None, selection_mode=None, tags=None, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
@@ -228,6 +236,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         self._log_y = None
         self._unit = None
         self._unit_format = None
+        self._null_value = None
 
         # set initial values
         self.expression = expression
@@ -241,6 +250,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         self.log_y = log_y
         self.unit = unit
         self.unit_format = unit_format
+        self.null_value = null_value
 
     @property
     def expression(self):
@@ -416,6 +426,15 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
             raise ValueError("invalid unit_format: {}, key '{}' missing".format(unit_format, key))
 
         return unit_format
+
+    @typed
+    def null_value(self, null_value):
+        if null_value is None:
+            return None
+        if not isinstance(null_value, six.integer_types + (float,)):
+            raise TypeError("invalid null_value type: {}".format(null_value))
+
+        return null_value
 
     @property
     def n_bins(self):

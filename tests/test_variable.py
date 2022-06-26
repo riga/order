@@ -19,6 +19,7 @@ class VariableTest(unittest.TestCase):
         kwargs.setdefault("binning", (20, 0., 10.))
         kwargs.setdefault("x_title", "p_{T}")
         kwargs.setdefault("unit", "GeV")
+        kwargs.setdefault("null_value", -999)
         return Variable(name, **kwargs)
 
     def test_constructor(self):
@@ -74,6 +75,14 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(v.x_max, 1.)
         self.assertEqual(v.bin_width, 0.1)
         self.assertEqual(len(v.bin_edges), v.n_bins + 1)
+
+        self.assertEqual(v.null_value, -999)
+        v.null_value = 5.5
+        self.assertEqual(v.null_value, 5.5)
+        v.null_value = None
+        self.assertIsNone(v.null_value)
+        with self.assertRaises(TypeError):
+            v.null_value = "some_string"
 
         v.x_title = "foo"
         self.assertEqual(v.x_title, "foo")

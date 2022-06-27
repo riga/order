@@ -62,7 +62,6 @@ setup(
     classifiers=classifiers,
     long_description=long_description,
     install_requires=install_requires,
-    python_requires=">=2.7",
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, <4",
     zip_safe=False,
     packages=find_packages(exclude=["tests"]),

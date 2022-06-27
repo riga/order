@@ -548,7 +548,7 @@ class UniqueTreeTest(unittest.TestCase):
         def walk(depth, this):
             return [n for n, _, _ in n1.walk_nodes(
                 depth_first=depth,
-                include_self=this
+                include_self=this,
             )]
 
         self.assertListEqual(walk(False, False), [n2, n3, n4])
@@ -558,7 +558,7 @@ class UniqueTreeTest(unittest.TestCase):
 
         self.assertListEqual(
             [n for n, _, _ in n4.walk_parent_nodes(include_self=True)],
-            [n4, n2, n1]
+            [n4, n2, n1],
         )
 
     def test_lookup(self):

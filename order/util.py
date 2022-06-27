@@ -83,7 +83,7 @@ class typed(property):
             property.__init__(self,
                 functools.wraps(fparse)(self._fget(m_name)),
                 self._fset(m_name) if setter else None,
-                self._fdel(m_name) if deleter else None
+                self._fdel(m_name) if deleter else None,
             )
 
     def __call__(self, fparse):

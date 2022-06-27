@@ -15,7 +15,7 @@
    :target: https://github.com/riga/order/actions/workflows/lint_and_test.yml
    :alt: Lint and test
 
-.. image:: https://codecov.io/gh/riga/order/branch/master/graph/badge.svg?token=33FLINPXFP
+.. image:: https://codecov.io/gh/riga/order/branch/master/graph/badge.svg?token=SNFRGYOITJ
    :target: https://codecov.io/gh/riga/order
    :alt: Code coverge
 

@@ -43,8 +43,8 @@ class DatasetTest(unittest.TestCase):
                     "keys": ["/ttbar_scaleUP.../.../..."],
                     "n_files": 100,
                     "n_events": 40000,
-                }
-            }
+                },
+            },
         )
 
         self.assertEqual(len(d.info), 2)

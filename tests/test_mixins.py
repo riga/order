@@ -337,16 +337,16 @@ class SelectionMixinTest(unittest.TestCase):
 class LabelMixinTest(unittest.TestCase):
 
     def test_constructor(self):
-        l = LabelMixin(label=r"$\eq$ 3 jets", label_short="3j")
+        obj = LabelMixin(label=r"$\eq$ 3 jets", label_short="3j")
 
-        self.assertEqual(l.label, r"$\eq$ 3 jets")
-        self.assertEqual(l.label_short, "3j")
-        self.assertEqual(l.label_root, "#eq 3 jets")
+        self.assertEqual(obj.label, r"$\eq$ 3 jets")
+        self.assertEqual(obj.label_short, "3j")
+        self.assertEqual(obj.label_root, "#eq 3 jets")
 
-        l.label_short = None
-        self.assertEqual(l.label_short, l.label)
-        l.label = None
-        self.assertIsNone(l.label_short)
+        obj.label_short = None
+        self.assertEqual(obj.label_short, obj.label)
+        obj.label = None
+        self.assertIsNone(obj.label_short)
 
 
 class ColorMixinTest(unittest.TestCase):

@@ -55,6 +55,6 @@ autodoc_member_order = "bysource"
 
 
 def setup(app):
-    app.app.add_css_file("styles_common.css")
+    app.add_css_file("styles_common.css")
     if html_theme in ("sphinx_rtd_theme", "alabaster"):
-        app.app.add_css_file("styles_{}.css".format(html_theme))
+        app.add_css_file("styles_{}.css".format(html_theme))

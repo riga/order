@@ -11,3 +11,5 @@ __pycache__
 dist
 build
 docs/_build
+.coverage
+coverage*.xml

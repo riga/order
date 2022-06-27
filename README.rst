@@ -7,13 +7,17 @@
 .. marker-after-logo
 
 
+.. image:: https://readthedocs.org/projects/python-order/badge/?version=latest
+   :target: http://python-order.readthedocs.io/en/latest
+   :alt: Documentation status
+
 .. image:: https://github.com/riga/order/actions/workflows/lint_and_test.yml/badge.svg
    :target: https://github.com/riga/order/actions/workflows/lint_and_test.yml
    :alt: Lint and test
 
-.. image:: https://readthedocs.org/projects/python-order/badge/?version=latest
-   :target: http://python-order.readthedocs.io/en/latest
-   :alt: Documentation status
+.. image:: https://codecov.io/gh/riga/order/branch/master/graph/badge.svg?token=33FLINPXFP
+   :target: https://codecov.io/gh/riga/order
+   :alt: Code coverge
 
 .. image:: https://img.shields.io/pypi/v/order.svg?style=flat
    :target: https://pypi.python.org/pypi/order

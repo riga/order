@@ -72,7 +72,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     **Members**
 
     .. py:attribute:: expression
-       type: string, None
+       type: string, callable, None
 
        The expression of this variable. Defaults to name if *None*.
 

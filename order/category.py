@@ -8,6 +8,8 @@ Classes to describe object that help distinguishing events.
 __all__ = ["Channel", "Category"]
 
 
+import six
+
 from order.unique import UniqueObject, unique_tree
 from order.mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin
 from order.util import to_root_latex
@@ -15,7 +17,7 @@ from order.util import to_root_latex
 
 @unique_tree(parents=-1, deep_children=True, deep_parents=True)
 class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin):
-    """ __init__(name, id="+", channel=None, categories=None, label=None, label_short=None, \\
+    """ __init__(name, id="+", expression=None, channel=None, categories=None, label=None, label_short=None, \\
     selection=None, selection_mode=None, tags=None, aux=None, context=None)
     Class that describes an analysis category. This is not to be confused with an analysis
     :py:class:`Channel`. While the definition of a channel can be understood as being fixed by e.g.
@@ -97,6 +99,11 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
 
     **Members**
 
+    .. py:attribute:: expression
+       type: string, callable, None
+
+       The expression of this variable. Defaults to name if *None*.
+
     .. py:attribute:: channel
        type: Channel, None
 
@@ -133,13 +140,13 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
     cls_name_plural = "categories"
 
     # attributes for copying
-    copy_specs = [{"attr": "channel", "ref": True}] + UniqueObject.copy_specs + \
+    copy_specs = ["expression", {"attr": "channel", "ref": True}] + UniqueObject.copy_specs + \
         AuxDataMixin.copy_specs + TagMixin.copy_specs + SelectionMixin.copy_specs + \
         LabelMixin.copy_specs
 
-    def __init__(self, name, id=UniqueObject.AUTO_ID, channel=None, categories=None, label=None,
-            label_short=None, selection=None, selection_mode=None, tags=None, aux=None,
-            context=None):
+    def __init__(self, name, id=UniqueObject.AUTO_ID, expression=None, channel=None,
+            categories=None, label=None, label_short=None, selection=None, selection_mode=None,
+            tags=None, aux=None, context=None):
         UniqueObject.__init__(self, name, id, context=context)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
@@ -148,15 +155,39 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
         LabelMixin.__init__(self, label=label, label_short=label_short)
 
         # register empty attributes
+        self._expression = None
         self._channel = None
 
         # set initial values
-        if channel is not None:
-            self.channel = channel
-
-        # set initial child categories
+        self.expression = expression
+        self.channel = channel
         if categories is not None:
             self.extend_categories(categories)
+
+    @property
+    def expression(self):
+        # expression getter
+        if self._expression is None:
+            return self.name
+        else:
+            return self._expression
+
+    @expression.setter
+    def expression(self, expression):
+        # expression setter
+        if expression is None:
+            # reset on None
+            self._expression = None
+            return
+
+        if isinstance(expression, six.string_types):
+            if not expression:
+                raise ValueError("expression must not be empty")
+            expression = str(expression)
+        elif not callable(expression):
+            raise TypeError("invalid expression type: {}".format(expression))
+
+        self._expression = expression
 
     @property
     def channel(self):

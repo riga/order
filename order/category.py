@@ -17,8 +17,8 @@ from order.util import to_root_latex
 
 @unique_tree(parents=-1, deep_children=True, deep_parents=True)
 class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin):
-    """ __init__(name, id="+", expression=None, channel=None, categories=None, label=None, label_short=None, \\
-    selection=None, selection_mode=None, tags=None, aux=None, context=None)
+    """ __init__(name, id="+", expression=None, channel=None, categories=None, label=None, \\
+    label_short=None, selection=None, selection_mode=None, tags=None, aux=None, context=None)
     Class that describes an analysis category. This is not to be confused with an analysis
     :py:class:`Channel`. While the definition of a channel can be understood as being fixed by e.g.
     the final state of an event, a category describes an arbitrary sub phase-space. Therefore, a

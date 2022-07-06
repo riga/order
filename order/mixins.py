@@ -636,8 +636,8 @@ class DataSourceMixin(object):
 
 class SelectionMixin(object):
     """
-    Mixin-class that adds attibutes and methods to describe a selection rule using ROOT- and
-    numexpr-style expressions.
+    Mixin-class that adds attibutes and methods to describe a selection rule using ROOT- or
+    numexpr-style expression syntax, or a bare callable.
 
     **Arguments**
 
@@ -673,6 +673,17 @@ class SelectionMixin(object):
         c.selection
         # -> "(myBranchA > 0) & (myBranchB < 100)"
 
+        def my_selection(*args, **kwargs):
+            ...
+
+        c.selection = my_selection
+        c.selection
+        # -> <function my_selection()>
+        c.selection_mode
+        # -> None
+        c.add_selection("myBranchB < 100")
+        # -> TypeError
+
     **Members**
 
     .. py:classattribute:: MODE_ROOT
@@ -693,14 +704,16 @@ class SelectionMixin(object):
        otherwise.
 
     .. py:attribute:: selection
-       type: string
+       type: string, callable
 
-       The selection string.
+       The selection string or a callable. When a string, :py:attr:`selection_mode` decides how the
+       string is treated.
 
     .. py:attribute:: selection_mode
-       type: string
+       type: string, None
 
-       The selection mode. Should either be *MODE_ROOT* or *MODE_NUMEXPR*.
+       The selection mode. Should either be *MODE_ROOT* or *MODE_NUMEXPR*. Only considered when
+       :py:attr:`selection` is a string.
     """
 
     MODE_ROOT = "root"
@@ -726,24 +739,37 @@ class SelectionMixin(object):
         if selection is not None:
             self.selection = selection
 
-    @typed
+    @property
+    def selection(self):
+        # selection getter
+        return self._selection
+
+    @selection.setter
     def selection(self, selection):
-        # selection parser
+        if callable(selection):
+            self._selection = selection
+            self._selection_mode = None
+            return
+
+        # get the selection mode
         if self.selection_mode == self.MODE_ROOT:
             join = join_root_selection
-        else:
+        elif self.selection_mode == self.MODE_NUMEXPR:
             join = join_numexpr_selection
+        else:
+            raise Exception("when selection is a string, selection mode must be set")
 
         try:
-            selection = join(selection)
+            self._selection = join(selection)
         except:
             raise TypeError("invalid selection type: {}".format(selection))
-
-        return selection
 
     @typed
     def selection_mode(self, selection_mode):
         # selection mode parser
+        if selection_mode is None:
+            return selection_mode
+
         if not isinstance(selection_mode, six.string_types):
             raise TypeError("invalid selection_mode type: {}".format(selection_mode))
 
@@ -755,14 +781,23 @@ class SelectionMixin(object):
 
     def add_selection(self, selection, **kwargs):
         """
-        Adds a *selection* string to the current one. The new string will be logically connected via
-        *AND* by default, which can be configured through *kwargs*. All *kwargs* are forwarded to
+        Adds a *selection* string to the current one if it is also a string. The new string will be
+        logically connected via *AND* by default, which can be configured through *kwargs*. All
+        *kwargs* are forwarded to
         :py:func:`util.join_root_selection` or :py:func:`util.join_numexpr_selection`.
         """
+        if not isinstance(self.selection, six.string_types):
+            raise TypeError(
+                "cannot add selection expressions to existing non-string "
+                "selection {}".format(self.selection),
+            )
+
         if self.selection_mode == self.MODE_ROOT:
             join = join_root_selection
-        else:
+        elif self.selection_mode == self.MODE_NUMEXPR:
             join = join_numexpr_selection
+        else:
+            raise Exception("when selection is a string, selection mode must be set")
 
         self.selection = join(self.selection, selection, **kwargs)
 

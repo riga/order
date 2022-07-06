@@ -313,6 +313,14 @@ class SelectionMixinTest(unittest.TestCase):
         self.assertEqual(s.selection, "(((myBranchC > 0) & (myBranchD < 100)) | (myBranchE < 1)) "
             "* (myWeight)")
 
+    def test_constructor_callable(self):
+        s = SelectionMixin("myBranchC > 0", selection_mode=SelectionMixin.MODE_NUMEXPR)
+        self.assertEqual(s.selection, "myBranchC > 0")
+
+        s.selection = lambda: None
+        self.assertTrue(callable(s.selection))
+        self.assertIsNone(s.selection_mode)
+
     def test_selections(self):
         s = SelectionMixin(selection_mode=SelectionMixin.MODE_ROOT)
 

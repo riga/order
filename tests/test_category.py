@@ -78,18 +78,6 @@ class CategoryTest(unittest.TestCase):
         c.label = None
         self.assertEqual(c.label_short, c.name)
 
-    def test_expression(self):
-        c = Category("eq4j", context="category_test_expression")
-        c.expression = "foo"
-        self.assertEqual(c.expression, "foo")
-        with self.assertRaises(TypeError):
-            c.expression = 1
-        with self.assertRaises(ValueError):
-            c.expression = ""
-        c.expression = lambda: 123
-        self.assertEqual(c.expression(), 123)
-        c.expression = "foo"
-
     def test_channel(self):
         SL = Channel("SL", 1, context="category_test_channel")
         c = Category("eq4j", channel=SL, label=r"$\eq$ 4 jets")

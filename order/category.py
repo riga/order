@@ -8,8 +8,6 @@ Classes to describe object that help distinguishing events.
 __all__ = ["Channel", "Category"]
 
 
-import six
-
 from order.unique import UniqueObject, unique_tree
 from order.mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin
 from order.util import to_root_latex

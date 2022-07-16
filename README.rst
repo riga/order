@@ -27,6 +27,10 @@
    :target: https://github.com/riga/order/blob/master/LICENSE
    :alt: License
 
+.. image:: https://img.shields.io/pypi/dm/order.svg
+   :target: https://pypi.python.org/pypi/order
+   :alt: PyPI downloads
+
 .. image:: https://mybinder.org/badge_logo.svg
    :target: https://mybinder.org/v2/gh/riga/order/master?filepath=examples%2Fintro.ipynb
    :alt: Open in binder

@@ -376,23 +376,18 @@ class UniqueObjectIndex(CopyMixin):
         """
         Adds a new object to the index for a certain context. When the first *arg* is not an
         instance of *cls*, all *args* and *kwargs* are passed to the *cls* constructor to create a
-        new object. In this case, the *kwargs* may contain *index_context* to define the *context*
-        if the index in which the newly created object should be stored. When not set,
-        *default_context* is used. Otherwise, when the first *arg* is already an object and to be
-        added, the context is either *index_context* or *contex*. The former has priority for
-        consistency with the case described above. In both cases the added object is returned.
+        new object. The context of the object is used to store it within _this_ index. The added
+        object is returned.
         """
         # determine the object to add
         if len(args) == 1 and isinstance(args[0], self.cls):
-            context = kwargs.get("index_context") or kwargs.get("context") or self.default_context
             obj = args[0]
         else:
-            context = kwargs.pop("index_context", None) or self.default_context
             obj = self.cls(*args, **kwargs)
 
         # add to the index
-        self._indices[context]["names"][obj.name] = obj
-        self._indices[context]["ids"][obj.id] = obj
+        self._indices[obj.context]["names"][obj.name] = obj
+        self._indices[obj.context]["ids"][obj.id] = obj
 
         return obj
 
@@ -1038,10 +1033,27 @@ def unique_tree(**kwargs):
         # patch the init method
         orig_init = decorated_cls.__init__
         def __init__(self, *args, **kwargs):
-            # register the child and parent indexes
-            setattr(self, "_" + plural, UniqueObjectIndex(cls=cls))
+            if getattr(self, "_child_indices", None) is None:
+                self._child_indices = []
+            if getattr(self, "_parent_indices", None) is None:
+                self._parent_indices = []
+            if getattr(self, "_all_indices", None) is None:
+                self._all_indices = []
+
+            # register the child index
+            child_index = UniqueObjectIndex(cls=cls)
+            setattr(self, "_" + plural, child_index)
+            self._child_indices.append(child_index)
+            self._all_indices.append(child_index)
+
+            # register the child index
             if parents:
-                setattr(self, "_parent_" + plural, UniqueObjectIndex(cls=cls))
+                parent_index = UniqueObjectIndex(cls=cls)
+                setattr(self, "_parent_" + plural, parent_index)
+                self._parent_indices.append(parent_index)
+                self._all_indices.append(parent_index)
+
+            # call the original inint
             orig_init(self, *args, **kwargs)
         decorated_cls.__init__ = __init__
 

@@ -190,7 +190,7 @@ class UniqueObjectIndexTest(unittest.TestCase):
         idx = UniqueObjectIndex(cls=C)
         idx.add("foo", 1)
         idx.add("bar", 2)
-        idx.add("test", 3, context="other", index_context="other")
+        idx.add("test", 3, context="other")
 
         return C, idx
 
@@ -330,7 +330,7 @@ class UniqueObjectIndexTest(unittest.TestCase):
         self.assertTrue("foo" in idx)
         self.assertTrue(idx.has("foo"))
 
-        idx.add("test", 1, context="newindex", index_context="newindex")
+        idx.add("test", 1, context="newindex")
         self.assertTrue("test" in idx)
         self.assertFalse(idx.has("test"))
 

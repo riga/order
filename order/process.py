@@ -10,6 +10,7 @@ __all__ = ["Process"]
 
 import sys
 
+import six
 from scinum import Number
 
 from order.unique import UniqueObject, UniqueObjectIndex, unique_tree
@@ -195,7 +196,7 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
             xsec = self.xsecs.get(ecm)
             entry += "  " * _depth + (xsec.str(**kwargs) if xsec else "no cross-section")
 
-        stream.write((entry + "\n").encode())
+        stream.write(six.b(entry + "\n"))
 
         # stop here when max_depth is reached
         if 0 <= max_depth <= _depth:

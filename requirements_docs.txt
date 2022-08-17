@@ -1,4 +1,4 @@
-scinum>=1.1.3
+scinum>=1.4.3
 six
 
 sphinx>=5.0,<6

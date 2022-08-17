@@ -28,13 +28,12 @@ class Shift(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
 
     *label* and *label_short* are forwarded to the :py:class:`~order.mixins.LabelMixin`, *tags* to
     the :py:class:`~order.mixins.TagMixin`, *aux* to the :py:class:`~order.mixins.AuxDataMixin`
-    *name*, *id* (defaulting to an auto id) and *context* to the
-    :py:class:`~order.unique.UniqueObject` constructor.
+    *name* and *id* (defaulting to an auto id) to the :py:class:`~order.unique.UniqueObject`
+    constructor.
 
     **Copy behavior**
 
-    All attributes are copied. Also note the copy behavior of
-    :py:class:`~order.unique.UniqueObject`'s.
+    All attributes are copied.
 
     **Example**
 
@@ -220,9 +219,8 @@ class Shift(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
         else:
             raise ValueError("unknown shift direction: {}".format(direction))
 
-    def __init__(self, name, id, type=None, label=None, label_short=None, tags=None, aux=None,
-            context=None):
-        UniqueObject.__init__(self, name, id, context=context)
+    def __init__(self, name, id, type=None, label=None, label_short=None, tags=None, aux=None):
+        UniqueObject.__init__(self, name, id)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)

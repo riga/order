@@ -13,7 +13,7 @@ import sys
 import six
 from scinum import Number
 
-from order.unique import UniqueObject, UniqueObjectIndex, unique_tree
+from order.unique import UniqueObject, unique_tree
 from order.mixins import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, LabelMixin, ColorMixin
 from order.util import typed
 
@@ -31,8 +31,8 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
 
     *color* is forwarded to the :py:class:`~order.mixins.ColorMixin`, *label* and *label_short* to
     the :py:class:`~order.mixins.LabelMixin`, *is_data* to the
-    :py:class:`~order.mixins.DataSourceMixin`,*tags* to the :py:class:`~order.mixins.TagMixin`,
-    *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and *name*, *id* and *context* to the
+    :py:class:`~order.mixins.DataSourceMixin`, *tags* to the :py:class:`~order.mixins.TagMixin`,
+    *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and *name* and *id* to the
     :py:class:`~order.unique.UniqueObject` constructor.
 
     A process can have parent-child relations to other processes. Initial child processes are set
@@ -40,8 +40,9 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
 
     **Copy behavior**
 
-    All attributes are copied **except** for references to child and parent processes. Also note the
-    copy behavior of :py:class:`~order.unique.UniqueObject`'s.
+    All attributes are coied, **except** for
+
+       - child and parent processes.
 
     **Example**
 
@@ -96,28 +97,9 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
         TagMixin.copy_specs + DataSourceMixin.copy_specs + LabelMixin.copy_specs + \
         ColorMixin.copy_specs
 
-    @classmethod
-    def pretty_print_all(cls, *args, **kwargs):
-        """ pretty_print_all(*args, contenxt=None, **kwargs)
-        Calls :py:meth:`pretty_print` of all root processes in the instance cache for *context* and
-        forwards all *args* and *kwargs*. When *context* is *all*, root processes of all indices are
-        printed.
-        """
-        context = kwargs.pop("context", None)
-        stream = kwargs.get("stream") or sys.stdout
-        first = True
-        for process in cls._instances.values(context=context):
-            if context == UniqueObjectIndex.ALL:
-                process = process[0]
-            if process.is_root_process:
-                if first:
-                    stream.write("\n".encode())
-                first = False
-                process.pretty_print(*args, **kwargs)
-
     def __init__(self, name, id, xsecs=None, processes=None, color=None, label=None,
-            label_short=None, is_data=False, tags=None, aux=None, context=None):
-        UniqueObject.__init__(self, name, id, context=context)
+            label_short=None, is_data=False, tags=None, aux=None):
+        UniqueObject.__init__(self, name, id)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)

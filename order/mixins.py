@@ -78,11 +78,14 @@ class CopySpec(object):
     def new(cls, obj):
         if isinstance(obj, cls):
             return copy.copy(obj)
-        elif isinstance(obj, six.string_types):
+
+        if isinstance(obj, six.string_types):
             return cls(dst=obj)
-        elif isinstance(obj, (tuple, list)) and len(obj) == 2:
+
+        if isinstance(obj, (tuple, list)) and len(obj) == 2:
             return cls(src=obj[0], dst=obj[1])
-        elif isinstance(obj, dict):
+
+        if isinstance(obj, dict):
             kwargs = {}
             kwargs["dst"] = obj.get("dst", obj.get("attr"))
             if kwargs["dst"] is None:
@@ -94,9 +97,8 @@ class CopySpec(object):
             kwargs["use_setter"] = obj.get("use_setter", False)
             kwargs["manual"] = obj.get("manual", False)
             return cls(**kwargs)
-        else:
-            msg = "cannot create {} from unknown type of object '{}'"
-            raise TypeError(msg.format(cls.__name__, obj))
+
+        raise TypeError("cannot create {} from object '{}'".format(cls.__name__, obj))
 
     def __init__(self, dst, src=None, ref=False, shallow=False, use_setter=False, manual=False):
         super(CopySpec, self).__init__()
@@ -196,10 +198,12 @@ class CopyMixin(object):
         """
         if spec.ref:
             return obj
-        elif spec.shallow:
+
+        if spec.shallow:
             return copy.copy(obj)
-        else:
-            return copy.deepcopy(obj)
+
+        # default to deep copy
+        return copy.deepcopy(obj)
 
     def _copy_attribute_manual(self, inst, obj, spec):
         """
@@ -229,7 +233,7 @@ class CopyMixin(object):
         to its constructor. Attributes that are not present in *args* or *kwargs* are copied over
         from *this* instance based in the attribute specifications given in :py:attr:`copy_specs`.
         They can be extended by *_specs* or even replaced when *_replace_specs* is *True*. *_skip*
-        can be a sequence of destination attribute names that should be skipped.
+        can be a sequence of source attribute names that should be skipped.
         """
         # extract the copy configuration from kwargs
         cls = kwargs.pop("_cls", self.__class__)
@@ -256,11 +260,8 @@ class CopyMixin(object):
                 _specs.insert(0, spec)
         specs = _specs
 
-        # maybe skip some specs, identified by the destination attribute
-        specs = list(filter((lambda spec: spec.dst not in skip), specs))
-        for skip_dst in skip:
-            if skip_dst in kwargs:
-                del kwargs[skip_dst]
+        # maybe skip some specs, identified by the source attribute
+        specs = list(filter((lambda spec: spec.src not in skip), specs))
 
         # check if a reference should be returned instead of a real copy
         # _copy_ref might also update kwargs

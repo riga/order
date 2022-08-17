@@ -43,13 +43,15 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
     one. Otherwise, it should be a dictionary matching the format of the *info* mapping. *label* and
     *label_short* are forwarded to the :py:class:`~order.mixins.LabelMixin`, *is_data* to the
     :py:class:`~order.mixins.DataSourceMixin`, *tags* to the :py:class:`~order.mixins.TagMixin`,
-    *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and *name*, *id* and *context* to the
+    *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and *name* and *id* to the
     :py:class:`~order.unique.UniqueObject` constructor.
 
     **Copy behavior**
 
-    All attributes are copied **except** for references to linked processes. The *campaign*
-    reference is kept. Also note the copy behavior of :py:class:`~order.unique.UniqueObject`'s.
+    All attributes are copied, **except** for
+
+        - references to linked processes, and
+        - the reference to the campaign.
 
     **Example**
 
@@ -140,13 +142,13 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
     cls_name_plural = "datasets"
 
     # attributes for copying
-    copy_specs = [{"attr": "campaign", "ref": True}, "info"] + UniqueObject.copy_specs + \
+    copy_specs = ["info"] + UniqueObject.copy_specs + \
         AuxDataMixin.copy_specs + TagMixin.copy_specs + DataSourceMixin.copy_specs + \
         LabelMixin.copy_specs
 
     def __init__(self, name, id, campaign=None, info=None, processes=None, label=None,
-            label_short=None, is_data=False, tags=None, aux=None, context=None, **kwargs):
-        UniqueObject.__init__(self, name, id, context=context)
+            label_short=None, is_data=False, tags=None, aux=None, **kwargs):
+        UniqueObject.__init__(self, name, id)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)
@@ -263,8 +265,7 @@ class DatasetInfo(CopyMixin, AuxDataMixin, TagMixin):
 
     **Copy behavior**
 
-    All attributes are copied. Also note the copy behavior of
-    :py:class:`~order.unique.UniqueObject`'s.
+    All attributes are copied.
 
     **Members**
 

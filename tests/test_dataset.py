@@ -6,7 +6,7 @@ __all__ = ["DatasetTest", "DatasetInfoTest"]
 
 import unittest
 
-from order import Dataset, DatasetInfo, Campaign, uniqueness_context
+from order import Dataset, DatasetInfo, Campaign
 
 
 class DatasetTest(unittest.TestCase):
@@ -89,22 +89,21 @@ class DatasetTest(unittest.TestCase):
             d.info = "foo"
 
     def test_copy(self):
-        with uniqueness_context("dataset_test_copy"):
-            c = Campaign("2017B", 2)
-            d = Dataset("ttH", 1,
-                campaign=c,
-                keys=["/ttHTobb_M125.../.../..."],
-                n_files=123,
-                n_events=456789,
-            )
-            d.add_process("ttH", 1)
-            d2 = d.copy(name="ttH2", id=2)
+        c = Campaign("2017B", 2)
+        d = Dataset("ttH", 1,
+            campaign=c,
+            keys=["/ttHTobb_M125.../.../..."],
+            n_files=123,
+            n_events=456789,
+        )
+        d.add_process("ttH", 1)
+        d2 = d.copy(name="ttH2", id=2)
 
         self.assertEqual(d2.name, "ttH2")
         self.assertEqual(d2.id, 2)
         self.assertEqual(len(d.processes), 1)
         self.assertEqual(len(d2.processes), 0)
-        self.assertEqual(d.campaign, d2.campaign)
+        self.assertIsNone(d2.campaign)
 
 
 class DatasetInfoTest(unittest.TestCase):

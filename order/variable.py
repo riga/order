@@ -30,13 +30,12 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
     *selection* and *selection_mode* are passed to the :py:class:`~order.mixins.SelectionMixin`,
     *tags* to the :py:class:`~order.mixins.TagMixin`, *aux* to the
-    :py:class:`~order.mixins.AuxDataMixin`, and *name*, *id* (defaulting to an automatically
-    increasing id) and *context* to the :py:class:`~order.unique.UniqueObject` constructor.
+    :py:class:`~order.mixins.AuxDataMixin`, and *name* and *id* (defaulting to an automatically
+    increasing id) to the :py:class:`~order.unique.UniqueObject` constructor.
 
     **Copy behavior**
 
-    All attributes are copied. Also note the copy behavior of
-    :py:class:`~order.unique.UniqueObject`'s.
+    All attributes are copied.
 
     **Example**
 
@@ -44,7 +43,8 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
         import order as od
 
-        v1 = od.Variable("myVar",
+        v1 = od.Variable(
+            name="myVar",
             expression="myBranchA * myBranchB",
             selection="myBranchC > 0",
             binning=(20, 0., 10.),
@@ -217,8 +217,8 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     def __init__(self, name, id=UniqueObject.AUTO_ID, expression=None, binning=(1, 0., 1.),
             x_title="", x_title_short=None, y_title="Entries", y_title_short=None, x_labels=None,
             log_x=False, log_y=False, unit="1", unit_format="{title} / {unit}", null_value=None,
-            selection=None, selection_mode=None, tags=None, aux=None, context=None):
-        UniqueObject.__init__(self, name, id, context=context)
+            selection=None, selection_mode=None, tags=None, aux=None):
+        UniqueObject.__init__(self, name, id)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)

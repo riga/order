@@ -58,6 +58,8 @@ class ProcessTest(unittest.TestCase):
         self.assertEqual(p2.get_xsec(13), 5)
         self.assertEqual(p2.color, p.color)
         self.assertEqual(list(p2.aux.keys())[0], 3)
+        self.assertTrue(p2.has_aux(3))
+        self.assertFalse(p2.has_aux(1))
 
     def test_parent_processes(self):
         c = Process("child", 10)

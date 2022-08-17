@@ -25,7 +25,7 @@ class Analysis(UniqueObject, AuxDataMixin, TagMixin):
 
     The configuration objects are initialized with *configs*. *tags* are forwarded to the
     :py:class:`~order.mixins.TagMixin`, *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and
-    *name*, *id* and *context* to the :py:class:`~order.unique.UniqueObject` constructor.
+    *name* and *id* to the :py:class:`~order.unique.UniqueObject` constructor.
 
     **Example**
 
@@ -38,8 +38,8 @@ class Analysis(UniqueObject, AuxDataMixin, TagMixin):
     cls_name_singular = "analysis"
     cls_name_plural = "analyses"
 
-    def __init__(self, name, id, configs=None, tags=None, aux=None, context=None):
-        UniqueObject.__init__(self, name, id, context=context)
+    def __init__(self, name, id, configs=None, tags=None, aux=None):
+        UniqueObject.__init__(self, name, id)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)
 

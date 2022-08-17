@@ -16,7 +16,7 @@ from order.util import to_root_latex
 @unique_tree(parents=-1, deep_children=True, deep_parents=True)
 class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin):
     """ __init__(name, id="+", channel=None, categories=None, label=None, label_short=None, \
-    selection=None, selection_mode=None, tags=None, aux=None, context=None)
+    selection=None, selection_mode=None, tags=None, aux=None)
     Class that describes an analysis category. This is not to be confused with an analysis
     :py:class:`Channel`. While the definition of a channel can be understood as being fixed by e.g.
     the final state of an event, a category describes an arbitrary sub phase-space. Therefore, a
@@ -32,14 +32,15 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
     *label* and *label_short* are forwarded to the :py:class:`~order.mixins.LabelMixin`, *selection*
     and *selection_mode* to the :py:class:`~order.mixins.SelectionMixin`, *tags* to the
     :py:class:`~order.mixins.TagMixin`, *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and
-    *name*, *id* (defaulting to an auto id) and *context* to the
-    :py:class:`~order.unique.UniqueObject` constructor.
+    *name* and *id* (defaulting to an auto id) to the :py:class:`~order.unique.UniqueObject`
+    constructor.
 
     **Copy behavior**
 
-    All attributes are copied **except** for references to child and parent categories. If set, the
-    *channel* reference is kept. Also note the copy behavior of
-    :py:class:`~order.unique.UniqueObject`'s.
+    All attributes are copied, **except** for
+
+        - references to child and parent categories, and
+        - the reference to the *channel* if set.
 
     **Example**
 
@@ -133,14 +134,13 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
     cls_name_plural = "categories"
 
     # attributes for copying
-    copy_specs = [{"attr": "channel", "ref": True}] + UniqueObject.copy_specs + \
+    copy_specs = UniqueObject.copy_specs + \
         AuxDataMixin.copy_specs + TagMixin.copy_specs + SelectionMixin.copy_specs + \
         LabelMixin.copy_specs
 
     def __init__(self, name, id=UniqueObject.AUTO_ID, channel=None, categories=None, label=None,
-            label_short=None, selection=None, selection_mode=None, tags=None, aux=None,
-            context=None):
-        UniqueObject.__init__(self, name, id, context=context)
+            label_short=None, selection=None, selection_mode=None, tags=None, aux=None):
+        UniqueObject.__init__(self, name, id)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)
@@ -212,12 +212,14 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
     References to contained categories are initialized with *categories*. *label* and *label_short*
     are passed to the :py:class:`~order.mixins.LabelMixin`, *tags* to the
     :py:class:`~order.mixins.TagMixin`, *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and
-    *name*, *id* and *context* to the :py:class:`~order.unique.UniqueObject` constructor.
+    *name* and *id* to the :py:class:`~order.unique.UniqueObject` constructor.
 
     **Copy behavior**
 
-    All attributes are copied **except** for references to child channels and the parent channel as
-    well as categories. Also note the copy behavior of :py:class:`~order.unique.UniqueObject`'s.
+    All attributes are copied, **except** for
+
+        - references to child channels and the parent channel, and
+        - references to categories.
 
     **Example**
 
@@ -261,9 +263,8 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
     copy_specs = UniqueObject.copy_specs + AuxDataMixin.copy_specs + TagMixin.copy_specs + \
         LabelMixin.copy_specs
 
-    def __init__(self, name, id, categories=None, label=None, label_short=None, tags=None, aux=None,
-            context=None):
-        UniqueObject.__init__(self, name, id, context=context)
+    def __init__(self, name, id, categories=None, label=None, label_short=None, tags=None, aux=None):
+        UniqueObject.__init__(self, name, id)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)

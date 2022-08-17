@@ -14,7 +14,9 @@ class DatasetTest(unittest.TestCase):
     def test_constructor(self):
         c = Campaign("2017B", 2)
 
-        d = Dataset("ttH", 1,
+        d = Dataset(
+            name="ttH",
+            id=1,
             campaign=c,
             keys=["/ttHTobb_M125.../.../..."],
             n_files=123,
@@ -70,11 +72,14 @@ class DatasetTest(unittest.TestCase):
         self.assertEqual(d["scale_up"].n_files, 100)
         self.assertEqual(d["scale_up"].n_events, 40000)
 
-        d.set_info("scale_down", DatasetInfo(
-            keys=["/ttbar_scaleDOWN.../.../..."],
-            n_files=101,
-            n_events=40001,
-        ))
+        d.set_info(
+            "scale_down",
+            DatasetInfo(
+                keys=["/ttbar_scaleDOWN.../.../..."],
+                n_files=101,
+                n_events=40001,
+            ),
+        )
         self.assertEqual(d["scale_down"].keys[0], "/ttbar_scaleDOWN.../.../...")
         self.assertEqual(d["scale_down"].n_files, 101)
         self.assertEqual(d["scale_down"].n_events, 40001)
@@ -90,7 +95,9 @@ class DatasetTest(unittest.TestCase):
 
     def test_copy(self):
         c = Campaign("2017B", 2)
-        d = Dataset("ttH", 1,
+        d = Dataset(
+            name="ttH",
+            id=1,
             campaign=c,
             keys=["/ttHTobb_M125.../.../..."],
             n_files=123,

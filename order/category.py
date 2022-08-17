@@ -51,7 +51,8 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
         # toggle the default selection mode to Root-style selection string concatenation
         od.Category.default_selection_mode = "root"
 
-        cat = od.Category("4j",
+        cat = od.Category(
+            name="4j",
             label="4 jets",
             label_short="4j",
             selection="nJets == 4",
@@ -67,7 +68,9 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
         # -> "4 jets"
 
         # add a channel
-        ch = od.Channel("dilepton", 1,
+        ch = od.Channel(
+            name="dilepton",
+            id=1,
             label="Dilepton",
             label_short="DL"
         )
@@ -86,7 +89,8 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
         # -> "DL, 4j"
 
         # add a sub category
-        cat2 = cat.add_category("4j_2b",
+        cat2 = cat.add_category(
+            name="4j_2b",
             label=cat.label + ", 2 b-tags",
         )
 
@@ -134,12 +138,27 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
     cls_name_plural = "categories"
 
     # attributes for copying
-    copy_specs = UniqueObject.copy_specs + \
-        AuxDataMixin.copy_specs + TagMixin.copy_specs + SelectionMixin.copy_specs + \
+    copy_specs = (
+        UniqueObject.copy_specs +
+        AuxDataMixin.copy_specs +
+        TagMixin.copy_specs +
+        SelectionMixin.copy_specs +
         LabelMixin.copy_specs
+    )
 
-    def __init__(self, name, id=UniqueObject.AUTO_ID, channel=None, categories=None, label=None,
-            label_short=None, selection=None, selection_mode=None, tags=None, aux=None):
+    def __init__(
+        self,
+        name,
+        id=UniqueObject.AUTO_ID,
+        channel=None,
+        categories=None,
+        label=None,
+        label_short=None,
+        selection=None,
+        selection_mode=None,
+        tags=None,
+        aux=None,
+    ):
         UniqueObject.__init__(self, name, id)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
@@ -180,15 +199,15 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
     def full_label(self):
         if self.channel:
             return "{}, {}".format(self.channel.label, self.label)
-        else:
-            return self.label
+
+        return self.label
 
     @property
     def full_label_short(self):
         if self.channel:
             return "{}, {}".format(self.channel.label_short, self.label_short)
-        else:
-            return self.label_short
+
+        return self.label_short
 
     @property
     def full_label_root(self):
@@ -244,7 +263,8 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
         # -> SL_channel
 
         # add categories
-        cat_e_2j = e_channel.add_category("e_2j",
+        cat_e_2j = e_channel.add_category(
+            name="e_2j",
             label="2 jets",
             selection="nJets == 2",
         )
@@ -260,10 +280,23 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
     cls_name_plural = "channels"
 
     # attributes for copying
-    copy_specs = UniqueObject.copy_specs + AuxDataMixin.copy_specs + TagMixin.copy_specs + \
+    copy_specs = (
+        UniqueObject.copy_specs +
+        AuxDataMixin.copy_specs +
+        TagMixin.copy_specs +
         LabelMixin.copy_specs
+    )
 
-    def __init__(self, name, id, categories=None, label=None, label_short=None, tags=None, aux=None):
+    def __init__(
+        self,
+        name,
+        id,
+        categories=None,
+        label=None,
+        label_short=None,
+        tags=None,
+        aux=None,
+    ):
         UniqueObject.__init__(self, name, id)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)

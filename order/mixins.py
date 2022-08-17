@@ -420,8 +420,8 @@ class AuxDataMixin(object):
         """
         if default != self._no_default:
             return self.aux.get(key, default)
-        else:
-            return self.aux[key]
+
+        return self.aux[key]
 
     def remove_aux(self, key, silent=False):
         """
@@ -896,10 +896,10 @@ class LabelMixin(object):
         # label setter
         if label is None:
             self._label = None
-        elif not isinstance(label, six.string_types):
-            raise TypeError("invalid label type: {}".format(label))
-        else:
+        elif isinstance(label, six.string_types):
             self._label = str(label)
+        else:
+            raise TypeError("invalid label type: {}".format(label))
 
     @property
     def label_root(self):
@@ -946,7 +946,7 @@ class ColorMixin(object):
         c = od.ColorMixin(color=(255, 0.5, 100))
 
         c.color
-        # -> (1.0, 0.5, 0.392..)
+        # -> (1.0, 0.5, 0.392)
 
         c.color_int
         # -> (255, 128, 100)
@@ -989,7 +989,7 @@ class ColorMixin(object):
     .. py:attribute:: color_alpha
        type: float
 
-       The alpha value, defaults to 1.
+       The alpha value, defaults to 1.0.
 
     .. py:attribute:: color
        type: tuple (float)
@@ -1008,10 +1008,10 @@ class ColorMixin(object):
         super(ColorMixin, self).__init__()
 
         # instance members
-        self._color_r = 0.
-        self._color_g = 0.
-        self._color_b = 0.
-        self._color_alpha = 1.
+        self._color_r = 0.0
+        self._color_g = 0.0
+        self._color_b = 0.0
+        self._color_alpha = 1.0
 
         # set initial values
         if color is not None:
@@ -1022,7 +1022,7 @@ class ColorMixin(object):
         if isinstance(color_r, six.integer_types):
             if not (0 <= color_r <= 255):
                 raise ValueError("invalid color_r value: {}".format(color_r))
-            color_r /= 255.
+            color_r /= 255.0
         elif isinstance(color_r, float):
             if not (0 <= color_r <= 1):
                 raise ValueError("invalid color_r value: {}".format(color_r))
@@ -1036,7 +1036,7 @@ class ColorMixin(object):
         if isinstance(color_g, six.integer_types):
             if not (0 <= color_g <= 255):
                 raise ValueError("invalid color_g value: {}".format(color_g))
-            color_g /= 255.
+            color_g /= 255.0
         elif isinstance(color_g, float):
             if not (0 <= color_g <= 1):
                 raise ValueError("invalid color_g value: {}".format(color_g))
@@ -1050,7 +1050,7 @@ class ColorMixin(object):
         if isinstance(color_b, six.integer_types):
             if not (0 <= color_b <= 255):
                 raise ValueError("invalid color_b value: {}".format(color_b))
-            color_b /= 255.
+            color_b /= 255.0
         elif isinstance(color_b, float):
             if not (0 <= color_b <= 1):
                 raise ValueError("invalid color_b value: {}".format(color_b))

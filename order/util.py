@@ -128,8 +128,7 @@ def make_list(obj, cast=True):
         return list(obj)
     if isinstance(obj, (tuple, set)) and cast:
         return list(obj)
-    else:
-        return [obj]
+    return [obj]
 
 
 def multi_match(name, patterns, mode=any, func="fnmatch", *args, **kwargs):
@@ -141,11 +140,12 @@ def multi_match(name, patterns, mode=any, func="fnmatch", *args, **kwargs):
     """
     if func == "re":
         return mode(re.match(pattern, name, *args, **kwargs) for pattern in patterns)
-    elif func in ("fnmatch", "fnmatchcase"):
+
+    if func in ("fnmatch", "fnmatchcase"):
         _func = getattr(fnmatch, func)
         return mode(_func(name, pattern, *args, **kwargs) for pattern in patterns)
-    else:
-        raise ValueError("unknown matching function: {}".format(func))
+
+    raise ValueError("unknown matching function: {}".format(func))
 
 
 def flatten(struct, depth=-1):
@@ -164,13 +164,14 @@ def flatten(struct, depth=-1):
     # actual flattening
     if isinstance(struct, dict):
         return flatten(struct.values(), depth=depth - 1)
-    elif isinstance(struct, (list, tuple, set)):
+
+    if isinstance(struct, (list, tuple, set)):
         objs = []
         for obj in struct:
             objs.extend(flatten(obj, depth=depth - 1))
         return objs
-    else:
-        return [struct]
+
+    return [struct]
 
 
 def to_root_latex(s):
@@ -232,10 +233,7 @@ def _join_selection(selection, op, bracket):
         joined = op.join(_bracket(s) for s in selection)
 
     # check if brackets should be placed around the joined selection string
-    if bracket:
-        return _bracket(joined, force=True)
-    else:
-        return joined
+    return _bracket(joined, force=True) if bracket else joined
 
 
 _root_ops = {"and": "&&", "or": "||", "mul": "*", "div": "/", "plus": "+", "minus": "-"}
@@ -271,22 +269,19 @@ def class_id(cls):
 
     .. code-block:: python
 
-       # module a.b
+        # module a.b
 
-       class MyClass(object):
-           ...
+        class MyClass(object):
+            ...
 
-       class_id(MyClass)
-       # "a.b.MyClass"
+        class_id(MyClass)
+        # "a.b.MyClass"
     """
     name = cls.__name__
     module = cls.__module__
 
     # skip empty and builtin modules
-    if not module or module == str.__module__:
-        return name
-    else:
-        return module + "." + name
+    return name if not module or module == str.__module__ else (module + "." + name)
 
 
 def args_to_kwargs(func, args):
@@ -297,14 +292,14 @@ def args_to_kwargs(func, args):
 
     .. code-block:: python
 
-       def func(a, b, c=1):
-           ...
+        def func(a, b, c=1):
+            ...
 
-       def wrapper(*args, **kwargs):
-           kwargs.update(args_to_kwargs(func, args))
-           # kwargs now contains the initial args and kwargs for easy parsing
-           ...
-           return func(**kwargs)
+        def wrapper(*args, **kwargs):
+            kwargs.update(args_to_kwargs(func, args))
+            # kwargs now contains the initial args and kwargs for easy parsing
+            ...
+            return func(**kwargs)
     """
     if six.PY2:
         ismethod = inspect.ismethod(func)
@@ -357,18 +352,19 @@ class DotAccessProxy(object):
     def __getattr__(self, attr):
         if attr.startswith("__") or attr in ("_getter", "_setter"):
             return super(DotAccessProxy, self).__getattr__(attr)
-        else:
-            try:
-                return self._getter(attr)
-            except KeyError as e:
-                raise AttributeError(*e.args)
+
+        try:
+            return self._getter(attr)
+        except KeyError as e:
+            raise AttributeError(*e.args)
 
     def __setattr__(self, attr, value):
         if attr.startswith("__") or attr in ("_getter", "_setter"):
             super(DotAccessProxy, self).__setattr__(attr, value)
+
         else:
             setter = self._setter
             if setter is None:
-                raise Exception("cannot set attribute, setter not defined on {}".format(
-                    self.__class__.__name__))
+                cls_name = self.__class__.__name__
+                raise Exception("cannot set attribute, setter not defined on {}".format(cls_name))
             setter(attr, value)

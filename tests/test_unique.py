@@ -429,10 +429,13 @@ class UniqueTreeTest(unittest.TestCase):
                 self.assertEqual(len(nodes), 0)
 
         def walk(depth, this):
-            return [n for n, _, _ in n1.walk_nodes(
-                depth_first=depth,
-                include_self=this,
-            )]
+            return [
+                n
+                for n, _, _ in n1.walk_nodes(
+                    depth_first=depth,
+                    include_self=this,
+                )
+            ]
 
         self.assertListEqual(walk(False, False), [n2, n3, n4])
         self.assertListEqual(walk(False, True), [n1, n2, n3, n4])

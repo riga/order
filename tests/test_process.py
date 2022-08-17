@@ -16,7 +16,7 @@ class ProcessTest(unittest.TestCase):
     def test_constructor(self):
         p = Process("ttH", 1,
             xsecs={
-                13: Number(0.5071, {"scale": (Number.REL, 0.036)}),
+                13: Number(0.5071, {"scale": 0.036j}),
             },
             label=r"$t\bar{t}H$",
             color=(255, 0, 0),
@@ -78,5 +78,7 @@ class ProcessTest(unittest.TestCase):
         output = BytesIO()
         a.pretty_print(13, offset=10, stream=output)
 
-        self.assertEqual(output.getvalue().decode("utf-8"),
-            "> a (100) 12.0 (no uncertainties)\n| > b (101)  1.0 (no uncertainties)\n")
+        self.assertEqual(
+            output.getvalue().decode("utf-8"),
+            "> a (100) 12.0 (no uncertainties)\n| > b (101)  1.0 (no uncertainties)\n",
+        )

@@ -148,24 +148,32 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(v.get_full_y_title(), "Entries / 0.25 GeV")
         self.assertEqual(v.get_full_y_title(bin_width=0.2), "Entries / 0.2 GeV")
         self.assertEqual(v.get_full_y_title(short=True), "N / 0.25 GeV")
-        self.assertEqual(v.get_full_title(),
-            "foo;Muon transverse momentum / GeV;Entries / 0.25 GeV")
+        self.assertEqual(
+            v.get_full_title(),
+            "foo;Muon transverse momentum / GeV;Entries / 0.25 GeV",
+        )
         self.assertEqual(v.get_full_title(short=True), r"foo;$\mu p_{T}$ / GeV;N / 0.25 GeV")
 
         v.unit_format = "{title} [{unit}]"
-        self.assertEqual(v.get_full_title(),
-            "foo;Muon transverse momentum [GeV];Entries [0.25 GeV]")
+        self.assertEqual(
+            v.get_full_title(),
+            "foo;Muon transverse momentum [GeV];Entries [0.25 GeV]",
+        )
 
     def test_copy(self):
-        v = self.make_var("copy_var").copy(name="otherVar", id=Variable.AUTO_ID,
-            expression="otherExpression")
+        v = self.make_var("copy_var").copy(
+            name="otherVar",
+            id=Variable.AUTO_ID,
+            expression="otherExpression",
+        )
 
         self.assertEqual(v.name, "otherVar")
         self.assertEqual(v.expression, "otherExpression")
         self.assertEqual(v.selection, "myBranchC > 0")
 
     def test_mpl_data(self):
-        v = self.make_var("mpl_hist",
+        v = self.make_var(
+            name="mpl_hist",
             binning=(40, 0., 10.),
             log_x=True,
         )

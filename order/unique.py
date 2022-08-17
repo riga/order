@@ -633,8 +633,9 @@ def unique_tree(**kwargs):
     """
     def decorator(decorated_cls):
         if not issubclass(decorated_cls, UniqueObject):
-            raise TypeError("decorated class must inherit from UniqueObject: {}".format(
-                decorated_cls))
+            raise TypeError(
+                "decorated class must inherit from UniqueObject: {}".format(decorated_cls),
+            )
 
         # determine configuration defaults
         cls = kwargs.get("cls", decorated_cls)
@@ -655,8 +656,10 @@ def unique_tree(**kwargs):
 
         # parents are logically possible only when the decorated and tree class are identical
         if parents and decorated_cls != cls:
-            raise TypeError("when parents are enabled, decorated class and tree class must be "
-                "identical, found {} and {}".format(decorated_cls, cls))
+            raise TypeError(
+                "when parents are enabled, decorated class and tree class must be "
+                "identical, found {} and {}".format(decorated_cls, cls),
+            )
 
         # decorator for registering new instance methods with proper name and doc string
         # functionality is almost similar to functools.wraps, except for the customized function
@@ -1301,9 +1304,10 @@ class DuplicateNameException(DuplicateObjectException):
     """
 
     def __init__(self, cls, name):
-        msg = "duplicate '{}.{}' object with name '{}' encountered".format(
-            cls.__module__, cls.__name__, name)
-        super(DuplicateNameException, self).__init__(msg)
+        super(DuplicateNameException, self).__init__(
+            "duplicate '{}.{}' object with name '{}' encountered".format(
+                cls.__module__, cls.__name__, name),
+        )
 
 
 class DuplicateIdException(DuplicateObjectException):
@@ -1312,6 +1316,7 @@ class DuplicateIdException(DuplicateObjectException):
     """
 
     def __init__(self, cls, id):
-        msg = "duplicate '{}.{}' object with id '{}' encountered".format(
-            cls.__module__, cls.__name__, id)
-        super(DuplicateIdException, self).__init__(msg)
+        super(DuplicateIdException, self).__init__(
+            "duplicate '{}.{}' object with id '{}' encountered".format(
+                cls.__module__, cls.__name__, id),
+        )

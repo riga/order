@@ -45,7 +45,9 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
 
         import order as od
 
-        c = od.Campaign("2017B", 1,
+        c = od.Campaign(
+            name="2017B",
+            id=1,
             ecm=13,
             bx=25,
         )
@@ -74,8 +76,12 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
     cls_name_singular = "campaign"
     cls_name_plural = "campaigns"
 
-    copy_specs = ["ecm", "bx"] + UniqueObject.copy_specs + AuxDataMixin.copy_specs + \
+    copy_specs = (
+        ["ecm", "bx"] +
+        UniqueObject.copy_specs +
+        AuxDataMixin.copy_specs +
         TagMixin.copy_specs
+    )
 
     def __init__(self, name, id, ecm=None, bx=None, datasets=None, tags=None, aux=None):
         UniqueObject.__init__(self, name, id)
@@ -225,9 +231,21 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
 
     copy_specs = UniqueObject.copy_specs + AuxDataMixin.copy_specs + TagMixin.copy_specs
 
-    def __init__(self, campaign=None, name=None, id=None, analysis=None, datasets=None,
-            processes=None, channels=None, categories=None, variables=None, shifts=None, tags=None,
-            aux=None):
+    def __init__(
+        self,
+        campaign=None,
+        name=None,
+        id=None,
+        analysis=None,
+        datasets=None,
+        processes=None,
+        channels=None,
+        categories=None,
+        variables=None,
+        shifts=None,
+        tags=None,
+        aux=None,
+    ):
         # instance members
         self._campaign = None
         self._analysis = None

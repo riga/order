@@ -61,7 +61,9 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
 
         campaign = od.Campaign("2017B", 1, ...)
 
-        d = od.Dataset("ttH_bb", 1,
+        d = od.Dataset(
+            name="ttH_bb",
+            id=1,
             campaign=campaign,
             keys=["/ttHTobb_M125.../.../..."],
             n_files=123,
@@ -78,7 +80,9 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
         # -> 123
 
         # similar to above, but set explicit info objects
-        d = Dataset("ttH_bb", 1,
+        d = Dataset(
+            name="ttH_bb",
+            id=1,
             campaign=campaign,
             info={
                 "nominal": {
@@ -142,12 +146,29 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
     cls_name_plural = "datasets"
 
     # attributes for copying
-    copy_specs = ["info"] + UniqueObject.copy_specs + \
-        AuxDataMixin.copy_specs + TagMixin.copy_specs + DataSourceMixin.copy_specs + \
+    copy_specs = (
+        ["info"] +
+        UniqueObject.copy_specs +
+        AuxDataMixin.copy_specs +
+        TagMixin.copy_specs +
+        DataSourceMixin.copy_specs +
         LabelMixin.copy_specs
+    )
 
-    def __init__(self, name, id, campaign=None, info=None, processes=None, label=None,
-            label_short=None, is_data=False, tags=None, aux=None, **kwargs):
+    def __init__(
+        self,
+        name,
+        id,
+        campaign=None,
+        info=None,
+        processes=None,
+        label=None,
+        label_short=None,
+        is_data=False,
+        tags=None,
+        aux=None,
+        **kwargs,
+    ):
         UniqueObject.__init__(self, name, id)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)

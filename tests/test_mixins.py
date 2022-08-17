@@ -296,8 +296,10 @@ class SelectionMixinTest(unittest.TestCase):
         self.assertEqual(s.selection, "((myBranchC > 0) && (myBranchD < 100)) || (myBranchE < 1)")
 
         s.add_selection("myWeight", op="*")
-        self.assertEqual(s.selection, "(((myBranchC > 0) && (myBranchD < 100)) || (myBranchE < 1)) "
-            "* (myWeight)")
+        self.assertEqual(
+            s.selection,
+            "(((myBranchC > 0) && (myBranchD < 100)) || (myBranchE < 1)) * (myWeight)",
+        )
 
     def test_constructor_numexpr(self):
         s = SelectionMixin("myBranchC > 0", selection_mode=SelectionMixin.MODE_NUMEXPR)
@@ -310,8 +312,10 @@ class SelectionMixinTest(unittest.TestCase):
         self.assertEqual(s.selection, "((myBranchC > 0) & (myBranchD < 100)) | (myBranchE < 1)")
 
         s.add_selection("myWeight", op="*")
-        self.assertEqual(s.selection, "(((myBranchC > 0) & (myBranchD < 100)) | (myBranchE < 1)) "
-            "* (myWeight)")
+        self.assertEqual(
+            s.selection,
+            "(((myBranchC > 0) & (myBranchD < 100)) | (myBranchE < 1)) * (myWeight)",
+        )
 
     def test_constructor_callable(self):
         s = SelectionMixin("myBranchC > 0", selection_mode=SelectionMixin.MODE_NUMEXPR)

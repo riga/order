@@ -47,7 +47,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
             name="myVar",
             expression="myBranchA * myBranchB",
             selection="myBranchC > 0",
-            binning=(20, 0., 10.),
+            binning=(20, 0.0, 10.0),
             x_title=r"$\mu p_{T}$",
             unit="GeV",
             null_value=-999.0,
@@ -208,16 +208,47 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     cls_name_plural = "variables"
 
     # attributes for copying
-    copy_specs = [
-        "expression", "binning", "x_title", ("_x_title_short", "x_title_short"), "y_title",
-        ("_y_title_short", "y_title_short"), "log_x", "log_y", "unit", "unit_format", "null_value",
-    ] + UniqueObject.copy_specs + AuxDataMixin.copy_specs + TagMixin.copy_specs + \
+    copy_specs = (
+        [
+            "expression",
+            "binning",
+            "x_title",
+            ("_x_title_short", "x_title_short"),
+            "y_title",
+            ("_y_title_short", "y_title_short"),
+            "log_x",
+            "log_y",
+            "unit",
+            "unit_format",
+            "null_value",
+        ] +
+        UniqueObject.copy_specs +
+        AuxDataMixin.copy_specs +
+        TagMixin.copy_specs +
         SelectionMixin.copy_specs
+    )
 
-    def __init__(self, name, id=UniqueObject.AUTO_ID, expression=None, binning=(1, 0., 1.),
-            x_title="", x_title_short=None, y_title="Entries", y_title_short=None, x_labels=None,
-            log_x=False, log_y=False, unit="1", unit_format="{title} / {unit}", null_value=None,
-            selection=None, selection_mode=None, tags=None, aux=None):
+    def __init__(
+        self,
+        name,
+        id=UniqueObject.AUTO_ID,
+        expression=None,
+        binning=(1, 0.0, 1.0),
+        x_title="",
+        x_title_short=None,
+        y_title="Entries",
+        y_title_short=None,
+        x_labels=None,
+        log_x=False,
+        log_y=False,
+        unit="1",
+        unit_format="{title} / {unit}",
+        null_value=None,
+        selection=None,
+        selection_mode=None,
+        tags=None,
+        aux=None,
+    ):
         UniqueObject.__init__(self, name, id)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
@@ -257,8 +288,8 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         # expression getter
         if self._expression is None:
             return self.name
-        else:
-            return self._expression
+
+        return self._expression
 
     @expression.setter
     def expression(self, expression):
@@ -383,8 +414,8 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     def x_labels_root(self):
         if self.x_labels is None:
             return None
-        else:
-            return [to_root_latex(str(label)) for label in self.x_labels]
+
+        return [to_root_latex(str(label)) for label in self.x_labels]
 
     @typed
     def log_x(self, log_x):
@@ -459,9 +490,9 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     def bin_edges(self):
         if not self.even_binning:
             return self.binning
-        else:
-            bin_width = self.bin_width
-            return [self.x_min + i * bin_width for i in range(self.n_bins + 1)]
+
+        bin_width = self.bin_width
+        return [self.x_min + i * bin_width for i in range(self.n_bins + 1)]
 
     def get_full_x_title(self, short=False, root=ROOT_DEFAULT):
         """
@@ -500,8 +531,15 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
         return to_root_latex(title) if root else title
 
-    def get_full_title(self, name=None, short=False, short_x=None, short_y=None, root=ROOT_DEFAULT,
-            bin_width=None):
+    def get_full_title(
+        self,
+        name=None,
+        short=False,
+        short_x=None,
+        short_y=None,
+        root=ROOT_DEFAULT,
+        bin_width=None,
+    ):
         """
         Returns the full combined title that is compliant with ROOT's TH1 classes. *short_x*
         (*short_y*) is passed to :py:meth:`full_x_title` (:py:meth:`full_y_title`). Both values

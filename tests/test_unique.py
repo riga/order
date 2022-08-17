@@ -41,16 +41,11 @@ class UniqueObjectTest(unittest.TestCase):
             import cloudpickle as cp
         except ImportError as e:
             raise unittest.SkipTest(e)
-        import gc
 
         x = C2("foo", 222)
 
         y = cp.loads(cp.dumps(x))
-        self.assertEqual(y, C2.get_instance("foo"))
-        del y
-        gc.collect()
-
-        self.assertEqual(x, C2.get_instance("foo"))
+        self.assertEqual(y, x)
 
     def test_equality(self):
         C = self.make_class()

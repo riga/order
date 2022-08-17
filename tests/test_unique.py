@@ -5,7 +5,6 @@ __all__ = ["UniqueObjectTest", "UniqueObjectIndexTest", "UniqueTreeTest"]
 
 
 import unittest
-from copy import deepcopy
 
 from order import (
     UniqueObject, UniqueObjectIndex, unique_tree, DuplicateNameException, DuplicateIdException,

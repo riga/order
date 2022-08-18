@@ -12,6 +12,7 @@ Class *UniqueObject*
 .. autoclass:: UniqueObject
    :show-inheritance:
    :members:
+   :autosummary:
 
 
 Class *UniqueObjectIndex*
@@ -20,6 +21,7 @@ Class *UniqueObjectIndex*
 .. autoclass:: UniqueObjectIndex
    :show-inheritance:
    :members:
+   :autosummary:
 
 
 Class *UniqueObjectMeta*
@@ -28,12 +30,7 @@ Class *UniqueObjectMeta*
 .. autoclass:: UniqueObjectMeta
    :show-inheritance:
    :members:
-
-
-Function *uniqueness_context*
------------------------------
-
-.. autofunction:: uniqueness_context
+   :autosummary:
 
 
 Decorator *unique_tree*

@@ -3,3 +3,4 @@ six
 
 sphinx>=5.0,<6
 sphinx_rtd_theme
+autodocsumm==0.2.*

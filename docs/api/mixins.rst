@@ -12,8 +12,7 @@ Class *CopyMixin*
 .. autoclass:: CopyMixin
    :show-inheritance:
    :members:
-   :private-members:
-   :special-members: __copy__, __deepcopy__
+   :autosummary:
 
 
 Class *CopySpec*
@@ -30,6 +29,7 @@ Class *AuxDataMixin*
 .. autoclass:: AuxDataMixin
    :show-inheritance:
    :members:
+   :autosummary:
 
 
 Class *TagMixin*
@@ -38,6 +38,7 @@ Class *TagMixin*
 .. autoclass:: TagMixin
    :show-inheritance:
    :members:
+   :autosummary:
 
 
 Class *DataSourceMixin*
@@ -46,6 +47,7 @@ Class *DataSourceMixin*
 .. autoclass:: DataSourceMixin
    :show-inheritance:
    :members:
+   :autosummary:
 
 
 Class *SelectionMixin*
@@ -54,6 +56,7 @@ Class *SelectionMixin*
 .. autoclass:: SelectionMixin
    :show-inheritance:
    :members:
+   :autosummary:
 
 
 Class *LabelMixin*
@@ -62,6 +65,7 @@ Class *LabelMixin*
 .. autoclass:: LabelMixin
    :show-inheritance:
    :members:
+   :autosummary:
 
 
 Class *ColorMixin*
@@ -70,3 +74,4 @@ Class *ColorMixin*
 .. autoclass:: ColorMixin
    :show-inheritance:
    :members:
+   :autosummary:

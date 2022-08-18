@@ -981,7 +981,7 @@ def unique_tree(**kwargs):
                     Adds multiple child {plural} to the :py:attr:`{plural}` index and returns the
                     added objects in a list. Also adds *this* {singular} to the
                     :py:attr:`parent_{plural}` index of the added {singular}. An exception is raised
-                        when the number of allowed parents of a child {singular} is exceeded.
+                    when the number of allowed parents of a child {singular} is exceeded.
                     """
                     _extend(self, getattr(self, "add_" + singular), getattr(self, plural), objs)
 

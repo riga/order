@@ -1,4 +1,0 @@
-Copying objects
-===============
-
-TODO.

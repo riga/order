@@ -49,7 +49,14 @@ elif html_theme == "alabaster":
         "travis_button": True,
     })
 
-extensions = ["sphinx.ext.autodoc", "pydomain_patch"]
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.autosectionlabel",
+    "autodocsumm",
+    "pydomain_patch",
+]
 
 autodoc_member_order = "bysource"
 

@@ -12,3 +12,4 @@ Class *Variable*
 .. autoclass:: Variable
    :show-inheritance:
    :members:
+   :autosummary:

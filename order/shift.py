@@ -166,7 +166,6 @@ class Shift(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
 
     # attributes for copying
     copy_specs = (
-        ["type"] +
         UniqueObject.copy_specs +
         AuxDataMixin.copy_specs +
         TagMixin.copy_specs +

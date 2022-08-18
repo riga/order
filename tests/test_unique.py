@@ -87,7 +87,7 @@ class UniqueObjectTest(unittest.TestCase):
         C = self.make_class()
 
         class D(C, CopyMixin):
-            copy_specs = ["name", "id"]
+            pass
 
         a = D("foo", 1)
         b = a.copy(name="bar")
@@ -239,12 +239,11 @@ class UniqueObjectIndexTest(unittest.TestCase):
 
     def test_copy(self):
         class D(UniqueObject, CopyMixin):
-            copy_specs = ["name", "id"]
+            pass
 
         class DIndex(UniqueObjectIndex, CopyMixin):
             copy_specs = [
-                {"attr": "cls", "ref": True},
-                {"attr": "_index", "use_setter": True},
+                {"attr": "_cls", "ref": True},
             ]
 
         idx = DIndex(cls=D)

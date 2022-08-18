@@ -109,8 +109,10 @@ class DatasetTest(unittest.TestCase):
         self.assertEqual(d2.name, "ttH2")
         self.assertEqual(d2.id, 2)
         self.assertEqual(len(d.processes), 1)
-        self.assertEqual(len(d2.processes), 0)
-        self.assertIsNone(d2.campaign)
+        self.assertEqual(len(d2.processes), 1)
+        self.assertEqual(d2.campaign, d.campaign)
+        self.assertEqual(len(d.campaign.datasets), 2)
+        self.assertTrue(d2 in d.campaign.datasets)
 
 
 class DatasetInfoTest(unittest.TestCase):

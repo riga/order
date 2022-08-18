@@ -37,10 +37,8 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
 
     **Copy behavior**
 
-    All attributes are copied, **except** for
-
-        - references to child and parent categories, and
-        - the reference to the *channel* if set.
+    The :py:attr:`channel` attribute is carried over as a reference, all remaining attributes are
+    copied. Note that the copied dataset is also registered in the channel.
 
     **Example**
 
@@ -139,6 +137,7 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
 
     # attributes for copying
     copy_specs = (
+        [{"attr": "_channel", "ref": True}] +
         UniqueObject.copy_specs +
         AuxDataMixin.copy_specs +
         TagMixin.copy_specs +
@@ -173,6 +172,15 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
         self.channel = channel
         if categories is not None:
             self.extend_categories(categories)
+
+    def copy(self, *args, **kwargs):
+        inst = super(Category, self).copy(*args, **kwargs)
+
+        # register in the channel
+        if inst.channel:
+            inst.channel.categories.add(inst)
+
+        return inst
 
     @property
     def channel(self):
@@ -235,10 +243,7 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
 
     **Copy behavior**
 
-    All attributes are copied, **except** for
-
-        - references to child channels and the parent channel, and
-        - references to categories.
+    All attributes are copied.
 
     **Example**
 
@@ -309,8 +314,9 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
 
     def add_category(self, *args, **kwargs):
         """
-        Adds a child category. See :py:meth:`UniqueObjectIndex.add` for more info. Also sets the
-        *channel* of the added category to *this* instance.
+        Adds a child category to the :py:attr:`categories` index and returns it. See
+        :py:meth:`UniqueObjectIndex.add` for more info. Also sets the *channel* of the added
+        category to *this* instance.
         """
         category = self.categories.add(*args, **kwargs)
 
@@ -322,8 +328,9 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
 
     def remove_category(self, *args, **kwargs):
         """
-        Removes a child category. See :py:meth:`UniqueObjectIndex.remove` for more info. Also resets
-        the *channel* of the added category.
+        Removes a child category from the :py:attr:`categories` index and returns the removed
+        object. See :py:meth:`UniqueObjectIndex.remove` for more info. Also resets the *channel* of
+        the removed category.
         """
         category = self.categories.remove(*args, **kwargs)
 

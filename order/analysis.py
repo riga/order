@@ -91,8 +91,9 @@ class Analysis(UniqueObject, AuxDataMixin, TagMixin):
 
     def add_config(self, *args, **kwargs):
         """
-        Adds a child config. See :py:meth:`order.unique.UniqueObjectIndex.add` for more info. Also
-        sets the analysis of the added config to *this* instance. Returns the added config object.
+        Adds a child config to the :py:attr:`configs` index and returns it. See
+        :py:meth:`order.unique.UniqueObjectIndex.add` for more info. Also sets the analysis of the
+        added config to *this* instance.
         """
         config = self.configs.add(*args, **kwargs)
 
@@ -104,8 +105,9 @@ class Analysis(UniqueObject, AuxDataMixin, TagMixin):
 
     def remove_config(self, *args, **kwargs):
         """
-        Removes a child config. See :py:meth:`order.unique.UniqueObjectIndex.remove` for more info.
-        Also resets the analysis of the added config. Returns the removed config object.
+        Removes a child config from the :py:attr:`configs` index and returns the removed object. See
+        :py:meth:`order.unique.UniqueObjectIndex.remove` for more info. Also resets the analysis of
+        the removed config.
         """
         config = self.configs.remove(*args, **kwargs)
 

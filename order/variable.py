@@ -209,19 +209,6 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
     # attributes for copying
     copy_specs = (
-        [
-            "expression",
-            "binning",
-            "x_title",
-            ("_x_title_short", "x_title_short"),
-            "y_title",
-            ("_y_title_short", "y_title_short"),
-            "log_x",
-            "log_y",
-            "unit",
-            "unit_format",
-            "null_value",
-        ] +
         UniqueObject.copy_specs +
         AuxDataMixin.copy_specs +
         TagMixin.copy_specs +

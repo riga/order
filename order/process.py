@@ -47,9 +47,7 @@ class Process(
 
     **Copy behavior**
 
-    All attributes are copied, **except** for
-
-       - child and parent processes.
+    All attributes are copied.
 
     **Example**
 
@@ -105,7 +103,6 @@ class Process(
 
     # attributes for copying
     copy_specs = (
-        ["xsecs"] +
         UniqueObject.copy_specs +
         AuxDataMixin.copy_specs +
         TagMixin.copy_specs +

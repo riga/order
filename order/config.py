@@ -35,9 +35,7 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
 
     **Copy behavior**
 
-    All attributes are copied, **except** for
-
-       - references to contained datasets.
+    All attributes are copied.
 
     **Example**
 
@@ -77,7 +75,6 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
     cls_name_plural = "campaigns"
 
     copy_specs = (
-        ["ecm", "bx"] +
         UniqueObject.copy_specs +
         AuxDataMixin.copy_specs +
         TagMixin.copy_specs
@@ -119,8 +116,9 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
 
     def add_dataset(self, *args, **kwargs):
         """
-        Adds a child dataset and returns it. See :py:meth:`UniqueObjectIndex.add` for more info.
-        Also sets the *campaign* of the added dataset to *this* instance.
+        Adds a child dataset to the :py:attr:`datasets` index and returns it. See
+        :py:meth:`UniqueObjectIndex.add` for more info. Also sets the *campaign* of the added
+        dataset to *this* instance.
         """
         dataset = self.datasets.add(*args, **kwargs)
 
@@ -132,8 +130,9 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
 
     def remove_dataset(self, *args, **kwargs):
         """
-        Removes a child dataset. See :py:meth:`UniqueObjectIndex.remove` for more info. Also resets
-        the *campaign* of the added dataset.
+        Removes a child dataset from the :py:attr:`datasets` index and returns the removed object.
+        See :py:meth:`UniqueObjectIndex.remove` for more info. Also resets the *campaign* of the
+        added dataset.
         """
         dataset = self.datasets.remove(*args, **kwargs)
 
@@ -171,10 +170,8 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
 
     **Copy behavior**
 
-    All attributes are copied, **except** for
-
-       - the reference to the campaign, and
-       - the reference to the analysis.
+    The :py:attr:`campaign` and :py:attr:`analysis` attributes are carried over as references, all
+    remaining attributes are copied. Note that the copied config is also registered in the analysis.
 
     **Example**
 
@@ -229,7 +226,15 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
     cls_name_singular = "config"
     cls_name_plural = "configs"
 
-    copy_specs = UniqueObject.copy_specs + AuxDataMixin.copy_specs + TagMixin.copy_specs
+    copy_specs = (
+        [
+            {"attr": "_campaign", "ref": True},
+            {"attr": "_analysis", "ref": True},
+        ] +
+        UniqueObject.copy_specs +
+        AuxDataMixin.copy_specs +
+        TagMixin.copy_specs
+    )
 
     def __init__(
         self,
@@ -287,6 +292,15 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
 
         if shifts is not None:
             self.extend_shifts(shifts)
+
+    def copy(self, *args, **kwargs):
+        inst = super(Config, self).copy(*args, **kwargs)
+
+        # register in the analysis
+        if inst.analysis:
+            inst.analysis.configs.add(inst)
+
+        return inst
 
     @typed
     def campaign(self, campaign):

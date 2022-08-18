@@ -54,8 +54,8 @@ class ChannelTest(unittest.TestCase):
         self.assertEqual(len(c.channels), 1)
         self.assertEqual(len(c.categories), 1)
 
-        self.assertEqual(len(c2.channels), 0)
-        self.assertEqual(len(c2.categories), 0)
+        self.assertEqual(len(c2.channels), 1)
+        self.assertEqual(len(c2.categories), 1)
 
         self.assertEqual(c2.name, "test4")
         self.assertEqual(c2.id, 11)
@@ -92,8 +92,11 @@ class CategoryTest(unittest.TestCase):
         c = Category("eq4j", channel=SL)
         c.add_category("eq4j_eq2b")
 
+        self.assertEqual(len(SL.categories), 1)
+
         c2 = c.copy(name="SL2", id="+")
 
+        self.assertEqual(len(SL.categories), 2)
         self.assertEqual(len(c.categories), 1)
-        self.assertEqual(len(c2.categories), 0)
-        self.assertIsNone(c2.channel)
+        self.assertEqual(len(c2.categories), 1)
+        self.assertEqual(c2.channel, c.channel)

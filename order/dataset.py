@@ -48,10 +48,8 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
 
     **Copy behavior**
 
-    All attributes are copied, **except** for
-
-        - references to linked processes, and
-        - the reference to the campaign.
+    The :py:attr:`campaign` attribute is carried over as a reference, all remaining attributes are
+    copied. Note that the copied dataset is also registered in the campaign.
 
     **Example**
 
@@ -147,7 +145,7 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
 
     # attributes for copying
     copy_specs = (
-        ["info"] +
+        [{"attr": "_campaign", "ref": True}] +
         UniqueObject.copy_specs +
         AuxDataMixin.copy_specs +
         TagMixin.copy_specs +
@@ -197,6 +195,15 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
         Forwarded to :py:meth:`get_info`.
         """
         return self.get_info(name)
+
+    def copy(self, *args, **kwargs):
+        inst = super(Dataset, self).copy(*args, **kwargs)
+
+        # register in the campaign
+        if inst.campaign:
+            inst.campaign.datasets.add(inst)
+
+        return inst
 
     @property
     def campaign(self):
@@ -306,7 +313,10 @@ class DatasetInfo(CopyMixin, AuxDataMixin, TagMixin):
        The number of events.
     """
 
-    copy_specs = ["keys", "n_files", "n_events"] + AuxDataMixin.copy_specs
+    copy_specs = (
+        AuxDataMixin.copy_specs +
+        TagMixin.copy_specs
+    )
 
     def __init__(self, keys=None, n_files=-1, n_events=-1, tags=None, aux=None):
         CopyMixin.__init__(self)

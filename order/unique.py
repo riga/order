@@ -99,15 +99,8 @@ class UniqueObjectIndex(CopyMixin):
     """
 
     copy_specs = [
-        {"attr": "cls", "ref": True},
+        {"attr": "_cls", "ref": True},
     ]
-
-    @staticmethod
-    def _index_factory():
-        return {
-            "names": collections.OrderedDict(),
-            "ids": collections.OrderedDict(),
-        }
 
     def __init__(self, cls, objects=None):
         CopyMixin.__init__(self)
@@ -117,7 +110,7 @@ class UniqueObjectIndex(CopyMixin):
         self._cls = self.__class__.cls.fparse(self, cls)
 
         # create the index
-        self._index = self._index_factory()
+        self._index = []
 
         # add initial objects
         if objects is not None:
@@ -151,7 +144,7 @@ class UniqueObjectIndex(CopyMixin):
         """
         Returns the number of objects in the index.
         """
-        return len(self.ids())
+        return len(self._index)
 
     def __contains__(self, obj):
         """
@@ -163,7 +156,7 @@ class UniqueObjectIndex(CopyMixin):
         """
         Iterates through the index and yields the contained objects (i.e. the *values*).
         """
-        for obj in six.itervalues(self._index["ids"]):
+        for obj in self._index:
             yield obj
 
     def __nonzero__(self):
@@ -188,31 +181,31 @@ class UniqueObjectIndex(CopyMixin):
         """
         Returns the names of the contained objects in the index.
         """
-        return list(self._index["names"])
+        return list(obj.name for obj in self._index)
 
     def ids(self):
         """
         Returns the ids of the contained objects in the index.
         """
-        return list(self._index["ids"])
+        return list(obj.id for obj in self._index)
 
     def keys(self):
         """
         Returns the (name, id) pairs of all objects contained in the index.
         """
-        return list(zip(self._index["names"], self._index["ids"]))
+        return list((obj.name, obj.id) for obj in self._index)
 
     def values(self):
         """
         Returns all objects contained in the index.
         """
-        return list(self._index["ids"].values())
+        return list(self._index)
 
     def items(self):
         """
         Returns (name, id, object) 3-tuples of all objects contained in the index
         """
-        return list(zip(self._index["names"], self._index["ids"], self._index["ids"].values()))
+        return list((obj.name, obj.id, obj) for obj in self._index)
 
     def add(self, *args, **kwargs):
         """ add(*args, overwrite=True, **kwargs)
@@ -231,16 +224,21 @@ class UniqueObjectIndex(CopyMixin):
         else:
             obj = self.cls(*args, **kwargs)
 
-        # check overwrite
-        if not overwrite:
-            if obj.name in self._index["names"]:
-                raise DuplicateNameException(self.cls, obj.name)
-            elif obj.id in self._index["ids"]:
-                raise DuplicateIdException(self.cls, obj.id)
+        # check if obj is a duplicate and whether it should overwrite or cause an exception
+        for _obj in self:
+            if obj.name == _obj.name:
+                if not overwrite:
+                    raise DuplicateNameException(self.cls, obj.name)
+                self.remove(obj.name)
+                break
+            if obj.id == _obj.id:
+                if not overwrite:
+                    raise DuplicateIdException(self.cls, obj.id)
+                self.remove(obj.id)
+                break
 
         # add to the index
-        self._index["names"][obj.name] = obj
-        self._index["ids"][obj.id] = obj
+        self._index.append(obj)
 
         return obj
 
@@ -272,37 +270,27 @@ class UniqueObjectIndex(CopyMixin):
         could be found. Otherwise, an error is raised.
         """
         # when it's already an object, do the lookup by it's name
+        orig_obj = obj
         if isinstance(obj, self._cls):
             obj = obj.name
 
-        # name?
-        try:
-            obj = self._index["names"][self.cls.name.fparse(self, obj)]
-            return obj
-        except:
-            pass
-
-        # id?
-        try:
-            obj = self._index["ids"][self.cls.id.fparse(self, obj)]
-            return obj
-        except:
-            pass
+        for _obj in self:
+            if obj in (_obj.name, _obj.id):
+                return _obj
 
         # default
         if default != _no_default:
             return default
 
-        raise ValueError("object '{}' not known to index '{}'".format(obj, self))
+        raise ValueError("object '{}' not known to index '{}'".format(orig_obj, self))
 
     def get_first(self, default=_no_default):
         """ get_first(default=no_default)
         Returns the first object that is stored in the index. If *default* is given, it is used as
         the default return value if no object could be found. Otherwise, an exception is raised.
         """
-        objs = self.values()
-        if objs:
-            return objs[0]
+        if len(self) > 0:
+            return self._index[0]
 
         # default
         if default != _no_default:
@@ -315,9 +303,8 @@ class UniqueObjectIndex(CopyMixin):
         Returns the last object that is stored in the index. If *default* is given, it is used as
         the default return value if no object could be found. Otherwise, an exception is raised.
         """
-        objs = self.values()
-        if objs:
-            return objs[-1]
+        if len(self) > 0:
+            return self._index[-1]
 
         # default
         if default != _no_default:
@@ -338,7 +325,7 @@ class UniqueObjectIndex(CopyMixin):
         instance of *cls*. When the object is not found in the index, an exception is raised.
         """
         obj = self.get(obj)
-        return self.ids().index(obj.id)
+        return self._index.index(obj)
 
     def remove(self, obj, silent=False):
         """
@@ -348,8 +335,7 @@ class UniqueObjectIndex(CopyMixin):
         """
         obj = self.get(obj, default=_not_found)
         if obj != _not_found:
-            del self._index["names"][obj.name]
-            del self._index["ids"][obj.id]
+            self._index.remove(obj)
             return obj
 
         # no object removed at this point
@@ -443,22 +429,18 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta)):
 
     AUTO_ID = "+"
 
-    # define copy specs in case inheriting classes also inherit from CopyMixin
-    copy_specs = ["name", "id"]
+    copy_specs = []
 
     def __init__(self, name, id):
         super(UniqueObject, self).__init__()
 
-        # manually validate and set name and id
-        self._name = self.__class__.name.fparse(None, name)
-        if id == self.AUTO_ID:
-            self.__class__._max_id += 1
-            self._id = self.__class__._max_id
-        else:
-            id = self.__class__.id.fparse(None, id)
-            if id > self.__class__._max_id:
-                self.__class__._max_id = id
-            self._id = id
+        # register empty attributes
+        self._name = None
+        self._id = None
+
+        # set initial values
+        self.name = name
+        self.id = id
 
     def _repr_parts(self):
         return [
@@ -563,7 +545,7 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta)):
 
         return False
 
-    @typed(setter=False)
+    @typed
     def name(self, name):
         # name parser
         if not isinstance(name, six.string_types):
@@ -571,10 +553,16 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta)):
 
         return str(name)
 
-    @typed(setter=False)
+    @typed
     def id(self, id):
         # id parser
-        if not isinstance(id, six.integer_types):
+        if id == self.AUTO_ID:
+            self.__class__._max_id += 1
+            id = self.__class__._max_id
+        elif isinstance(id, six.integer_types):
+            if id > self.__class__._max_id:
+                self.__class__._max_id = id
+        else:
             raise TypeError("invalid id type: {}".format(id))
 
         return int(id)

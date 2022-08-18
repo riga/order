@@ -11,4 +11,4 @@ __credits__ = ["Marcel Rieger"]
 __contact__ = "https://github.com/riga/order"
 __license__ = "BSD-3-Clause"
 __status__ = "Development"
-__version__ = "1.3.6"
+__version__ = "2.0.0"

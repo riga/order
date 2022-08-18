@@ -506,8 +506,8 @@ class UniqueObjectIndex(CopyMixin):
         """
         obj, _context = self.get(obj, default=_not_found, context=context, return_context=True)
         if obj != _not_found:
-            del(self._indices[_context]["names"][obj.name])
-            del(self._indices[_context]["ids"][obj.id])
+            del self._indices[_context]["names"][obj.name]
+            del self._indices[_context]["ids"][obj.id]
             return obj
         elif silent:
             return None

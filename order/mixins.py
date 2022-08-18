@@ -428,7 +428,7 @@ class AuxDataMixin(object):
         raised if the *key* to remove is not found.
         """
         if key in self.aux or not silent:
-            del(self.aux[key])
+            del self.aux[key]
 
     def clear_aux(self):
         """

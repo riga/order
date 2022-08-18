@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 
+#
 # Script to run all tests in a docker image.
+#
 # Arguments:
 #   1. The docker image, defaults to "python:3.8".
 #   2. Interactive flag, when "1", a bash is opened instead of running the tests and exit, defaults
 #      to "".
+#
 
 action() {
     local this_file="$( [ ! -z "$ZSH_VERSION" ] && echo "${(%):-%x}" || echo "${BASH_SOURCE[0]}" )"

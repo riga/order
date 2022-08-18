@@ -28,13 +28,12 @@ class Shift(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
 
     *label* and *label_short* are forwarded to the :py:class:`~order.mixins.LabelMixin`, *tags* to
     the :py:class:`~order.mixins.TagMixin`, *aux* to the :py:class:`~order.mixins.AuxDataMixin`
-    *name*, *id* (defaulting to an auto id) and *context* to the
-    :py:class:`~order.unique.UniqueObject` constructor.
+    *name* and *id* (defaulting to an auto id) to the :py:class:`~order.unique.UniqueObject`
+    constructor.
 
     **Copy behavior**
 
-    All attributes are copied. Also note the copy behavior of
-    :py:class:`~order.unique.UniqueObject`'s.
+    All attributes are copied.
 
     **Example**
 
@@ -166,8 +165,12 @@ class Shift(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
     RATE_SHAPE = "rate_shape"
 
     # attributes for copying
-    copy_specs = ["type"] + UniqueObject.copy_specs + AuxDataMixin.copy_specs + \
-        TagMixin.copy_specs + LabelMixin.copy_specs
+    copy_specs = (
+        UniqueObject.copy_specs +
+        AuxDataMixin.copy_specs +
+        TagMixin.copy_specs +
+        LabelMixin.copy_specs
+    )
 
     @classmethod
     def split_name(cls, name):
@@ -183,18 +186,19 @@ class Shift(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
         """
         if name is None:
             return (None, None)
-        elif name == cls.NOMINAL:
+
+        if name == cls.NOMINAL:
             return (cls.NOMINAL, cls.NOMINAL)
-        elif "_" in name:
+
+        if "_" in name:
             source, direction = tuple(name.rsplit("_", 1))
             if source == cls.NOMINAL:
                 raise ValueError("pointless nominal shift name: {}".format(name))
-            elif direction not in (cls.UP, cls.DOWN):
+            if direction not in (cls.UP, cls.DOWN):
                 raise ValueError("invalid shift direction: {}".format(direction))
-            else:
-                return (source, direction)
-        else:
-            raise ValueError("invalid shift name format: {}".format(name))
+            return (source, direction)
+
+        raise ValueError("invalid shift name format: {}".format(name))
 
     @classmethod
     def join_name(cls, source, direction):
@@ -211,18 +215,17 @@ class Shift(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
             join_name("pdf", "high")         # -> ValueError: invalid shift direction
         """
         if source == cls.NOMINAL:
-            if direction != cls.NOMINAL:
-                raise ValueError("pointless nominal shift direction: {}".format(direction))
-            else:
+            if direction == cls.NOMINAL:
                 return cls.NOMINAL
-        elif direction in (cls.UP, cls.DOWN):
-            return "{}_{}".format(source, direction)
-        else:
-            raise ValueError("unknown shift direction: {}".format(direction))
+            raise ValueError("pointless nominal shift direction: {}".format(direction))
 
-    def __init__(self, name, id, type=None, label=None, label_short=None, tags=None, aux=None,
-            context=None):
-        UniqueObject.__init__(self, name, id, context=context)
+        if direction in (cls.UP, cls.DOWN):
+            return "{}_{}".format(source, direction)
+
+        raise ValueError("unknown shift direction: {}".format(direction))
+
+    def __init__(self, name, id, type=None, label=None, label_short=None, tags=None, aux=None):
+        UniqueObject.__init__(self, name, id)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)

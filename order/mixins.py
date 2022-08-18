@@ -26,18 +26,16 @@ from order.util import (
 class CopySpec(object):
     """
     Class holding attribute copy specifications. Instances of this class are used in
-    :py:class:`CopyMixin` to describe the copy behavior individually per attribute.
+    :py:class:`CopyMixin` to optionally describe the copy behavior individually per attribute. At
+    the moment, copy specs only need to be created in case attributes should not be copied but
+    carried over the the copied objects as a reference.
 
     **Arguments**
 
     *dst* is the destination attribute name, *src* is the source attribute. When *ref* is *True*,
-    the attribute is not copied but a reference is passed to the newly created instance. By default,
-    ``copy.deepcopy`` is used to copy attributes (if *ref* is *False*). When *shallow* is *True*,
-    ``copy.copy`` is used instead. The standard way to pass copied attributes to new instances is
-    via constructor arguments. However, you can set *use_setter* to *True* to use a plain setter to
-    add the copied attribute to the instance. *manual* denotes whether the custom
-    :py:meth:`CopyMixin._copy_attribute_manual` method should be invoked to copy an attribute. This
-    method must be implemented by inheriting functions.
+    the attribute is not copied but a reference is passed to the newly created instance. Internally,
+    this is done be temporarily setting the attribute to a *ref_placeholder* value, performing the
+    deep copy, and then (re)setting the attribute to the original object.
 
     **Members**
 
@@ -56,33 +54,24 @@ class CopySpec(object):
 
        Whether or not the attribute should be passed as a reference instead of copying.
 
-    .. py:attribute:: shallow
-       type: bool
+    .. py:attribute:: ref_placeholder
+       type: any
 
-       Whether or not the attribute should be copied shallow or deep.
-
-    .. py:attribute:: use_setter
-       type: bool
-
-       Whether or not a setter should be invoked to set the copied attribute. When *False*, it is
-       passed as a constructor argument (the default).
-
-    .. py:attribute:: manual
-       type: bool
-
-       Whether or not the attribute should be copied manually by the custom
-       :py:meth:`CopyMixin._copy_attribute_manual` method.
+       Placeholder value that is used during the copying process.
     """
 
     @classmethod
     def new(cls, obj):
         if isinstance(obj, cls):
             return copy.copy(obj)
-        elif isinstance(obj, six.string_types):
+
+        if isinstance(obj, six.string_types):
             return cls(dst=obj)
-        elif isinstance(obj, (tuple, list)) and len(obj) == 2:
+
+        if isinstance(obj, (tuple, list)) and len(obj) == 2:
             return cls(src=obj[0], dst=obj[1])
-        elif isinstance(obj, dict):
+
+        if isinstance(obj, dict):
             kwargs = {}
             kwargs["dst"] = obj.get("dst", obj.get("attr"))
             if kwargs["dst"] is None:
@@ -90,41 +79,51 @@ class CopySpec(object):
                 raise ValueError(msg.format(cls.__name__, obj))
             kwargs["src"] = obj.get("src", obj.get("attr"))
             kwargs["ref"] = obj.get("ref", False)
-            kwargs["shallow"] = obj.get("shallow", False)
-            kwargs["use_setter"] = obj.get("use_setter", False)
-            kwargs["manual"] = obj.get("manual", False)
+            kwargs["ref_placeholder"] = obj.get("ref_placeholder", None)
             return cls(**kwargs)
-        else:
-            msg = "cannot create {} from unknown type of object '{}'"
-            raise TypeError(msg.format(cls.__name__, obj))
 
-    def __init__(self, dst, src=None, ref=False, shallow=False, use_setter=False, manual=False):
+        raise TypeError("cannot create {} from object '{}'".format(cls.__name__, obj))
+
+    def __init__(self, dst, src=None, ref=False, ref_placeholder=None):
         super(CopySpec, self).__init__()
 
+        # store attributes
         self.dst = dst
         self.src = src or dst
         self.ref = ref
-        self.shallow = shallow
-        self.use_setter = use_setter
-        self.manual = manual
+        self.ref_placeholder = ref_placeholder
 
     def __eq__(self, spec):
         """
-        To instances are equal when their *dst* attributes are equal
+        To instances are equal when their *dst* attributes are equal.
         """
-        # two specs are
-        if not isinstance(spec, self.__class__):
-            spec = self.new(spec)
-        return self.dst == spec.dst
+        if isinstance(spec, six.string_types):
+            return self.dst == spec
+
+        if isinstance(spec, self.__class__):
+            return self.dst == spec.dst
+
+        return False
+
+    def __hash__(self):
+        """
+        The *dst* attribute defines the hash.
+        """
+        return hash(self.dst)
 
 
 class CopyMixin(object):
     """
     Mixin-class that adds copy features to inheriting classes.
 
-    Inheriting classes should define a *copy_specs* class member, which is supposed to be a list
+    Inheriting classes can define a *copy_specs* class member, which is supposed to be a list
     containing specifications per attribute to be copied. See :py:class:`CopySpec` and
     :py:meth:`CopySpec.new` for information about possible copy specifications.
+
+    .. note::
+
+        At the moment, custom specs are only required for attributes that should not be copied but
+        carried over to the copied instance as a reference.
 
     **Example**
 
@@ -137,7 +136,6 @@ class CopyMixin(object):
         class MyClass(od.CopyMixin):
 
             copy_specs = [
-                "name",
                 {"attr": "obj", "ref": True},
             ]
 
@@ -157,27 +155,6 @@ class CopyMixin(object):
         b.obj is a.obj
         # -> True
 
-        c = a.copy(name="bar")
-        c.name
-        # -> "bar"
-
-        # one can also use the python copy module
-        import copy
-
-        d = copy.copy(a)
-
-        d.name
-        # -> "foo"
-
-        d.obj is a.obj
-        # -> True
-
-        # no distinction is made between copy and deepcopy
-        e = copy.deepcopy(a)
-
-        e.obj is a.obj
-        # -> True
-
     **Members**
 
     .. py:classattribute:: copy_specs
@@ -186,65 +163,21 @@ class CopyMixin(object):
        List of copy specifications per attribute.
     """
 
-    copy_specs = []
-
-    def _copy_attribute(self, obj, spec):
-        """
-        Copies an object *obj*, taking into account the :py:class:`CopySpec` speficications *spec*,
-        and returns the copy. Internally, ``copy.copy`` and ``copy.deepcopy`` are used to copy
-        objects.
-        """
-        if spec.ref:
-            return obj
-        elif spec.shallow:
-            return copy.copy(obj)
-        else:
-            return copy.deepcopy(obj)
-
-    def _copy_attribute_manual(self, inst, obj, spec):
-        """
-        Hook that is called in :py:meth:`copy` to invoke the manual copying of an object *obj*
-        **after** the copied instance *inst* was created. *spec* is the associated
-        :py:class:`CopySpec` object. Instead of returning the copied object, the method should
-        directly alter *inst*.
-        """
-        raise NotImplementedError()
-
-    def _copy_ref(self, kwargs, cls, specs):
-        """
-        Hook that is called in :py:meth:`copy` before an instance is actually copied. When this
-        method returns *True*, no new instance is created but rather a reference will be returned.
-        The default is *False*. This is useful in special situations that require flexible copy
-        decisions. *kwargs* is a dictionary that contains all *args* and *kwargs* passed to
-        :py:meth:`copy` (*args* are included by mapping them to the target argument names via
-        inspection), *cls* is the target class to instantiate, and *specs* is the full list of
-        :py:class:`CopySpec` instances.
-        """
-        return False
+    copy_spec = []
 
     def copy(self, *args, **kwargs):
-        r"""copy(*args, **kwargs, _cls=None, _specs=None, _replace_specs=False, _skip=None)
-        Creates a copy of this instance and returns it. Internally, an instance if *_cls* is
-        created, defaulting to the class of *this* instance, with all *args* and *kwargs* forwarded
-        to its constructor. Attributes that are not present in *args* or *kwargs* are copied over
-        from *this* instance based in the attribute specifications given in :py:attr:`copy_specs`.
-        They can be extended by *_specs* or even replaced when *_replace_specs* is *True*. *_skip*
-        can be a sequence of destination attribute names that should be skipped.
+        r"""copy(*args, **kwargs, _specs=None, _skip=None)
+        Creates a copy of this instance and returns it. All *args* and *kwargs* are converted to
+        named arguments (based on the *init* signature) and set as attributes of the created copy.
+        Additional specifications per attribute are taken from :py:attr:`copy_specs` or *_specs* if
+        set. *_skip* can be a sequence of source attribute names that should be skipped.
         """
         # extract the copy configuration from kwargs
-        cls = kwargs.pop("_cls", self.__class__)
-        specs = kwargs.pop("_specs", None)
-        replace_specs = kwargs.pop("_replace_specs", False)
-        skip = kwargs.pop("_skip", None)
-        if specs is None:
-            specs = self.copy_specs
-        elif not replace_specs:
-            specs = self.copy_specs + specs
-        if skip is None:
-            skip = []
+        specs = kwargs.pop("_specs", None) or self.copy_specs
+        skip = kwargs.pop("_skip", None) or []
 
         # unite args and kwargs
-        kwargs.update(args_to_kwargs(cls.__init__ if six.PY2 else cls, args))
+        kwargs.update(args_to_kwargs(self.__class__.__init__ if six.PY2 else self.__class__, args))
 
         # ensure that specs contain CopySpec objects
         # also remove duplicates, prioritize last occurances
@@ -253,59 +186,35 @@ class CopyMixin(object):
             if not isinstance(spec, CopySpec):
                 spec = CopySpec.new(spec)
             if spec not in _specs:
-                _specs.insert(0, spec)
-        specs = _specs
+                _specs.append(spec)
+        specs = _specs[::-1]
 
-        # maybe skip some specs, identified by the destination attribute
-        specs = list(filter((lambda spec: spec.dst not in skip), specs))
-        for skip_dst in skip:
-            if skip_dst in kwargs:
-                del kwargs[skip_dst]
+        # maybe skip some specs, identified by the source attribute
+        specs = list(filter((lambda spec: spec.src not in skip), specs))
 
-        # check if a reference should be returned instead of a real copy
-        # _copy_ref might also update kwargs
-        if self._copy_ref(kwargs, cls, specs):
-            return self
-
-        # actual attribute copying
-        kwargs = kwargs.copy()
+        # attributes that are not copied but carried over as a reference should be set to a
+        # placeholder first and reset later on
+        refs = {}
         for spec in specs:
-            # only copy when not manual the attribute is not yet in kwargs
-            if not spec.manual and spec.dst not in kwargs:
-                kwargs[spec.dst] = self._copy_attribute(getattr(self, spec.src), spec)
+            if spec.ref:
+                refs[spec] = getattr(self, spec.src)
+                setattr(self, spec.src, spec.ref_placeholder)
 
-        # determine which attributes are not passed to the constructor, but set with plain setters
-        set_attrs = []
-        for spec in specs:
-            if spec.use_setter and spec.dst in kwargs:
-                set_attrs.append((spec.dst, kwargs.pop(spec.dst)))
+        # perform the deep copy operation
+        inst = copy.deepcopy(self)
 
-        # create the instance
-        inst = cls(**kwargs)
+        # reset references
+        for spec, obj in refs.items():
+            # reset the old value of this instance
+            setattr(self, spec.src, obj)
+            # add a reference to the copied instance
+            setattr(inst, spec.dst, obj)
 
-        # invoke setters
-        for attr, obj in set_attrs:
+        # set additional attributes
+        for attr, obj in kwargs.items():
             setattr(inst, attr, obj)
 
-        # invoke manual copy implementations
-        for spec in specs:
-            # only copy when the attribute is not yet in kwargs
-            if spec.manual and spec.dst not in kwargs:
-                self._copy_attribute_manual(inst, getattr(self, spec.src), spec)
-
         return inst
-
-    def __copy__(self):
-        """
-        Shorthand to :py:meth:`copy` without arguments.
-        """
-        return self.copy()
-
-    def __deepcopy__(self, memo):
-        """
-        Shorthand to :py:meth:`copy` without arguments.
-        """
-        return self.copy()
 
 
 class AuxDataMixin(object):
@@ -369,7 +278,7 @@ class AuxDataMixin(object):
     _no_default = object()
     _no_value = object()
 
-    copy_specs = ["aux"]
+    copy_specs = []
 
     def __init__(self, aux=None):
         super(AuxDataMixin, self).__init__()
@@ -419,8 +328,8 @@ class AuxDataMixin(object):
         """
         if default != self._no_default:
             return self.aux.get(key, default)
-        else:
-            return self.aux[key]
+
+        return self.aux[key]
 
     def remove_aux(self, key, silent=False):
         """
@@ -484,7 +393,7 @@ class TagMixin(object):
        them with patterns or regular expressions.
     """
 
-    copy_specs = ["tags"]
+    copy_specs = []
 
     def __init__(self, tags=None):
         super(TagMixin, self).__init__()
@@ -596,7 +505,7 @@ class DataSourceMixin(object):
     DATA_SOURCE_DATA = "data"
     DATA_SOURCE_MC = "mc"
 
-    copy_specs = ["is_data"]
+    copy_specs = []
 
     def __init__(self, is_data=False):
         super(DataSourceMixin, self).__init__()
@@ -721,7 +630,7 @@ class SelectionMixin(object):
 
     default_selection_mode = MODE_ROOT if ROOT_DEFAULT else MODE_NUMEXPR
 
-    copy_specs = ["selection", "selection_mode"]
+    copy_specs = []
 
     def __init__(self, selection=None, selection_mode=None):
         super(SelectionMixin, self).__init__()
@@ -860,11 +769,7 @@ class LabelMixin(object):
        Short version of the label, converted to ROOT-style latex.
     """
 
-    copy_specs = [
-        ("_label", "label"),
-        ("_label_short", "label_short"),
-        {"attr": "_label_fallback_attr", "use_setter": True},
-    ]
+    copy_specs = []
 
     def __init__(self, label=None, label_short=None):
         super(LabelMixin, self).__init__()
@@ -895,10 +800,10 @@ class LabelMixin(object):
         # label setter
         if label is None:
             self._label = None
-        elif not isinstance(label, six.string_types):
-            raise TypeError("invalid label type: {}".format(label))
-        else:
+        elif isinstance(label, six.string_types):
             self._label = str(label)
+        else:
+            raise TypeError("invalid label type: {}".format(label))
 
     @property
     def label_root(self):
@@ -945,7 +850,7 @@ class ColorMixin(object):
         c = od.ColorMixin(color=(255, 0.5, 100))
 
         c.color
-        # -> (1.0, 0.5, 0.392..)
+        # -> (1.0, 0.5, 0.392)
 
         c.color_int
         # -> (255, 128, 100)
@@ -988,7 +893,7 @@ class ColorMixin(object):
     .. py:attribute:: color_alpha
        type: float
 
-       The alpha value, defaults to 1.
+       The alpha value, defaults to 1.0.
 
     .. py:attribute:: color
        type: tuple (float)
@@ -1001,16 +906,16 @@ class ColorMixin(object):
        The RGB int color values in a 3-tuple.
     """
 
-    copy_specs = ["color"]
+    copy_specs = []
 
     def __init__(self, color=None):
         super(ColorMixin, self).__init__()
 
         # instance members
-        self._color_r = 0.
-        self._color_g = 0.
-        self._color_b = 0.
-        self._color_alpha = 1.
+        self._color_r = 0.0
+        self._color_g = 0.0
+        self._color_b = 0.0
+        self._color_alpha = 1.0
 
         # set initial values
         if color is not None:
@@ -1021,7 +926,7 @@ class ColorMixin(object):
         if isinstance(color_r, six.integer_types):
             if not (0 <= color_r <= 255):
                 raise ValueError("invalid color_r value: {}".format(color_r))
-            color_r /= 255.
+            color_r /= 255.0
         elif isinstance(color_r, float):
             if not (0 <= color_r <= 1):
                 raise ValueError("invalid color_r value: {}".format(color_r))
@@ -1035,7 +940,7 @@ class ColorMixin(object):
         if isinstance(color_g, six.integer_types):
             if not (0 <= color_g <= 255):
                 raise ValueError("invalid color_g value: {}".format(color_g))
-            color_g /= 255.
+            color_g /= 255.0
         elif isinstance(color_g, float):
             if not (0 <= color_g <= 1):
                 raise ValueError("invalid color_g value: {}".format(color_g))
@@ -1049,7 +954,7 @@ class ColorMixin(object):
         if isinstance(color_b, six.integer_types):
             if not (0 <= color_b <= 255):
                 raise ValueError("invalid color_b value: {}".format(color_b))
-            color_b /= 255.
+            color_b /= 255.0
         elif isinstance(color_b, float):
             if not (0 <= color_b <= 1):
                 raise ValueError("invalid color_b value: {}".format(color_b))

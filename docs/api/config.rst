@@ -12,6 +12,7 @@ Class *Campaign*
 .. autoclass:: Campaign
    :show-inheritance:
    :members:
+   :autosummary:
 
 
 Class *Config*
@@ -20,3 +21,4 @@ Class *Config*
 .. autoclass:: Config
    :show-inheritance:
    :members:
+   :autosummary:

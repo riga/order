@@ -15,7 +15,6 @@ from .util import skip_if, has_module
 def mk_obj(cls, arg0=None, name=None, id=123):
     if name is None:
         name = cls.__name__.lower()
-    cls._instances.clear(cls._instances.ALL)
     return cls(arg0, name, id) if arg0 else cls(name, id)
 
 

@@ -12,3 +12,4 @@ Class *Shift*
 .. autoclass:: Shift
    :show-inheritance:
    :members:
+   :autosummary:

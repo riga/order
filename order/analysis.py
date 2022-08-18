@@ -25,7 +25,7 @@ class Analysis(UniqueObject, AuxDataMixin, TagMixin):
 
     The configuration objects are initialized with *configs*. *tags* are forwarded to the
     :py:class:`~order.mixins.TagMixin`, *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and
-    *name*, *id* and *context* to the :py:class:`~order.unique.UniqueObject` constructor.
+    *name* and *id* to the :py:class:`~order.unique.UniqueObject` constructor.
 
     **Example**
 
@@ -38,8 +38,8 @@ class Analysis(UniqueObject, AuxDataMixin, TagMixin):
     cls_name_singular = "analysis"
     cls_name_plural = "analyses"
 
-    def __init__(self, name, id, configs=None, tags=None, aux=None, context=None):
-        UniqueObject.__init__(self, name, id, context=context)
+    def __init__(self, name, id, configs=None, tags=None, aux=None):
+        UniqueObject.__init__(self, name, id)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)
 
@@ -91,8 +91,9 @@ class Analysis(UniqueObject, AuxDataMixin, TagMixin):
 
     def add_config(self, *args, **kwargs):
         """
-        Adds a child config. See :py:meth:`order.unique.UniqueObjectIndex.add` for more info. Also
-        sets the analysis of the added config to *this* instance. Returns the added config object.
+        Adds a child config to the :py:attr:`configs` index and returns it. See
+        :py:meth:`order.unique.UniqueObjectIndex.add` for more info. Also sets the analysis of the
+        added config to *this* instance.
         """
         config = self.configs.add(*args, **kwargs)
 
@@ -104,8 +105,9 @@ class Analysis(UniqueObject, AuxDataMixin, TagMixin):
 
     def remove_config(self, *args, **kwargs):
         """
-        Removes a child config. See :py:meth:`order.unique.UniqueObjectIndex.remove` for more info.
-        Also resets the analysis of the added config. Returns the removed config object.
+        Removes a child config from the :py:attr:`configs` index and returns the removed object. See
+        :py:meth:`order.unique.UniqueObjectIndex.remove` for more info. Also resets the analysis of
+        the removed config.
         """
         config = self.configs.remove(*args, **kwargs)
 

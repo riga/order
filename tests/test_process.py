@@ -16,7 +16,7 @@ class ProcessTest(unittest.TestCase):
     def test_constructor(self):
         p = Process("ttH", 1,
             xsecs={
-                13: Number(0.5071, {"scale": (Number.REL, 0.036)}),
+                13: Number(0.5071, {"scale": 0.036j}),
             },
             label=r"$t\bar{t}H$",
             color=(255, 0, 0),
@@ -51,13 +51,21 @@ class ProcessTest(unittest.TestCase):
 
     def test_copy(self):
         p = Process("ttVV", 7, xsecs={13: 5}, color=(0.3, 0.4, 0.5), is_data=False, aux={1: 2})
-        p2 = p.copy(name="ttVVV", id=8, aux={3: 4})
+        p.add_process("ttVV_dl", 8)
+        self.assertEqual(len(p.processes), 1)
+
+        p2 = p.copy(name="ttVVV", id=9, aux={3: 4})
+        self.assertEqual(len(p2.processes), 1)
 
         self.assertEqual(p2.name, "ttVVV")
-        self.assertEqual(p2.id, 8)
+        self.assertEqual(p2.id, 9)
         self.assertEqual(p2.get_xsec(13), 5)
         self.assertEqual(p2.color, p.color)
         self.assertEqual(list(p2.aux.keys())[0], 3)
+        self.assertTrue(p2.has_aux(3))
+        self.assertFalse(p2.has_aux(1))
+        self.assertEqual(p.get_process(8).get_parent_process(7), p)
+        self.assertEqual(p2.get_process(8).get_parent_process(9), p2)
 
     def test_parent_processes(self):
         c = Process("child", 10)
@@ -76,5 +84,7 @@ class ProcessTest(unittest.TestCase):
         output = BytesIO()
         a.pretty_print(13, offset=10, stream=output)
 
-        self.assertEqual(output.getvalue().decode("utf-8"),
-            "> a (100) 12.0 (no uncertainties)\n| > b (101)  1.0 (no uncertainties)\n")
+        self.assertEqual(
+            output.getvalue().decode("utf-8"),
+            "> a (100) 12.0 (no uncertainties)\n| > b (101)  1.0 (no uncertainties)\n",
+        )

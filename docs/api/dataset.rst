@@ -12,6 +12,7 @@ Class *Dataset*
 .. autoclass:: Dataset
    :show-inheritance:
    :members:
+   :autosummary:
 
 
 Class *DatasetInfo*
@@ -20,3 +21,4 @@ Class *DatasetInfo*
 .. autoclass:: DatasetInfo
    :show-inheritance:
    :members:
+   :autosummary:

@@ -30,13 +30,12 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
     **Arguments**
 
     *ecm* is the center-of-mass energy, *bx* the bunch-crossing. *tags* are forwarded to the
-    :py:class:`~order.mixins.TagMixin`, *aux* to the :py:class:`~order.mixins.AuxDataMixin`, *name*,
-    *id* and *context* to the :py:class:`~order.unique.UniqueObject` constructor.
+    :py:class:`~order.mixins.TagMixin`, *aux* to the :py:class:`~order.mixins.AuxDataMixin`, *name*
+    and *id* to the :py:class:`~order.unique.UniqueObject` constructor.
 
     **Copy behavior**
 
-    All attributes are copied **except** for references to contained datasets. Also note the copy
-    behavior of :py:class:`~order.unique.UniqueObject`'s.
+    All attributes are copied.
 
     **Example**
 
@@ -44,7 +43,9 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
 
         import order as od
 
-        c = od.Campaign("2017B", 1,
+        c = od.Campaign(
+            name="2017B",
+            id=1,
             ecm=13,
             bx=25,
         )
@@ -73,12 +74,14 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
     cls_name_singular = "campaign"
     cls_name_plural = "campaigns"
 
-    copy_specs = ["ecm", "bx"] + UniqueObject.copy_specs + AuxDataMixin.copy_specs + \
+    copy_specs = (
+        UniqueObject.copy_specs +
+        AuxDataMixin.copy_specs +
         TagMixin.copy_specs
+    )
 
-    def __init__(self, name, id, ecm=None, bx=None, datasets=None, tags=None, aux=None,
-            context=None):
-        UniqueObject.__init__(self, name, id, context=context)
+    def __init__(self, name, id, ecm=None, bx=None, datasets=None, tags=None, aux=None):
+        UniqueObject.__init__(self, name, id)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)
 
@@ -113,8 +116,9 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
 
     def add_dataset(self, *args, **kwargs):
         """
-        Adds a child dataset and returns it. See :py:meth:`UniqueObjectIndex.add` for more info.
-        Also sets the *campaign* of the added dataset to *this* instance.
+        Adds a child dataset to the :py:attr:`datasets` index and returns it. See
+        :py:meth:`UniqueObjectIndex.add` for more info. Also sets the *campaign* of the added
+        dataset to *this* instance.
         """
         dataset = self.datasets.add(*args, **kwargs)
 
@@ -126,8 +130,9 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
 
     def remove_dataset(self, *args, **kwargs):
         """
-        Removes a child dataset. See :py:meth:`UniqueObjectIndex.remove` for more info. Also resets
-        the *campaign* of the added dataset.
+        Removes a child dataset from the :py:attr:`datasets` index and returns the removed object.
+        See :py:meth:`UniqueObjectIndex.remove` for more info. Also resets the *campaign* of the
+        added dataset.
         """
         dataset = self.datasets.remove(*args, **kwargs)
 
@@ -156,7 +161,7 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
     **Arguments**
 
     *datasets*, *processes*, *channels*, *categories*, *variables*, and *shifts* are initialized
-    from constructor arguments. *name*, *id* and *context* are forwarded to the
+    from constructor arguments. *name* and *id* are forwarded to the
     :py:class:`~order.unique.UniqueObject` constructor. *name* and *id* default to the values of the
     *campaign* instance. Specialized data such as integrated luminosities, triggers, etc, can be
     stored as auxiliary data *aux*, which are forwarded to the
@@ -165,11 +170,8 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
 
     **Copy behavior**
 
-    Only *name*, *id*, *context*, auxiliary data, and references to the *analysis* and *campaign*
-    instances are copied. Datasets, processes, channels, categories, variables and shifts are not
-    copied! This is due to the fact that order does not try to auto-magically guess wich exact copy
-    behavior is desired by the user. Also note the copy behavior of
-    :py:class:`~order.unique.UniqueObject`'s.
+    The :py:attr:`campaign` and :py:attr:`analysis` attributes are carried over as references, all
+    remaining attributes are copied. Note that the copied config is also registered in the analysis.
 
     **Example**
 
@@ -224,12 +226,31 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
     cls_name_singular = "config"
     cls_name_plural = "configs"
 
-    copy_specs = [{"attr": "campaign", "ref": True}, {"attr": "analysis", "ref": True}] + \
-        UniqueObject.copy_specs + AuxDataMixin.copy_specs + TagMixin.copy_specs
+    copy_specs = (
+        [
+            {"attr": "_campaign", "ref": True},
+            {"attr": "_analysis", "ref": True},
+        ] +
+        UniqueObject.copy_specs +
+        AuxDataMixin.copy_specs +
+        TagMixin.copy_specs
+    )
 
-    def __init__(self, campaign=None, name=None, id=None, analysis=None, datasets=None,
-            processes=None, channels=None, categories=None, variables=None, shifts=None, tags=None,
-            aux=None, context=None):
+    def __init__(
+        self,
+        campaign=None,
+        name=None,
+        id=None,
+        analysis=None,
+        datasets=None,
+        processes=None,
+        channels=None,
+        categories=None,
+        variables=None,
+        shifts=None,
+        tags=None,
+        aux=None,
+    ):
         # instance members
         self._campaign = None
         self._analysis = None
@@ -246,7 +267,7 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
                 raise ValueError("an id must be set when campaign is missing")
             id = self.campaign.id
 
-        UniqueObject.__init__(self, name=name, id=id, context=context)
+        UniqueObject.__init__(self, name=name, id=id)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)
 
@@ -271,6 +292,15 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
 
         if shifts is not None:
             self.extend_shifts(shifts)
+
+    def copy(self, *args, **kwargs):
+        inst = super(Config, self).copy(*args, **kwargs)
+
+        # register in the analysis
+        if inst.analysis:
+            inst.analysis.configs.add(inst)
+
+        return inst
 
     @typed
     def campaign(self, campaign):

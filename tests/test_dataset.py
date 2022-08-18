@@ -6,7 +6,7 @@ __all__ = ["DatasetTest", "DatasetInfoTest"]
 
 import unittest
 
-from order import Dataset, DatasetInfo, Campaign, uniqueness_context
+from order import Dataset, DatasetInfo, Campaign
 
 
 class DatasetTest(unittest.TestCase):
@@ -14,7 +14,9 @@ class DatasetTest(unittest.TestCase):
     def test_constructor(self):
         c = Campaign("2017B", 2)
 
-        d = Dataset("ttH", 1,
+        d = Dataset(
+            name="ttH",
+            id=1,
             campaign=c,
             keys=["/ttHTobb_M125.../.../..."],
             n_files=123,
@@ -70,11 +72,14 @@ class DatasetTest(unittest.TestCase):
         self.assertEqual(d["scale_up"].n_files, 100)
         self.assertEqual(d["scale_up"].n_events, 40000)
 
-        d.set_info("scale_down", DatasetInfo(
-            keys=["/ttbar_scaleDOWN.../.../..."],
-            n_files=101,
-            n_events=40001,
-        ))
+        d.set_info(
+            "scale_down",
+            DatasetInfo(
+                keys=["/ttbar_scaleDOWN.../.../..."],
+                n_files=101,
+                n_events=40001,
+            ),
+        )
         self.assertEqual(d["scale_down"].keys[0], "/ttbar_scaleDOWN.../.../...")
         self.assertEqual(d["scale_down"].n_files, 101)
         self.assertEqual(d["scale_down"].n_events, 40001)
@@ -89,22 +94,25 @@ class DatasetTest(unittest.TestCase):
             d.info = "foo"
 
     def test_copy(self):
-        with uniqueness_context("dataset_test_copy"):
-            c = Campaign("2017B", 2)
-            d = Dataset("ttH", 1,
-                campaign=c,
-                keys=["/ttHTobb_M125.../.../..."],
-                n_files=123,
-                n_events=456789,
-            )
-            d.add_process("ttH", 1)
-            d2 = d.copy(name="ttH2", id=2)
+        c = Campaign("2017B", 2)
+        d = Dataset(
+            name="ttH",
+            id=1,
+            campaign=c,
+            keys=["/ttHTobb_M125.../.../..."],
+            n_files=123,
+            n_events=456789,
+        )
+        d.add_process("ttH", 1)
+        d2 = d.copy(name="ttH2", id=2)
 
         self.assertEqual(d2.name, "ttH2")
         self.assertEqual(d2.id, 2)
         self.assertEqual(len(d.processes), 1)
-        self.assertEqual(len(d2.processes), 0)
-        self.assertEqual(d.campaign, d2.campaign)
+        self.assertEqual(len(d2.processes), 1)
+        self.assertEqual(d2.campaign, d.campaign)
+        self.assertEqual(len(d.campaign.datasets), 2)
+        self.assertTrue(d2 in d.campaign.datasets)
 
 
 class DatasetInfoTest(unittest.TestCase):

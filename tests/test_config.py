@@ -6,7 +6,7 @@ __all__ = ["CampaignTest", "ConfigTest"]
 
 import unittest
 
-from order import Campaign, Config, Dataset, uniqueness_context
+from order import Campaign, Config, Dataset
 
 
 class CampaignTest(unittest.TestCase):
@@ -24,10 +24,9 @@ class CampaignTest(unittest.TestCase):
             c.bx = "foo"
 
     def test_datasets(self):
-        with uniqueness_context("campaign_test_datasets"):
-            a = Campaign("2017A", 1)
-            b = Campaign("2017B", 2)
-            d = Dataset("ttH", 1, campaign=a)
+        a = Campaign("2017A", 1)
+        b = Campaign("2017B", 2)
+        d = Dataset("ttH", 1, campaign=a)
 
         self.assertEqual(d.campaign, "2017A")
         self.assertIn(d, a.datasets)
@@ -52,11 +51,28 @@ class CampaignTest(unittest.TestCase):
         self.assertEqual(len(a.datasets), 0)
         self.assertEqual(len(b.datasets), 0)
 
+    def test_copy(self):
+        a = Campaign("2017A", 1)
+        d = Dataset("ttH", 1, campaign=a)
+        p = d.add_process("ttH_bb", 2)
+
+        a2 = a.copy(name="2017B", id=2)
+
+        self.assertEqual(a2.name, "2017B")
+        self.assertEqual(a2.id, 2)
+        self.assertEqual(len(a2.datasets), len(a.datasets))
+        self.assertIs(a.datasets.n.ttH.processes.n.ttH_bb, p)
+        self.assertIsNot(a2.datasets.n.ttH.processes.n.ttH_bb, p)
+        self.assertIs(
+            a2.datasets.n.ttH.processes.n.ttH_bb,
+            a2.datasets.get_first().processes.get_first(),
+        )
+
 
 class ConfigTest(unittest.TestCase):
 
     def test_constructor(self):
-        a = Campaign("2017A", 1, context="config_test_constructor")
+        a = Campaign("2017A", 1)
         c = Config(a)
 
         self.assertEqual(c.campaign, a)
@@ -68,4 +84,13 @@ class ConfigTest(unittest.TestCase):
 
         self.assertEqual(c.name, "otherName")
         self.assertEqual(c.id, 3)
-        self.assertEqual(c.context, "config")
+
+    def test_copy(self):
+        a = Campaign("2017A", 1)
+        c = Config(a)
+
+        c2 = c.copy(name="2017B", id=2)
+
+        self.assertEqual(c2.name, "2017B")
+        self.assertEqual(c2.id, 2)
+        self.assertEqual(c2.campaign, c.campaign)

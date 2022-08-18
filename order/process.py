@@ -13,14 +13,21 @@ import sys
 import six
 from scinum import Number
 
-from order.unique import UniqueObject, UniqueObjectIndex, unique_tree
+from order.unique import UniqueObject, unique_tree
 from order.mixins import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, LabelMixin, ColorMixin
 from order.util import typed
 
 
 @unique_tree(parents=-1, deep_children=True, deep_parents=True)
-class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, LabelMixin,
-        ColorMixin):
+class Process(
+    UniqueObject,
+    CopyMixin,
+    AuxDataMixin,
+    TagMixin,
+    DataSourceMixin,
+    LabelMixin,
+    ColorMixin,
+):
     r"""
     Definition of a phyiscs process.
 
@@ -31,8 +38,8 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
 
     *color* is forwarded to the :py:class:`~order.mixins.ColorMixin`, *label* and *label_short* to
     the :py:class:`~order.mixins.LabelMixin`, *is_data* to the
-    :py:class:`~order.mixins.DataSourceMixin`,*tags* to the :py:class:`~order.mixins.TagMixin`,
-    *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and *name*, *id* and *context* to the
+    :py:class:`~order.mixins.DataSourceMixin`, *tags* to the :py:class:`~order.mixins.TagMixin`,
+    *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and *name* and *id* to the
     :py:class:`~order.unique.UniqueObject` constructor.
 
     A process can have parent-child relations to other processes. Initial child processes are set
@@ -40,8 +47,7 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
 
     **Copy behavior**
 
-    All attributes are copied **except** for references to child and parent processes. Also note the
-    copy behavior of :py:class:`~order.unique.UniqueObject`'s.
+    All attributes are copied.
 
     **Example**
 
@@ -50,9 +56,11 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
         import order as od
         from scinum import Number, REL
 
-        p = od.Process("ttH", 1,
+        p = od.Process(
+            name="ttH",
+            id=1,
             xsecs={
-                13: Number(0.5071, {"scale": (REL, 0.036)}),  # +-3.6% scale uncertainty
+                13: Number(0.5071, {"scale": 0.036j}),  # +-3.6% scale uncertainty
             },
             label=r"$t\bar{t}H$",
             color=(255, 0, 0),
@@ -64,7 +72,9 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
         p.label_root
         # -> "t#bar{t}H"
 
-        p2 = p.add_process("ttH_bb", 2,
+        p2 = p.add_process(
+            name="ttH_bb",
+            id=2,
             xsecs={
                 13: p.get_xsec(13) * 0.5824,
             },
@@ -92,32 +102,29 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
     cls_name_plural = "processes"
 
     # attributes for copying
-    copy_specs = ["xsecs"] + UniqueObject.copy_specs + AuxDataMixin.copy_specs + \
-        TagMixin.copy_specs + DataSourceMixin.copy_specs + LabelMixin.copy_specs + \
+    copy_specs = (
+        UniqueObject.copy_specs +
+        AuxDataMixin.copy_specs +
+        TagMixin.copy_specs +
+        DataSourceMixin.copy_specs +
+        LabelMixin.copy_specs +
         ColorMixin.copy_specs
+    )
 
-    @classmethod
-    def pretty_print_all(cls, *args, **kwargs):
-        """ pretty_print_all(*args, contenxt=None, **kwargs)
-        Calls :py:meth:`pretty_print` of all root processes in the instance cache for *context* and
-        forwards all *args* and *kwargs*. When *context* is *all*, root processes of all indices are
-        printed.
-        """
-        context = kwargs.pop("context", None)
-        stream = kwargs.get("stream") or sys.stdout
-        first = True
-        for process in cls._instances.values(context=context):
-            if context == UniqueObjectIndex.ALL:
-                process = process[0]
-            if process.is_root_process:
-                if first:
-                    stream.write("\n".encode())
-                first = False
-                process.pretty_print(*args, **kwargs)
-
-    def __init__(self, name, id, xsecs=None, processes=None, color=None, label=None,
-            label_short=None, is_data=False, tags=None, aux=None, context=None):
-        UniqueObject.__init__(self, name, id, context=context)
+    def __init__(
+        self,
+        name,
+        id,
+        xsecs=None,
+        processes=None,
+        color=None,
+        label=None,
+        label_short=None,
+        is_data=False,
+        tags=None,
+        aux=None,
+    ):
+        UniqueObject.__init__(self, name, id)
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)
@@ -149,7 +156,7 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
         for ecm, xsec in xsecs.items():
             if not isinstance(ecm, (int, float)):
                 raise TypeError("invalid xsec energy type: {}".format(ecm))
-            elif not isinstance(xsec, Number):
+            if not isinstance(xsec, Number):
                 try:
                     xsec = Number(xsec)
                 except:
@@ -203,5 +210,11 @@ class Process(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
             return
 
         for proc in self.processes:
-            proc.pretty_print(ecm=ecm, offset=offset, max_depth=max_depth, stream=stream,
-                _depth=_depth + 1, **kwargs)
+            proc.pretty_print(
+                ecm=ecm,
+                offset=offset,
+                max_depth=max_depth,
+                stream=stream,
+                _depth=_depth + 1,
+                **kwargs  # noqa: C815
+            )

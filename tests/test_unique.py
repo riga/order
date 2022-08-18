@@ -7,8 +7,8 @@ __all__ = ["UniqueObjectTest", "UniqueObjectIndexTest", "UniqueTreeTest"]
 import unittest
 
 from order import (
-    UniqueObject, UniqueObjectIndex, uniqueness_context, unique_tree, DuplicateNameException,
-    DuplicateIdException, DuplicateObjectException, CopyMixin,
+    UniqueObject, UniqueObjectIndex, unique_tree, DuplicateNameException, DuplicateIdException,
+    CopyMixin,
 )
 
 
@@ -28,7 +28,6 @@ class UniqueObjectTest(unittest.TestCase):
         C = self.make_class()
 
         foo = C("foo", 1)
-        self.assertEqual(foo.context, C.default_context)
         self.assertEqual(foo.name, "foo")
         self.assertEqual(foo.id, 1)
 
@@ -37,52 +36,16 @@ class UniqueObjectTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             C(["bar"], 1)
 
-        with self.assertRaises(DuplicateNameException):
-            C("foo", 2)
-        with self.assertRaises(DuplicateIdException):
-            C("bar", 1)
-
-    def test_uncache(self):
-        C = self.make_class()
-
-        foo = C("foo", 1)
-
-        with self.assertRaises(DuplicateNameException):
-            C("foo", 2)
-
-        foo._remove()
-        C("foo", 2)
-
     def test_vanish(self):
         try:
             import cloudpickle as cp
         except ImportError as e:
             raise unittest.SkipTest(e)
-        import gc
 
         x = C2("foo", 222)
 
         y = cp.loads(cp.dumps(x))
-        self.assertEqual(y, C2.get_instance("foo"))
-        del y
-        gc.collect()
-
-        self.assertEqual(x, C2.get_instance("foo"))
-
-    def test_get_instance(self):
-        C = self.make_class()
-        c = C("foo", 1)
-
-        self.assertEqual(C.get_instance(c), c)
-        self.assertEqual(C.get_instance("foo"), c)
-        self.assertEqual(C.get_instance(1), c)
-        self.assertEqual(C.get_instance("bar", default=c), c)
-
-    def test_context(self):
-        C = self.make_class()
-
-        foo = C("foo", 1)  # noqa: F841
-        bar = C("foo", 1, context="other_context")  # noqa: F841
+        self.assertEqual(y, x)
 
     def test_equality(self):
         C = self.make_class()
@@ -109,17 +72,6 @@ class UniqueObjectTest(unittest.TestCase):
         self.assertTrue(bar > 1)
         self.assertTrue(foo < 3)
 
-    def test_instance_cache(self):
-        C = self.make_class()
-
-        foo = C("foo", 1)
-        self.assertEqual(C.get_instance("foo"), foo)
-        self.assertEqual(C.get_instance(1), foo)
-        self.assertEqual(C.get_instance(foo), foo)
-
-        foo._remove()
-        self.assertIsNone(C.get_instance("foo", default=None))
-
     def test_auto_id(self):
         C = self.make_class()
 
@@ -131,54 +83,18 @@ class UniqueObjectTest(unittest.TestCase):
         test = C("test", "+")
         self.assertEqual(test.id, 101)
 
-    def test_contexts(self):
-        C = self.make_class()
-        self.assertEqual(C.default_context, "c")
-
-        c = C("foo", 1)
-        self.assertEqual(c.context, "c")
-
-        c = C("foo", 1, context="test_context")
-        self.assertEqual(c.context, "test_context")
-
-        with uniqueness_context("x"):
-            c = C("foo", 1)
-            self.assertEqual(c.context, "x")
-
-            c = C("foo", 1, context="y")
-            self.assertEqual(c.context, "y")
-
-        c = C("bar", 2)
-        self.assertEqual(c.context, "c")
-
-        self.assertEqual(set(C._instances.contexts()), {"y", "x", "c", "test_context"})
-
     def test_copy(self):
         C = self.make_class()
 
         class D(C, CopyMixin):
-            copy_specs = ["name", "id", "context"]
+            pass
 
         a = D("foo", 1)
-        self.assertEqual(D._instances.len(all), 1)
+        b = a.copy(name="bar")
+        c = a.copy(id=2)
 
-        a.copy("bar", 2)
-        a.copy(context="other")
-        self.assertEqual(D._instances.len(all), 3)
-
-        with self.assertRaises(DuplicateIdException):
-            a.copy("baz")
-
-        with self.assertRaises(DuplicateNameException):
-            a.copy(id=3)
-
-        with uniqueness_context("other2"):
-            a.copy()
-        self.assertEqual(D._instances.len(all), 4)
-
-        with self.assertRaises(DuplicateObjectException):
-            with uniqueness_context("other"):
-                a.copy()
+        self.assertEqual(a.id, b.id)
+        self.assertEqual(a.name, c.name)
 
 
 class UniqueObjectIndexTest(unittest.TestCase):
@@ -190,7 +106,7 @@ class UniqueObjectIndexTest(unittest.TestCase):
         idx = UniqueObjectIndex(cls=C)
         idx.add("foo", 1)
         idx.add("bar", 2)
-        idx.add("test", 3, context="other")
+        idx.add("test", 3)
 
         return C, idx
 
@@ -228,16 +144,19 @@ class UniqueObjectIndexTest(unittest.TestCase):
         self.assertEqual(len(idx), 3)
 
         objs = idx.extend([C("baz", 3), C("test", 4)])
-        self.assertEqual(len(idx), 5)
+        self.assertEqual(len(idx), 4)
+
+        with self.assertRaises(DuplicateNameException):
+            objs = idx.extend([C("baz", 3), C("test", 4)], overwrite=False)
 
         self.assertEqual(objs[0].name, "baz")
         self.assertEqual(objs[1].id, 4)
 
         objs = idx.extend([dict(name="hep", id=5)])
-        self.assertEqual(len(idx), 6)
+        self.assertEqual(len(idx), 5)
 
         objs = idx.extend([("ex", 6)])
-        self.assertEqual(len(idx), 7)
+        self.assertEqual(len(idx), 6)
 
     def test_get(self):
         C, idx = self.make_index()
@@ -245,17 +164,16 @@ class UniqueObjectIndexTest(unittest.TestCase):
         self.assertIsInstance(idx.get("foo"), C)
         self.assertEqual(idx.get("foo"), 1)
         self.assertEqual(idx.get("bar"), "bar")
+        self.assertEqual(idx.get("test"), 3)
 
         with self.assertRaises(ValueError):
-            idx.get("test")
-
-        self.assertEqual(idx.get("test", context="other"), 3)
+            idx.get("NOT EXISTING")
 
     def test_get_first_last(self):
         C, idx = self.make_index()
 
         self.assertEqual(idx.get_first(), "foo")
-        self.assertEqual(idx.get_last(), "bar")
+        self.assertEqual(idx.get_last(), "test")
 
         idx.clear()
         with self.assertRaises(ValueError):
@@ -269,7 +187,7 @@ class UniqueObjectIndexTest(unittest.TestCase):
         self.assertEqual(idx.n.bar, "bar")
 
         with self.assertRaises(ValueError):
-            idx.n.test
+            idx.n.NOT_EXISTING
 
     def test_contains(self):
         C, idx = self.make_index()
@@ -285,8 +203,7 @@ class UniqueObjectIndexTest(unittest.TestCase):
         self.assertFalse(4 in idx)
 
         self.assertTrue("test" in idx)
-        self.assertFalse(idx.has("test"))
-        self.assertTrue(idx.has("test", context="other"))
+        self.assertTrue(idx.has("test"))
 
     def test_remove(self):
         C, idx = self.make_index()
@@ -297,7 +214,7 @@ class UniqueObjectIndexTest(unittest.TestCase):
         self.assertEqual(len(idx), 2)
         self.assertFalse("foo" in idx)
         self.assertTrue("test" in idx)
-        self.assertIsNotNone(idx.remove("test", context="other"))
+        self.assertIsNotNone(idx.remove("test"))
         self.assertFalse("test" in idx)
 
         self.assertIsNone(idx.remove("baz", silent=True))
@@ -307,9 +224,6 @@ class UniqueObjectIndexTest(unittest.TestCase):
         self.assertEqual(len(idx), 3)
 
         idx.clear()
-        self.assertEqual(len(idx), 1)
-
-        idx.clear(context=idx.ALL)
         self.assertEqual(len(idx), 0)
         self.assertFalse(idx)
 
@@ -318,59 +232,27 @@ class UniqueObjectIndexTest(unittest.TestCase):
 
         self.assertEqual(idx.index("foo"), 0)
         self.assertEqual(idx.index(2), 1)
-        self.assertEqual(idx.index("test", context="other"), 0)
+        self.assertEqual(idx.index("test"), 2)
 
         with self.assertRaises(ValueError):
-            idx.index("test")
+            idx.index("NOT EXISTING")
 
-    def test_change_default_context(self):
-        C, idx = self.make_index()
+    def test_copy(self):
+        class D(UniqueObject, CopyMixin):
+            pass
 
-        self.assertEqual(idx.default_context, "c")
-        self.assertTrue("foo" in idx)
-        self.assertTrue(idx.has("foo"))
+        class DIndex(UniqueObjectIndex, CopyMixin):
+            copy_specs = [
+                {"attr": "_cls", "ref": True},
+            ]
 
-        idx.add("test", 1, context="newindex")
-        self.assertTrue("test" in idx)
-        self.assertFalse(idx.has("test"))
+        idx = DIndex(cls=D)
+        idx.add("foo", 1)
+        idx.add("bar", 2)
+        idx.add("test", 3)
 
-        idx.default_context = "newindex"
-        self.assertEqual(idx.default_context, "newindex")
-
-        self.assertTrue(idx.has("test"))
-
-    def test_multiple_contexts(self):
-        C, idx = self.make_index()
-
-        self.assertEqual(len(idx), 3)
-        self.assertEqual(idx.len(context=idx.ALL), 3)
-        self.assertEqual(idx.len(), 2)
-        self.assertEqual(idx.len(context="other"), 1)
-
-        self.assertEqual(set(idx.contexts()), {"c", "other"})
-
-        self.assertEqual(tuple(idx.names()), ("foo", "bar"))
-        self.assertEqual(tuple(idx.names(context="other")), ("test",))
-        self.assertEqual(tuple(idx.names(context=idx.ALL)),
-            (("foo", "c"), ("bar", "c"), ("test", "other")))
-
-        self.assertEqual(tuple(idx.ids()), (1, 2))
-        self.assertEqual(tuple(idx.ids(context="other")), (3,))
-        self.assertEqual(tuple(idx.ids(context=idx.ALL)), ((1, "c"), (2, "c"), (3, "other")))
-
-        self.assertEqual(tuple(idx.keys()), (("foo", 1), ("bar", 2)))
-        self.assertEqual(tuple(idx.keys(context="other")), (("test", 3),))
-        self.assertEqual(tuple(idx.keys(context=idx.ALL)),
-            (("foo", 1, "c"), ("bar", 2, "c"), ("test", 3, "other")))
-
-        self.assertEqual(tuple(idx.values()), (1, 2))
-        self.assertEqual(tuple(idx.values(context="other")), (3,))
-        self.assertEqual(tuple(idx.values(context=idx.ALL)), ((1, "c"), (2, "c"), (3, "other")))
-
-        self.assertEqual(tuple(idx.items()), ((("foo", 1), 1), (("bar", 2), 2)))
-        self.assertEqual(tuple(idx.items(context="other")), ((("test", 3), 3),))
-        self.assertEqual(tuple(idx.items(context=idx.ALL)),
-            ((("foo", 1), 1, "c"), (("bar", 2), 2, "c"), (("test", 3), 3, "other")))
+        idx2 = idx.copy()
+        self.assertEqual(len(idx2), 3)
 
 
 class UniqueTreeTest(unittest.TestCase):
@@ -546,10 +428,13 @@ class UniqueTreeTest(unittest.TestCase):
                 self.assertEqual(len(nodes), 0)
 
         def walk(depth, this):
-            return [n for n, _, _ in n1.walk_nodes(
-                depth_first=depth,
-                include_self=this,
-            )]
+            return [
+                n
+                for n, _, _ in n1.walk_nodes(
+                    depth_first=depth,
+                    include_self=this,
+                )
+            ]
 
         self.assertListEqual(walk(False, False), [n2, n3, n4])
         self.assertListEqual(walk(False, True), [n1, n2, n3, n4])

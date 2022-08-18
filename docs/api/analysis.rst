@@ -12,3 +12,4 @@ Class *Analysis*
 .. autoclass:: Analysis
    :show-inheritance:
    :members:
+   :autosummary:

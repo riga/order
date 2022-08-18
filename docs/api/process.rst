@@ -12,3 +12,4 @@ Class *Process*
 .. autoclass:: Process
    :show-inheritance:
    :members:
+   :autosummary:

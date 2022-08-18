@@ -49,6 +49,12 @@ class UniqueObjectIndex(CopyMixin):
     *cls* must be a subclass of :py:class:`UniqueObject`, which is used for type validation when a
     new object is added to the index.
 
+    **Copy behavior**
+
+    All attributes are copied, **except** for
+
+       - the index of objects itself.
+
     **Example**
 
     .. code-block:: python
@@ -94,8 +100,14 @@ class UniqueObjectIndex(CopyMixin):
 
     copy_specs = [
         {"attr": "cls", "ref": True},
-        {"attr": "_indices", "manual": True},
     ]
+
+    @staticmethod
+    def _index_factory():
+        return {
+            "names": collections.OrderedDict(),
+            "ids": collections.OrderedDict(),
+        }
 
     def __init__(self, cls, objects=None):
         CopyMixin.__init__(self)
@@ -113,20 +125,6 @@ class UniqueObjectIndex(CopyMixin):
 
         # save a dot access proxy for easy access of objects via name
         self._n = DotAccessProxy(self.get)
-
-    @staticmethod
-    def _index_factory():
-        return {
-            "names": collections.OrderedDict(),
-            "ids": collections.OrderedDict(),
-        }
-
-    def _copy_attribute_manual(self, inst, obj, spec):
-        if spec.dst == "_indices":
-            # simply extend the new index with the values of this instance
-            inst.extend(self.values())
-        else:
-            raise NotImplementedError()
 
     def _repr_parts(self):
         return [
@@ -214,7 +212,7 @@ class UniqueObjectIndex(CopyMixin):
         """
         Returns (name, id, object) 3-tuples of all objects contained in the index
         """
-        return list(zip(self._index["names"], self._index["ids"]. self._index["ids"].values()))
+        return list(zip(self._index["names"], self._index["ids"], self._index["ids"].values()))
 
     def add(self, *args, **kwargs):
         """ add(*args, overwrite=True, **kwargs)

@@ -161,15 +161,21 @@ class VariableTest(unittest.TestCase):
         )
 
     def test_copy(self):
-        v = self.make_var("copy_var").copy(
+        v = self.make_var("copy_var")
+        v2 = v.copy(
             name="otherVar",
             id=Variable.AUTO_ID,
             expression="otherExpression",
         )
 
-        self.assertEqual(v.name, "otherVar")
-        self.assertEqual(v.expression, "otherExpression")
-        self.assertEqual(v.selection, "myBranchC > 0")
+        self.assertEqual(v2.name, "otherVar")
+        self.assertEqual(v2.expression, "otherExpression")
+        self.assertEqual(v2.selection, "myBranchC > 0")
+
+        v3 = v.copy()
+        self.assertEqual(v3.name, v.name)
+        self.assertEqual(v3.expression, v.expression)
+        self.assertEqual(v3.selection, v.selection)
 
     def test_mpl_data(self):
         v = self.make_var(

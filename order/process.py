@@ -47,7 +47,7 @@ class Process(
 
     **Copy behavior**
 
-    All attributes are coied, **except** for
+    All attributes are copied, **except** for
 
        - child and parent processes.
 

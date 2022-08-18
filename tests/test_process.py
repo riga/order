@@ -51,7 +51,11 @@ class ProcessTest(unittest.TestCase):
 
     def test_copy(self):
         p = Process("ttVV", 7, xsecs={13: 5}, color=(0.3, 0.4, 0.5), is_data=False, aux={1: 2})
+        pp = p.add_process("ttVV_dl", 8)
+        self.assertEqual(len(p.processes), 1)
+
         p2 = p.copy(name="ttVVV", id=8, aux={3: 4})
+        self.assertEqual(len(p2.processes), 0)
 
         self.assertEqual(p2.name, "ttVVV")
         self.assertEqual(p2.id, 8)

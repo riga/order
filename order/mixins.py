@@ -486,6 +486,12 @@ class DataSourceMixin(object):
 
        The data source string for mc (``"mc"``).
 
+    .. py:classattribute:: allow_undefined_data_source
+       type: boolean
+
+       A configuration flag for this class that decides whether empty (*None*) data sources are
+       allowed. *False* by default.
+
     .. py:attribute:: is_data
        type: boolean
 
@@ -505,6 +511,9 @@ class DataSourceMixin(object):
     DATA_SOURCE_DATA = "data"
     DATA_SOURCE_MC = "mc"
 
+    # whether the data source is allowed to be undefined / None
+    allow_undefined_data_source = False
+
     copy_specs = []
 
     def __init__(self, is_data=False):
@@ -522,24 +531,31 @@ class DataSourceMixin(object):
 
     @is_data.setter
     def is_data(self, is_data):
-        if not isinstance(is_data, bool):
+        if is_data is None and self.allow_undefined_data_source:
+            self._is_data = None
+        elif isinstance(is_data, bool):
+            self._is_data = is_data
+        else:
             raise TypeError("invalid is_data type: {}".format(is_data))
-
-        self._is_data = is_data
 
     @property
     def is_mc(self):
-        return not self.is_data
+        return None if self.is_data is None else (not self.is_data)
 
     @is_mc.setter
     def is_mc(self, is_mc):
-        if not isinstance(is_mc, bool):
+        if is_mc is None and self.allow_undefined_data_source:
+            self._is_data = None
+        elif isinstance(is_mc, bool):
+            self._is_data = not is_mc
+        else:
             raise TypeError("invalid is_mc type: {}".format(is_mc))
-
-        self._is_data = not is_mc
 
     @property
     def data_source(self):
+        if self.is_data is None:
+            return None
+
         return self.DATA_SOURCE_DATA if self.is_data else self.DATA_SOURCE_MC
 
 

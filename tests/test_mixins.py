@@ -205,6 +205,20 @@ class DataSourceMixinTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             c.is_mc = {}
 
+    def test_empty_source(self):
+        class C(DataSourceMixin):
+            allow_undefined_data_source = True
+
+        c = C(is_data=None)
+        self.assertIsNone(c.is_data)
+        self.assertIsNone(c.is_mc)
+        self.assertIsNone(c.data_source)
+
+        c.is_mc = True
+        self.assertFalse(c.is_data)
+        self.assertTrue(c.is_mc)
+        self.assertEqual(c.data_source, "mc")
+
 
 class SelectionMixinTest(unittest.TestCase):
 

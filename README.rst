@@ -70,6 +70,13 @@ You can find the full `API documentation on readthedocs <http://python-order.rea
 .. marker-after-getting-started
 
 
+Projects using order
+--------------------
+
+- `uhh-cms/cmsdb <https://github.com/uhh-cms/cmsdb>`__
+- tba
+
+
 Installation and dependencies
 -----------------------------
 

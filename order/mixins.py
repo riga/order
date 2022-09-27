@@ -850,12 +850,16 @@ class LabelMixin(object):
 class ColorMixin(object):
     """
     Mixin-class that provides a color in terms of RGB values as well as some convenience methods.
+    Internally, up to three different color values are stored, accessible through attributes such as
+    :py:attr:`color1`, :py:attr:`color2` and :py:attr:`color3`. For convenience (and backwards
+    compatibility), omitting the number will forward to the primary color (1).
 
     **Arguments**
 
-    *color* can be a tuple of 3 or 4 numbers that are interpreted as red, green and blue color
-    values, and optinally an alpha value. Floats are stored internally. When integers are passed,
-    they are divided by 255.
+    Each *color* arguments can be a tuple of 3 or 4 numbers that are interpreted as red, green and
+    blue color values, and optinally an alpha value. Internally, all values are stored as floats, so
+    when integers are passed, they are divided by 255. Similar to the access, when *color1* is not
+    set but *color* is, the latter is interpreted as the former.
 
     **Example**
 
@@ -863,7 +867,7 @@ class ColorMixin(object):
 
         import order as od
 
-        c = od.ColorMixin(color=(255, 0.5, 100))
+        c = od.ColorMixin(color=(255, 0.5, 100), color2="#00f")
 
         c.color
         # -> (1.0, 0.5, 0.392)
@@ -874,165 +878,410 @@ class ColorMixin(object):
         c.color_alpha
         # -> 1.0
 
+        c.color2_int
+        # -> (0, 0, 255)
+
     **Members**
+
+    .. py:attribute:: color1_r
+       type: float
+
+       Red component of the primary color.
+
+    .. py:attribute:: color1_g
+       type: float
+
+       Green component of the primary color.
+
+    .. py:attribute:: color1_b
+       type: float
+
+       Blue component of the primary color.
+
+    .. py:attribute:: color1_r_int
+       type: int
+
+       Red component of the primary color, converted to an integer in the [0, 255] range.
+
+    .. py:attribute:: color1_g_int
+       type: int
+
+       Green component of the primary color, converted to an integer in the [0, 255] range.
+
+    .. py:attribute:: color1_b_int
+       type: int
+
+       Blue component of the primary color, converted to an integer in the [0, 255] range.
+
+    .. py:attribute:: color1_alpha
+       type: float
+
+       The alpha value of the primary color, defaults to 1.0.
+
+    .. py:attribute:: color1
+       type: tuple (float)
+
+       The RGB values of the primary color in a 3-tuple.
+
+    .. py:attribute:: color1_int
+       type: tuple (int)
+
+       The RGB int values of the primary color in a 3-tuple.
+
+    .. py:attribute:: color2_r
+       type: float
+
+       Red component of the secondary color.
+
+    .. py:attribute:: color2_g
+       type: float
+
+       Green component of the secondary color.
+
+    .. py:attribute:: color2_b
+       type: float
+
+       Blue component of the secondary color.
+
+    .. py:attribute:: color2_r_int
+       type: int
+
+       Red component of the secondary color, converted to an integer in the [0, 255] range.
+
+    .. py:attribute:: color2_g_int
+       type: int
+
+       Green component of the secondary color, converted to an integer in the [0, 255] range.
+
+    .. py:attribute:: color2_b_int
+       type: int
+
+       Blue component of the secondary color, converted to an integer in the [0, 255] range.
+
+    .. py:attribute:: color2_alpha
+       type: float
+
+       The alpha value of the secondary color, defaults to 1.0.
+
+    .. py:attribute:: color2
+       type: tuple (float)
+
+       The RGB values of the secondary color in a 3-tuple.
+
+    .. py:attribute:: color2_int
+       type: tuple (int)
+
+       The RGB int values of the secondary color in a 3-tuple.
+
+    .. py:attribute:: color3_r
+       type: float
+
+       Red component of the tertiary color.
+
+    .. py:attribute:: color3_g
+       type: float
+
+       Green component of the tertiary color.
+
+    .. py:attribute:: color3_b
+       type: float
+
+       Blue component of the tertiary color.
+
+    .. py:attribute:: color3_r_int
+       type: int
+
+       Red component of the tertiary color, converted to an integer in the [0, 255] range.
+
+    .. py:attribute:: color3_g_int
+       type: int
+
+       Green component of the tertiary color, converted to an integer in the [0, 255] range.
+
+    .. py:attribute:: color3_b_int
+       type: int
+
+       Blue component of the tertiary color, converted to an integer in the [0, 255] range.
+
+    .. py:attribute:: color3_alpha
+       type: float
+
+       The alpha value of the tertiary color, defaults to 1.0.
+
+    .. py:attribute:: color3
+       type: tuple (float)
+
+       The RGB values of the tertiary color in a 3-tuple.
+
+    .. py:attribute:: color3_int
+       type: tuple (int)
+
+       The RGB int values of the tertiary color in a 3-tuple.
 
     .. py:attribute:: color_r
        type: float
 
-       Red component.
+       Shorthand for :py:attr:`color1_r`.
 
     .. py:attribute:: color_g
        type: float
 
-       Green component.
+       Shorthand for :py:attr:`color1_g`.
 
     .. py:attribute:: color_b
        type: float
 
-       Blue component.
+       Shorthand for :py:attr:`color1_b`.
 
     .. py:attribute:: color_r_int
        type: int
 
-       Red component, converted to an integer in the [0, 255] range.
+       Shorthand for :py:attr:`color1_r_int`.
 
     .. py:attribute:: color_g_int
        type: int
 
-       Green component, converted to an integer in the [0, 255] range.
+       Shorthand for :py:attr:`color1_g_int`.
 
     .. py:attribute:: color_b_int
        type: int
 
-       Blue component, converted to an integer in the [0, 255] range.
+       Shorthand for :py:attr:`color1_b_int`.
 
     .. py:attribute:: color_alpha
        type: float
 
-       The alpha value, defaults to 1.0.
+       Shorthand for :py:attr:`color1_alpha`.
 
     .. py:attribute:: color
        type: tuple (float)
 
-       The RGB color values in a 3-tuple.
+       Shorthand for :py:attr:`color1`.
 
     .. py:attribute:: color_int
        type: tuple (int)
 
-       The RGB int color values in a 3-tuple.
+       Shorthand for :py:attr:`color1_int`.
     """
 
     copy_specs = []
 
-    def __init__(self, color=None):
+    def __init__(self, color=None, color1=None, color2=None, color3=None):
         super(ColorMixin, self).__init__()
 
         # instance members
-        self._color_r = 0.0
-        self._color_g = 0.0
-        self._color_b = 0.0
-        self._color_alpha = 1.0
+        self._color1_r = 0.0
+        self._color1_g = 0.0
+        self._color1_b = 0.0
+        self._color1_alpha = 1.0
+        self._color2_r = 0.0
+        self._color2_g = 0.0
+        self._color2_b = 0.0
+        self._color2_alpha = 1.0
+        self._color3_r = 0.0
+        self._color3_g = 0.0
+        self._color3_b = 0.0
+        self._color3_alpha = 1.0
 
         # set initial values
-        if color is not None:
-            self.color = color
+        if color1 is not None:
+            self.color1 = color1
+        elif color is not None:
+            self.color1 = color
+        if color2 is not None:
+            self.color2 = color2
+        if color3 is not None:
+            self.color3 = color3
 
-    @typed
-    def color_r(self, color_r):
-        if isinstance(color_r, six.integer_types):
-            if not (0 <= color_r <= 255):
-                raise ValueError("invalid color_r value: {}".format(color_r))
-            color_r /= 255.0
-        elif isinstance(color_r, float):
-            if not (0 <= color_r <= 1):
-                raise ValueError("invalid color_r value: {}".format(color_r))
+    @classmethod
+    def _parse_color_channel(cls, name, value):
+        if isinstance(value, six.integer_types):
+            if not (0 <= value <= 255):
+                raise ValueError("invalid {} value: {}".format(name, value))
+            value /= 255.0
+        elif isinstance(value, float):
+            if not (0 <= value <= 1):
+                raise ValueError("invalid {} value: {}".format(name, value))
         else:
-            raise TypeError("invalid color_r type: {}".format(color_r))
+            raise TypeError("invalid {} type: {}".format(name, value))
 
-        return color_r
+        return value
 
-    @typed
-    def color_g(self, color_g):
-        if isinstance(color_g, six.integer_types):
-            if not (0 <= color_g <= 255):
-                raise ValueError("invalid color_g value: {}".format(color_g))
-            color_g /= 255.0
-        elif isinstance(color_g, float):
-            if not (0 <= color_g <= 1):
-                raise ValueError("invalid color_g value: {}".format(color_g))
+    @classmethod
+    def _parse_color_alpha(cls, name, value):
+        if isinstance(value, (float, int)):
+            if not (0 <= value <= 1):
+                raise ValueError("invalid {} value: {}".format(name, value))
         else:
-            raise TypeError("invalid color_g type: {}".format(color_g))
+            raise TypeError("invalid {} type: {}".format(name, value))
 
-        return color_g
+        return float(value)
 
-    @typed
-    def color_b(self, color_b):
-        if isinstance(color_b, six.integer_types):
-            if not (0 <= color_b <= 255):
-                raise ValueError("invalid color_b value: {}".format(color_b))
-            color_b /= 255.0
-        elif isinstance(color_b, float):
-            if not (0 <= color_b <= 1):
-                raise ValueError("invalid color_b value: {}".format(color_b))
-        else:
-            raise TypeError("invalid color_b type: {}".format(color_b))
-
-        return color_b
-
-    @typed
-    def color_alpha(self, color_alpha):
-        if isinstance(color_alpha, (float, int)):
-            if not (0 <= color_alpha <= 1):
-                raise ValueError("invalid color_alpha value: {}".format(color_alpha))
-        else:
-            raise TypeError("invalid color_alpha type: {}".format(color_alpha))
-
-        return float(color_alpha)
-
-    @property
-    def color(self):
-        # color getter
-        return (self.color_r, self.color_g, self.color_b)
-
-    @color.setter
-    def color(self, color):
-        # color setter
-        if isinstance(color, six.string_types):
-            m = re.match(r"^\#([abcdef0-9]{3}|[abcdef0-9]{6})$", color.lower())
+    @classmethod
+    def _parse_color(cls, name, value):
+        if isinstance(value, six.string_types):
+            m = re.match(r"^\#([abcdef0-9]{3}|[abcdef0-9]{6})$", value.lower())
             if not m:
-                raise ValueError("invalid color value: {}".format(color))
+                raise ValueError("invalid {} value: {}".format(name, value))
             s = m.group(1)
             if len(s) == 3:
                 s = "".join(c1 + c2 for c1, c2 in zip(s, s))
-            color = [int(s[2 * i:2 * i + 2], base=16) for i in range(3)]
+            value = [int(s[2 * i:2 * i + 2], base=16) for i in range(3)]
 
-        if not isinstance(color, (tuple, list)):
-            raise TypeError("invalid color type: {}".format(color))
-        elif not len(color) in (3, 4):
-            raise ValueError("invalid color value: {}".format(color))
+        if not isinstance(value, (tuple, list)):
+            raise TypeError("invalid {} type: {}".format(name, value))
+        elif not len(value) in (3, 4):
+            raise ValueError("invalid {} value: {}".format(name, value))
 
-        self.color_r = color[0]
-        self.color_g = color[1]
-        self.color_b = color[2]
-        if len(color) == 4:
-            self.color_alpha = color[3]
+        return value
+
+    @classmethod
+    def _float_to_int(cls, value):
+        return min(255, max(0, int(round(value * 255))))
+
+    # primary color
+
+    @typed
+    def color1_r(self, color1_r):
+        return self._parse_color_channel("color1_r", color1_r)
+
+    @typed
+    def color1_g(self, color1_g):
+        return self._parse_color_channel("color1_g", color1_g)
+
+    @typed
+    def color1_b(self, color1_b):
+        return self._parse_color_channel("color1_b", color1_b)
+
+    @typed
+    def color1_alpha(self, color1_alpha):
+        return self._parse_color_alpha("color1_alpha", color1_alpha)
 
     @property
-    def color_r_int(self):
-        # color_r_int getter
-        return min(255, max(0, int(round(self.color_r * 255))))
+    def color1(self):
+        return (self.color1_r, self.color1_g, self.color1_b)
+
+    @color1.setter
+    def color1(self, color1):
+        color1 = self._parse_color("color1", color1)
+        self.color1_r, self.color1_g, self.color1_b = color1[:3]
+        if len(color1) == 4:
+            self.color1_alpha = color1[3]
 
     @property
-    def color_g_int(self):
-        # color_g_int getter
-        return min(255, max(0, int(round(self.color_g * 255))))
+    def color1_r_int(self):
+        return self._float_to_int(self.color1_r)
 
     @property
-    def color_b_int(self):
-        # color_b_int getter
-        return min(255, max(0, int(round(self.color_b * 255))))
+    def color1_g_int(self):
+        return self._float_to_int(self.color1_g)
 
     @property
-    def color_int(self):
-        # color_int getter
-        return (self.color_r_int, self.color_g_int, self.color_b_int)
+    def color1_b_int(self):
+        return self._float_to_int(self.color1_b)
+
+    @property
+    def color1_int(self):
+        return (self.color1_r_int, self.color1_g_int, self.color1_b_int)
+
+    # primary color shorthands
+
+    color_r = color1_r
+    color_g = color1_g
+    color_b = color1_b
+    color_alpha = color1_alpha
+    color = color1
+    color_r_int = color1_r_int
+    color_g_int = color1_g_int
+    color_b_int = color1_b_int
+    color_int = color1_int
+
+    # secondary color
+
+    @typed
+    def color2_r(self, color2_r):
+        return self._parse_color_channel("color2_r", color2_r)
+
+    @typed
+    def color2_g(self, color2_g):
+        return self._parse_color_channel("color2_g", color2_g)
+
+    @typed
+    def color2_b(self, color2_b):
+        return self._parse_color_channel("color2_b", color2_b)
+
+    @typed
+    def color2_alpha(self, color2_alpha):
+        return self._parse_color_alpha("color2_alpha", color2_alpha)
+
+    @property
+    def color2(self):
+        return (self.color2_r, self.color2_g, self.color2_b)
+
+    @color2.setter
+    def color2(self, color2):
+        color2 = self._parse_color("color2", color2)
+        self.color2_r, self.color2_g, self.color2_b = color2[:3]
+        if len(color2) == 4:
+            self.color2_alpha = color2[3]
+
+    @property
+    def color2_r_int(self):
+        return self._float_to_int(self.color2_r)
+
+    @property
+    def color2_g_int(self):
+        return self._float_to_int(self.color2_g)
+
+    @property
+    def color2_b_int(self):
+        return self._float_to_int(self.color2_b)
+
+    @property
+    def color2_int(self):
+        return (self.color2_r_int, self.color2_g_int, self.color2_b_int)
+
+    # tertiary color
+
+    @typed
+    def color3_r(self, color3_r):
+        return self._parse_color_channel("color3_r", color3_r)
+
+    @typed
+    def color3_g(self, color3_g):
+        return self._parse_color_channel("color3_g", color3_g)
+
+    @typed
+    def color3_b(self, color3_b):
+        return self._parse_color_channel("color3_b", color3_b)
+
+    @typed
+    def color3_alpha(self, color3_alpha):
+        return self._parse_color_alpha("color3_alpha", color3_alpha)
+
+    @property
+    def color3(self):
+        return (self.color3_r, self.color3_g, self.color3_b)
+
+    @color3.setter
+    def color3(self, color3):
+        color3 = self._parse_color("color3", color3)
+        self.color3_r, self.color3_g, self.color3_b = color3[:3]
+        if len(color3) == 4:
+            self.color3_alpha = color3[3]
+
+    @property
+    def color3_r_int(self):
+        return self._float_to_int(self.color3_r)
+
+    @property
+    def color3_g_int(self):
+        return self._float_to_int(self.color3_g)
+
+    @property
+    def color3_b_int(self):
+        return self._float_to_int(self.color3_b)
+
+    @property
+    def color3_int(self):
+        return (self.color3_r_int, self.color3_g_int, self.color3_b_int)

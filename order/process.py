@@ -36,8 +36,9 @@ class Process(
     *xsecs* should be a mapping of center-of-mass energies to cross sections values (automatically
     converted to `scinum.Number <https://scinum.readthedocs.io/en/latest/#number>`__ instances).
 
-    *color* is forwarded to the :py:class:`~order.mixins.ColorMixin`, *label* and *label_short* to
-    the :py:class:`~order.mixins.LabelMixin`, *is_data* to the
+    *color*, *color1*, *color2* and *color3* are forwarded to the
+    :py:class:`~order.mixins.ColorMixin`, *label* and *label_short* to the
+    :py:class:`~order.mixins.LabelMixin`, *is_data* to the
     :py:class:`~order.mixins.DataSourceMixin`, *tags* to the :py:class:`~order.mixins.TagMixin`,
     *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and *name* and *id* to the
     :py:class:`~order.unique.UniqueObject` constructor.
@@ -118,6 +119,9 @@ class Process(
         xsecs=None,
         processes=None,
         color=None,
+        color1=None,
+        color2=None,
+        color3=None,
         label=None,
         label_short=None,
         is_data=False,
@@ -130,7 +134,7 @@ class Process(
         TagMixin.__init__(self, tags=tags)
         DataSourceMixin.__init__(self, is_data=is_data)
         LabelMixin.__init__(self, label=label, label_short=label_short)
-        ColorMixin.__init__(self, color=color)
+        ColorMixin.__init__(self, color=color, color1=color1, color2=color2, color3=color3)
 
         # instance members
         self._xsecs = {}

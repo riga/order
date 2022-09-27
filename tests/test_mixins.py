@@ -301,50 +301,66 @@ class LabelMixinTest(unittest.TestCase):
 class ColorMixinTest(unittest.TestCase):
 
     def test_constructor(self):
-        c = ColorMixin((0.5, 0.4, 0.3))
-        self.assertEqual(c.color_r, 0.5)
-        self.assertEqual(c.color_g, 0.4)
-        self.assertEqual(c.color_b, 0.3)
+        def test(arg, attr):
+            c = ColorMixin(**{arg: (0.5, 0.4, 0.3)})
+            self.assertEqual(getattr(c, attr + "_r"), 0.5)
+            self.assertEqual(getattr(c, attr + "_g"), 0.4)
+            self.assertEqual(getattr(c, attr + "_b"), 0.3)
 
-        c = ColorMixin((255, 0, 255))
-        self.assertEqual(c.color_r, 1)
-        self.assertEqual(c.color_g, 0)
-        self.assertEqual(c.color_b, 1)
+            c = ColorMixin(**{arg: (255, 0, 255)})
+            self.assertEqual(getattr(c, attr + "_r"), 1)
+            self.assertEqual(getattr(c, attr + "_g"), 0)
+            self.assertEqual(getattr(c, attr + "_b"), 1)
 
-        c = ColorMixin("#f0f")
-        self.assertEqual(c.color_r, 1)
-        self.assertEqual(c.color_g, 0)
-        self.assertEqual(c.color_b, 1)
+            c = ColorMixin(**{arg: "#f0f"})
+            self.assertEqual(getattr(c, attr + "_r"), 1)
+            self.assertEqual(getattr(c, attr + "_g"), 0)
+            self.assertEqual(getattr(c, attr + "_b"), 1)
 
-        c = ColorMixin("#ff00ff")
-        self.assertEqual(c.color_r, 1)
-        self.assertEqual(c.color_g, 0)
-        self.assertEqual(c.color_b, 1)
+            c = ColorMixin(**{arg: "#ff00ff"})
+            self.assertEqual(getattr(c, attr + "_r"), 1)
+            self.assertEqual(getattr(c, attr + "_g"), 0)
+            self.assertEqual(getattr(c, attr + "_b"), 1)
 
-        with self.assertRaises(ValueError):
-            c = ColorMixin("foo")
+            with self.assertRaises(ValueError):
+                c = ColorMixin("foo")
 
-        with self.assertRaises(ValueError):
-            c = ColorMixin((255, 255))
+            with self.assertRaises(ValueError):
+                c = ColorMixin((255, 255))
+
+        test("color", "color")
+        test("color1", "color")
+        test("color", "color1")
+        test("color1", "color1")
+        test("color2", "color2")
+        test("color3", "color3")
 
     def test_setters_getters(self):
-        c = ColorMixin((0.5, 0.4, 0.3))
+        def test(arg, attr):
+            c = ColorMixin(**{arg: (0.5, 0.4, 0.3)})
 
-        c.color_r = 255
-        self.assertEqual(c.color_r, 1)
-        self.assertEqual(c.color_r_int, 255)
+            setattr(c, attr + "_r", 255)
+            self.assertEqual(getattr(c, attr + "_r"), 1)
+            self.assertEqual(getattr(c, attr + "_r_int"), 255)
 
-        c.color = (255, 0, 255, 0.5)
-        self.assertEqual(c.color_alpha, 0.5)
+            setattr(c, attr, (255, 0, 255, 0.5))
+            self.assertEqual(getattr(c, attr + "_alpha"), 0.5)
 
-        with self.assertRaises(ValueError):
-            c.color_r = -100
+            with self.assertRaises(ValueError):
+                setattr(c, attr + "_r", -100)
 
-        with self.assertRaises(ValueError):
-            c.color_g = 256
+            with self.assertRaises(ValueError):
+                setattr(c, attr + "_g", 256)
 
-        with self.assertRaises(ValueError):
-            c.color_b = 1.1
+            with self.assertRaises(ValueError):
+                setattr(c, attr + "_b", 1.1)
 
-        with self.assertRaises(ValueError):
-            c.color_alpha = 1.1
+            with self.assertRaises(ValueError):
+                setattr(c, attr + "_alpha", 1.1)
+
+        test("color", "color")
+        test("color1", "color")
+        test("color", "color1")
+        test("color1", "color1")
+        test("color2", "color2")
+        test("color3", "color3")

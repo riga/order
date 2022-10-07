@@ -1064,24 +1064,20 @@ class ColorMixin(object):
        Shorthand for :py:attr:`color1_int`.
     """
 
+    default_color = (0.0, 0.0, 0.0, 1.0)
+
     copy_specs = []
 
     def __init__(self, color=None, color1=None, color2=None, color3=None):
         super(ColorMixin, self).__init__()
 
         # instance members
-        self._color1_r = 0.0
-        self._color1_g = 0.0
-        self._color1_b = 0.0
-        self._color1_alpha = 1.0
-        self._color2_r = 0.0
-        self._color2_g = 0.0
-        self._color2_b = 0.0
-        self._color2_alpha = 1.0
-        self._color3_r = 0.0
-        self._color3_g = 0.0
-        self._color3_b = 0.0
-        self._color3_alpha = 1.0
+        self._color1_set = False
+        self._color1_r, self._color1_g, self._color1_b, self._color1_alpha = self.default_color
+        self._color2_set = False
+        self._color2_r, self._color2_g, self._color2_b, self._color2_alpha = self.default_color
+        self._color3_set = False
+        self._color3_r, self._color3_g, self._color3_b, self._color3_alpha = self.default_color
 
         # set initial values
         if color1 is not None:
@@ -1141,48 +1137,86 @@ class ColorMixin(object):
 
     # primary color
 
-    @typed
+    @property
+    def color1_r(self):
+        return self._color1_r if self._color1_set else None
+
+    @color1_r.setter
     def color1_r(self, color1_r):
-        return self._parse_color_channel("color1_r", color1_r)
+        self._color1_set = color1_r is not None
+        if self._color1_set:
+            self._color1_r = self._parse_color_channel("color1_r", color1_r)
+        else:
+            self.color1 = None
 
-    @typed
+    @property
+    def color1_g(self):
+        return self._color1_g if self._color1_set else None
+
+    @color1_g.setter
     def color1_g(self, color1_g):
-        return self._parse_color_channel("color1_g", color1_g)
+        self._color1_set = color1_g is not None
+        if self._color1_set:
+            self._color1_g = self._parse_color_channel("color1_g", color1_g)
+        else:
+            self.color1 = None
 
-    @typed
+    @property
+    def color1_b(self):
+        return self._color1_b if self._color1_set else None
+
+    @color1_b.setter
     def color1_b(self, color1_b):
-        return self._parse_color_channel("color1_b", color1_b)
+        self._color1_set = color1_b is not None
+        if self._color1_set:
+            self._color1_b = self._parse_color_channel("color1_b", color1_b)
+        else:
+            self.color1 = None
 
-    @typed
+    @property
+    def color1_alpha(self):
+        return self._color1_alpha if self._color1_set else None
+
+    @color1_alpha.setter
     def color1_alpha(self, color1_alpha):
-        return self._parse_color_alpha("color1_alpha", color1_alpha)
+        self._color1_set = color1_alpha is not None
+        if self._color1_set:
+            self._color1_alpha = self._parse_color_channel("color1_alpha", color1_alpha)
+        else:
+            self.color1 = None
 
     @property
     def color1(self):
-        return (self.color1_r, self.color1_g, self.color1_b)
+        return (self.color1_r, self.color1_g, self.color1_b) if self._color1_set else None
 
     @color1.setter
     def color1(self, color1):
-        color1 = self._parse_color("color1", color1)
+        color1_set = color1 is not None
+        color1 = self._parse_color("color1", color1) if color1_set else self.default_color
         self.color1_r, self.color1_g, self.color1_b = color1[:3]
         if len(color1) == 4:
-            self.color1_alpha = color1[3]
+            self._color1_alpha = color1[3]
+        self._color1_set = color1_set
 
     @property
     def color1_r_int(self):
-        return self._float_to_int(self.color1_r)
+        return self._float_to_int(self.color1_r) if self._color1_set else None
 
     @property
     def color1_g_int(self):
-        return self._float_to_int(self.color1_g)
+        return self._float_to_int(self.color1_g) if self._color1_set else None
 
     @property
     def color1_b_int(self):
-        return self._float_to_int(self.color1_b)
+        return self._float_to_int(self.color1_b) if self._color1_set else None
 
     @property
     def color1_int(self):
-        return (self.color1_r_int, self.color1_g_int, self.color1_b_int)
+        return (
+            self.color1_r_int,
+            self.color1_g_int,
+            self.color1_b_int,
+        ) if self._color1_set else None
 
     # primary color shorthands
 
@@ -1198,90 +1232,166 @@ class ColorMixin(object):
 
     # secondary color
 
-    @typed
+    @property
+    def color2_r(self):
+        return self._color2_r if self._color2_set else None
+
+    @color2_r.setter
     def color2_r(self, color2_r):
-        return self._parse_color_channel("color2_r", color2_r)
+        self._color2_set = color2_r is not None
+        if self._color2_set:
+            self._color2_r = self._parse_color_channel("color2_r", color2_r)
+        else:
+            self.color2 = None
 
-    @typed
+    @property
+    def color2_g(self):
+        return self._color2_g if self._color2_set else None
+
+    @color2_g.setter
     def color2_g(self, color2_g):
-        return self._parse_color_channel("color2_g", color2_g)
+        self._color2_set = color2_g is not None
+        if self._color2_set:
+            self._color2_g = self._parse_color_channel("color2_g", color2_g)
+        else:
+            self.color2 = None
 
-    @typed
+    @property
+    def color2_b(self):
+        return self._color2_b if self._color2_set else None
+
+    @color2_b.setter
     def color2_b(self, color2_b):
-        return self._parse_color_channel("color2_b", color2_b)
+        self._color2_set = color2_b is not None
+        if self._color2_set:
+            self._color2_b = self._parse_color_channel("color2_b", color2_b)
+        else:
+            self.color2 = None
 
-    @typed
+    @property
+    def color2_alpha(self):
+        return self._color2_alpha if self._color2_set else None
+
+    @color2_alpha.setter
     def color2_alpha(self, color2_alpha):
-        return self._parse_color_alpha("color2_alpha", color2_alpha)
+        self._color2_set = color2_alpha is not None
+        if self._color2_set:
+            self._color2_alpha = self._parse_color_channel("color2_alpha", color2_alpha)
+        else:
+            self.color2 = None
 
     @property
     def color2(self):
-        return (self.color2_r, self.color2_g, self.color2_b)
+        return (self.color2_r, self.color2_g, self.color2_b) if self._color2_set else None
 
     @color2.setter
     def color2(self, color2):
-        color2 = self._parse_color("color2", color2)
+        color2_set = color2 is not None
+        color2 = self._parse_color("color2", color2) if color2_set else self.default_color
         self.color2_r, self.color2_g, self.color2_b = color2[:3]
         if len(color2) == 4:
-            self.color2_alpha = color2[3]
+            self._color2_alpha = color2[3]
+        self._color2_set = color2_set
 
     @property
     def color2_r_int(self):
-        return self._float_to_int(self.color2_r)
+        return self._float_to_int(self.color2_r) if self._color2_set else None
 
     @property
     def color2_g_int(self):
-        return self._float_to_int(self.color2_g)
+        return self._float_to_int(self.color2_g) if self._color2_set else None
 
     @property
     def color2_b_int(self):
-        return self._float_to_int(self.color2_b)
+        return self._float_to_int(self.color2_b) if self._color2_set else None
 
     @property
     def color2_int(self):
-        return (self.color2_r_int, self.color2_g_int, self.color2_b_int)
+        return (
+            self.color2_r_int,
+            self.color2_g_int,
+            self.color2_b_int,
+        ) if self._color2_set else None
 
     # tertiary color
 
-    @typed
+    @property
+    def color3_r(self):
+        return self._color3_r if self._color3_set else None
+
+    @color3_r.setter
     def color3_r(self, color3_r):
-        return self._parse_color_channel("color3_r", color3_r)
+        self._color3_set = color3_r is not None
+        if self._color3_set:
+            self._color3_r = self._parse_color_channel("color3_r", color3_r)
+        else:
+            self.color3 = None
 
-    @typed
+    @property
+    def color3_g(self):
+        return self._color3_g if self._color3_set else None
+
+    @color3_g.setter
     def color3_g(self, color3_g):
-        return self._parse_color_channel("color3_g", color3_g)
+        self._color3_set = color3_g is not None
+        if self._color3_set:
+            self._color3_g = self._parse_color_channel("color3_g", color3_g)
+        else:
+            self.color3 = None
 
-    @typed
+    @property
+    def color3_b(self):
+        return self._color3_b if self._color3_set else None
+
+    @color3_b.setter
     def color3_b(self, color3_b):
-        return self._parse_color_channel("color3_b", color3_b)
+        self._color3_set = color3_b is not None
+        if self._color3_set:
+            self._color3_b = self._parse_color_channel("color3_b", color3_b)
+        else:
+            self.color3 = None
 
-    @typed
+    @property
+    def color3_alpha(self):
+        return self._color3_alpha if self._color3_set else None
+
+    @color3_alpha.setter
     def color3_alpha(self, color3_alpha):
-        return self._parse_color_alpha("color3_alpha", color3_alpha)
+        self._color3_set = color3_alpha is not None
+        if self._color3_set:
+            self._color3_alpha = self._parse_color_channel("color3_alpha", color3_alpha)
+        else:
+            self.color3 = None
 
     @property
     def color3(self):
-        return (self.color3_r, self.color3_g, self.color3_b)
+        return (self.color3_r, self.color3_g, self.color3_b) if self._color3_set else None
 
     @color3.setter
     def color3(self, color3):
-        color3 = self._parse_color("color3", color3)
+        color3_set = color3 is not None
+        color3 = self._parse_color("color3", color3) if color3_set else self.default_color
         self.color3_r, self.color3_g, self.color3_b = color3[:3]
         if len(color3) == 4:
-            self.color3_alpha = color3[3]
+            self._color3_alpha = color3[3]
+        self._color3_set = color3_set
 
     @property
     def color3_r_int(self):
-        return self._float_to_int(self.color3_r)
+        return self._float_to_int(self.color3_r) if self._color3_set else None
 
     @property
     def color3_g_int(self):
-        return self._float_to_int(self.color3_g)
+        return self._float_to_int(self.color3_g) if self._color3_set else None
 
     @property
     def color3_b_int(self):
-        return self._float_to_int(self.color3_b)
+        return self._float_to_int(self.color3_b) if self._color3_set else None
 
     @property
     def color3_int(self):
-        return (self.color3_r_int, self.color3_g_int, self.color3_b_int)
+        return (
+            self.color3_r_int,
+            self.color3_g_int,
+            self.color3_b_int,
+        ) if self._color3_set else None

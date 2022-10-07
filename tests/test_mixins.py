@@ -364,3 +364,30 @@ class ColorMixinTest(unittest.TestCase):
         test("color1", "color1")
         test("color2", "color2")
         test("color3", "color3")
+
+    def test_unset(self):
+        color = (0.5, 0.4, 0.3, 0.5)
+        c = ColorMixin(color=color)
+
+        self.assertTrue(c._color1_set)
+        self.assertEqual(c.color, color[:3])
+        self.assertEqual(c.color_r, 0.5)
+        self.assertEqual(c.color_alpha, color[-1])
+
+        c.color = None
+        self.assertFalse(c._color1_set)
+        self.assertIsNone(c.color)
+        self.assertIsNone(c.color_r)
+        self.assertIsNone(c.color_alpha)
+
+        c.color = color
+        self.assertTrue(c._color1_set)
+        self.assertEqual(c.color, color[:3])
+        self.assertEqual(c.color_r, 0.5)
+        self.assertEqual(c.color_alpha, color[-1])
+
+        c.color_r = None
+        self.assertFalse(c._color1_set)
+        self.assertIsNone(c.color)
+        self.assertIsNone(c.color_r)
+        self.assertIsNone(c.color_alpha)

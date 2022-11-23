@@ -137,8 +137,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     .. py:attribute:: x_labels
        type: list, None
 
-       A list of custom bin labels or *None*. When not *None*, its length must be the same as the
-       number of bins.
+       A list of custom bin labels or *None*.
 
     .. py:attribute:: x_labels_root
        type: list, None
@@ -392,8 +391,6 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
             return None
         elif not isinstance(x_labels, (list, tuple)):
             raise TypeError("invalid x_labels type: {}".format(x_labels))
-        elif len(x_labels) != self.n_bins:
-            raise ValueError("invalid x_labels length: {}".format(x_labels))
 
         return list(x_labels)
 

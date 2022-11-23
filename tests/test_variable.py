@@ -113,8 +113,6 @@ class VariableTest(unittest.TestCase):
         self.assertTrue(isinstance(v.x_labels, list))
         with self.assertRaises(TypeError):
             v.x_labels = {}
-        with self.assertRaises(ValueError):
-            v.x_labels = list("abc")
 
         v.log_x = True
         self.assertTrue(v.log_x)

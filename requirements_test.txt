@@ -2,7 +2,7 @@ scinum>=1.4.3
 six
 
 cloudpickle>=1.3
-flake8>=4.0;python_version>="3.6"
+flake8>=4.0,<6.0;python_version>="3.6"
 flake8>=3.0,<4.0;python_version<="2.7"
 flake8-commas>=2.1;
 flake8-quotes<=3.2;python_version<="2.7"

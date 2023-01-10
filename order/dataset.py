@@ -165,7 +165,7 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
         is_data=False,
         tags=None,
         aux=None,
-        **kwargs  # noqa: C816
+        **kwargs,
     ):
         UniqueObject.__init__(self, name, id)
         CopyMixin.__init__(self)

@@ -658,8 +658,12 @@ def unique_tree(**kwargs):
                 elif _name is None and hasattr(f, "__name__"):
                     _name = f.__name__
                 if f.__doc__:
-                    f.__doc__ = f.__doc__.format(name=_name, singular=singular, plural=plural,
-                        **kwargs)
+                    f.__doc__ = f.__doc__.format(
+                        name=_name,
+                        singular=singular,
+                        plural=plural,
+                        **kwargs,
+                    )
                 if prop:
                     f = property(f)
                 # only patch when there is not attribute with that name

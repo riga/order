@@ -220,5 +220,5 @@ class Process(
                 max_depth=max_depth,
                 stream=stream,
                 _depth=_depth + 1,
-                **kwargs  # noqa: C815
+                **kwargs,
             )

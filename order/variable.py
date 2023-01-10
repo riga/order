@@ -318,13 +318,13 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         if isinstance(binning, list):
             if len(binning) < 2:
                 raise ValueError("minimum number of bin edges is 2: {}".format(binning))
-            elif not all(isinstance(b, bin_types) for b in binning):
+            if not all(isinstance(b, bin_types) for b in binning):
                 raise TypeError("invalid bin edge types: {}".format(binning))
             binning = [float(b) for b in binning]
         elif isinstance(binning, tuple):
             if len(binning) != 3:
                 raise ValueError("even binning must have length 3: {}".format(binning))
-            elif not all(isinstance(b, bin_types) for b in binning):
+            if not all(isinstance(b, bin_types) for b in binning):
                 raise TypeError("invalid binning types: {}".format(binning))
             binning = (int(binning[0]), float(binning[1]), float(binning[2]))
         else:
@@ -406,7 +406,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     def x_labels(self, x_labels):
         if x_labels is None:
             return None
-        elif not isinstance(x_labels, (list, tuple)):
+        if not isinstance(x_labels, (list, tuple)):
             raise TypeError("invalid x_labels type: {}".format(x_labels))
 
         return list(x_labels)
@@ -454,7 +454,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     def unit(self, unit):
         if unit is None:
             return None
-        elif not isinstance(unit, six.string_types):
+        if not isinstance(unit, six.string_types):
             raise TypeError("invalid unit type: {}".format(unit))
 
         return str(unit)

@@ -713,7 +713,7 @@ class SelectionMixin(object):
         """
         if not isinstance(self.selection, six.string_types):
             raise TypeError(
-                "cannot add selection expressions to existing non-string "
+                "cannot add selection expressions to existing non-string " +
                 "selection {}".format(self.selection),
             )
 

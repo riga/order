@@ -124,6 +124,16 @@ class VariableTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             v.log_y = {}
 
+        v.discrete_x = True
+        self.assertTrue(v.discrete_x)
+        with self.assertRaises(TypeError):
+            v.discrete_x = {}
+
+        v.discrete_y = True
+        self.assertTrue(v.discrete_y)
+        with self.assertRaises(TypeError):
+            v.discrete_y = {}
+
         v.unit = "GeV"
         self.assertEqual(v.unit, "GeV")
         with self.assertRaises(TypeError):

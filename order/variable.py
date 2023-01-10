@@ -172,6 +172,17 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
        Whether or not the y-axis should be drawn logarithmically.
 
+    .. py:attribute:: discrete_x
+       type: boolean
+
+       Whether or not the x-axis is partitioned by discrete values (i.e, an integer axis). There is
+       not constraint on the :py:attribute:`binning` setting, but it should be set accordingly.
+
+    .. py:attribute:: discrete_y
+       type: boolean
+
+       Whether or not the y-axis is partitioned by discrete values (i.e, an integer axis).
+
     .. py:attribute:: n_bins
        type: int
        read-only
@@ -227,6 +238,8 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         x_labels=None,
         log_x=False,
         log_y=False,
+        discrete_x=False,
+        discrete_y=False,
         unit="1",
         unit_format="{title} / {unit}",
         null_value=None,
@@ -251,6 +264,8 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         self._x_labels = None
         self._log_x = None
         self._log_y = None
+        self._discrete_x = None
+        self._discrete_y = None
         self._unit = None
         self._unit_format = None
         self._null_value = None
@@ -265,6 +280,8 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         self.x_labels = x_labels
         self.log_x = log_x
         self.log_y = log_y
+        self.discrete_x = discrete_x
+        self.discrete_y = discrete_y
         self.unit = unit
         self.unit_format = unit_format
         self.null_value = null_value
@@ -416,6 +433,22 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
             raise TypeError("invalid log_y type: {}".format(log_y))
 
         return log_y
+
+    @typed
+    def discrete_x(self, discrete_x):
+        # discrete_x parser
+        if not isinstance(discrete_x, bool):
+            raise TypeError("invalid discrete_x type: {}".format(discrete_x))
+
+        return discrete_x
+
+    @typed
+    def discrete_y(self, discrete_y):
+        # discrete_y parser
+        if not isinstance(discrete_y, bool):
+            raise TypeError("invalid discrete_y type: {}".format(discrete_y))
+
+        return discrete_y
 
     @typed
     def unit(self, unit):

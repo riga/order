@@ -662,7 +662,7 @@ def unique_tree(**kwargs):
                         name=_name,
                         singular=singular,
                         plural=plural,
-                        **kwargs,
+                        **kwargs  # noqa: C815
                     )
                 if prop:
                     f = property(f)

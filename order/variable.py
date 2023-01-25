@@ -511,25 +511,36 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         bin_width = self.bin_width
         return [self.x_min + i * bin_width for i in range(self.n_bins + 1)]
 
-    def get_full_x_title(self, short=False, root=ROOT_DEFAULT):
+    def get_full_x_title(self, unit=None, short=False, root=ROOT_DEFAULT):
         """
-        Returns the full title (i.e. with unit string) of the x-axis. When *short* is *True*, the
-        short version is returned. When *root* is *True*, the title is converted to *proper* ROOT
-        latex.
+        Returns the full title (i.e. with unit string) of the x-axis. When *unit* is *None*, it
+        defaults to the :py:attr:`unit` if this instance. No unit is shown if it is one or it
+        evaluates to *False*.
+
+        When *short* is *True*, the short version is returned. When *root* is *True*, the title is
+        converted to *proper* ROOT latex.
         """
         title = self.x_title_short if short else self.x_title
 
-        if self.unit not in (None, "1"):
-            title = self.unit_format.format(title=title, unit=self.unit)
+        # determine the unit
+        if unit is None:
+            unit = self.unit
+
+        # create the full title
+        if unit and unit not in ("1", 1):
+            title = self.unit_format.format(title=title, unit=unit)
 
         return to_root_latex(title) if root else title
 
-    def get_full_y_title(self, bin_width=None, short=False, root=ROOT_DEFAULT):
+    def get_full_y_title(self, bin_width=None, unit=None, short=False, root=ROOT_DEFAULT):
         """
         Returns the full title (i.e. with bin width and unit string) of the y-axis. When not *None*,
-        the value *bin_width* instead of the one evaluated from *binning* when even. When *short* is
-        *True*, the short version is returned. When *root* is *True*, the title is converted to
-        ROOT-style latex.
+        the value *bin_width* instead of the one evaluated from *binning* when even. When *unit* is
+        *None*, it defaults to the :py:attr:`unit` if this instance. No unit is shown if it is one
+        or it evaluates to *False*.
+
+        When *short* is *True*, the short version is returned. When *root* is *True*, the title is
+        converted to ROOT-style latex.
         """
         title = self.y_title_short if short else self.y_title
 
@@ -537,14 +548,20 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         if bin_width is None and self.even_binning:
             bin_width = round(self.bin_width, 2)
 
+        # determine the unit
+        if unit is None:
+            unit = self.unit
+
         # add bin width and unit to the title
-        unit = []
-        if self.unit not in (None, "1"):
-            unit.append(str(self.unit))
+        parts = []
+        if unit and unit not in ("1", 1):
+            parts.append(str(unit))
         if bin_width:
-            unit.insert(0, str(bin_width))
-            if unit:
-                title = self.unit_format.format(title=title, unit=" ".join(unit))
+            parts.insert(0, str(bin_width))
+
+        # create the full title
+        if parts:
+            title = self.unit_format.format(title=title, unit=" ".join(parts))
 
         return to_root_latex(title) if root else title
 

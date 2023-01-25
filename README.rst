@@ -99,7 +99,7 @@ Just make sure to add new test cases and run them via:
 
    python -m unittest tests
 
-In general, tests should be run for Python 2.7, 3.6, 3.7, 3.8, 3.9 and 3.10.
+In general, tests should be run for Python 2.7, 3.6 - 3.11.
 To run tests in a docker container, do
 
 .. code-block:: shell

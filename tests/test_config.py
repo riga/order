@@ -14,8 +14,8 @@ class CampaignTest(unittest.TestCase):
     def test_constructor(self):
         c = Campaign("2017", 1, ecm=13, bx=25)
 
-        self.assertEqual(c.ecm, 13.)
-        self.assertEqual(c.bx, 25.)
+        self.assertEqual(c.ecm, 13.0)
+        self.assertEqual(c.bx, 25.0)
 
         with self.assertRaises(TypeError):
             c.ecm = "foo"

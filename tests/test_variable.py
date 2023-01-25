@@ -16,7 +16,7 @@ class VariableTest(unittest.TestCase):
     def make_var(self, name, **kwargs):
         kwargs.setdefault("expression", "myBranchA * myBranchB")
         kwargs.setdefault("selection", "myBranchC > 0")
-        kwargs.setdefault("binning", (20, 0., 10.))
+        kwargs.setdefault("binning", (20, 0.0, 10.0))
         kwargs.setdefault("x_title", "p_{T}")
         kwargs.setdefault("unit", "GeV")
         kwargs.setdefault("null_value", -999)
@@ -27,7 +27,7 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(v.name, "constructor_var")
         self.assertEqual(v.expression, "myBranchA * myBranchB")
         self.assertEqual(v.selection, "myBranchC > 0")
-        self.assertEqual(v.binning, (20, 0., 10.))
+        self.assertEqual(v.binning, (20, 0.0, 10.0))
         self.assertEqual(v.get_full_title(), "constructor_var;p_{T} / GeV;Entries / 0.5 GeV")
 
     def test_parsing(self):
@@ -56,23 +56,23 @@ class VariableTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             v.binning = [1]
 
-        v.binning = (10, 0., 1.)
-        self.assertEqual(v.binning, (10, 0., 1.))
+        v.binning = (10, 0.0, 1.0)
+        self.assertEqual(v.binning, (10, 0.0, 1.0))
         self.assertTrue(v.even_binning)
         self.assertEqual(len(v.bin_edges), 11)
         with self.assertRaises(TypeError):
             v.binning = {}
         with self.assertRaises(ValueError):
-            v.binning = (10, 0.)
+            v.binning = (10, 0.0)
 
-        v.binning = (10., 0, 1)
+        v.binning = (10.0, 0, 1)
         self.assertTrue(isinstance(v.n_bins, six.integer_types))
         self.assertTrue(isinstance(v.x_min, float))
         self.assertTrue(isinstance(v.x_max, float))
 
         self.assertEqual(v.n_bins, 10)
-        self.assertEqual(v.x_min, 0.)
-        self.assertEqual(v.x_max, 1.)
+        self.assertEqual(v.x_min, 0.0)
+        self.assertEqual(v.x_max, 1.0)
         self.assertEqual(v.bin_width, 0.1)
         self.assertEqual(len(v.bin_edges), v.n_bins + 1)
 
@@ -147,14 +147,21 @@ class VariableTest(unittest.TestCase):
             x_title_short=r"$\mu p_{T}$",
             y_title="Entries",
             y_title_short="N",
-            binning=(40, 0., 10.),
+            binning=(40, 0.0, 10.0),
         )
 
         self.assertEqual(v.get_full_x_title(), "Muon transverse momentum / GeV")
+        self.assertEqual(v.get_full_x_title(unit=None), "Muon transverse momentum / GeV")
+        self.assertEqual(v.get_full_x_title(unit=""), "Muon transverse momentum")
         self.assertEqual(v.get_full_x_title(short=True), "$\\mu p_{T}$ / GeV")
         self.assertEqual(v.get_full_x_title(short=True, root=True), "#mu p_{T} / GeV")
+
         self.assertEqual(v.get_full_y_title(), "Entries / 0.25 GeV")
+        self.assertEqual(v.get_full_y_title(bin_width=""), "Entries / GeV")
         self.assertEqual(v.get_full_y_title(bin_width=0.2), "Entries / 0.2 GeV")
+        self.assertEqual(v.get_full_y_title(unit=""), "Entries / 0.25")
+        self.assertEqual(v.get_full_y_title(unit="10^9eV"), "Entries / 0.25 10^9eV")
+        self.assertEqual(v.get_full_y_title(bin_width=0.2, unit=""), "Entries / 0.2")
         self.assertEqual(v.get_full_y_title(short=True), "N / 0.25 GeV")
         self.assertEqual(
             v.get_full_title(),
@@ -188,19 +195,19 @@ class VariableTest(unittest.TestCase):
     def test_mpl_data(self):
         v = self.make_var(
             name="mpl_hist",
-            binning=(40, 0., 10.),
+            binning=(40, 0.0, 10.0),
             log_x=True,
         )
 
         data = v.get_mpl_hist_data()
         self.assertEqual(data["bins"], 40)
-        self.assertEqual(data["range"], (0., 10.))
+        self.assertEqual(data["range"], (0.0, 10.0))
         self.assertEqual(data["label"], "mpl_hist")
         self.assertTrue(data["log"])
 
         data = v.get_mpl_hist_data(update={"color": "red", "label": "bar"}, skip="log")
         self.assertEqual(data["bins"], 40)
-        self.assertEqual(data["range"], (0., 10.))
+        self.assertEqual(data["range"], (0.0, 10.0))
         self.assertEqual(data["label"], "bar")
         self.assertEqual(data["color"], "red")
         self.assertTrue("log" not in data)

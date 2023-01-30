@@ -7,12 +7,20 @@ Tools to work with variables.
 
 __all__ = ["Variable"]
 
+import warnings
 
 import six
 
 from order.unique import UniqueObject
 from order.mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin
 from order.util import ROOT_DEFAULT, typed, to_root_latex, make_list
+
+
+def _depr_attr(old, new):
+    warnings.warn(
+        "Variable attribute '{}' is deprecated; use '{}' instead'".format(old, new),
+        DeprecationWarning,
+    )
 
 
 class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
@@ -162,23 +170,23 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
        A configurable NULL value for this variable, possibly denoting missing values. *None* is
        considered as "non-configured".
 
-    .. py:attribute:: log_x
+    .. py:attribute:: x_log
        type: boolean
 
        Whether or not the x-axis should be drawn logarithmically.
 
-    .. py:attribute:: log_y
+    .. py:attribute:: y_log
        type: boolean
 
        Whether or not the y-axis should be drawn logarithmically.
 
-    .. py:attribute:: discrete_x
+    .. py:attribute:: x_discrete
        type: boolean
 
        Whether or not the x-axis is partitioned by discrete values (i.e, an integer axis). There is
        not constraint on the :py:attribute:`binning` setting, but it should be set accordingly.
 
-    .. py:attribute:: discrete_y
+    .. py:attribute:: y_discrete
        type: boolean
 
        Whether or not the y-axis is partitioned by discrete values (i.e, an integer axis).
@@ -236,10 +244,10 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         y_title="Entries",
         y_title_short=None,
         x_labels=None,
-        log_x=False,
-        log_y=False,
-        discrete_x=False,
-        discrete_y=False,
+        x_log=False,
+        y_log=False,
+        x_discrete=False,
+        y_discrete=False,
         unit="1",
         unit_format="{title} / {unit}",
         null_value=None,
@@ -247,6 +255,11 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         selection_mode=None,
         tags=None,
         aux=None,
+        # backwards compatibility
+        log_x=None,
+        log_y=None,
+        discrete_x=None,
+        discrete_y=None,
     ):
         UniqueObject.__init__(self, name, id)
         CopyMixin.__init__(self)
@@ -262,13 +275,27 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         self._y_title = None
         self._y_title_short = None
         self._x_labels = None
-        self._log_x = None
-        self._log_y = None
-        self._discrete_x = None
-        self._discrete_y = None
+        self._x_log = None
+        self._y_log = None
+        self._x_discrete = None
+        self._y_discrete = None
         self._unit = None
         self._unit_format = None
         self._null_value = None
+
+        # backwards compatibility for log and discrete flags
+        if log_x is not None:
+            _depr_attr("log_x", "x_log")
+            x_log = log_x
+        if log_y is not None:
+            _depr_attr("log_y", "y_log")
+            y_log = log_y
+        if discrete_x is not None:
+            _depr_attr("discrete_x", "x_discrete")
+            x_discrete = discrete_x
+        if discrete_y is not None:
+            _depr_attr("discrete_y", "y_discrete")
+            y_discrete = discrete_y
 
         # set initial values
         self.expression = expression
@@ -278,10 +305,10 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         self.y_title = y_title
         self.y_title_short = y_title_short
         self.x_labels = x_labels
-        self.log_x = log_x
-        self.log_y = log_y
-        self.discrete_x = discrete_x
-        self.discrete_y = discrete_y
+        self.x_log = x_log
+        self.y_log = y_log
+        self.x_discrete = x_discrete
+        self.y_discrete = y_discrete
         self.unit = unit
         self.unit_format = unit_format
         self.null_value = null_value
@@ -419,36 +446,36 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         return [to_root_latex(str(label)) for label in self.x_labels]
 
     @typed
-    def log_x(self, log_x):
-        # log_x parser
-        if not isinstance(log_x, bool):
-            raise TypeError("invalid log_x type: {}".format(log_x))
+    def x_log(self, x_log):
+        # x_log parser
+        if not isinstance(x_log, bool):
+            raise TypeError("invalid x_log type: {}".format(x_log))
 
-        return log_x
-
-    @typed
-    def log_y(self, log_y):
-        # log_y parser
-        if not isinstance(log_y, bool):
-            raise TypeError("invalid log_y type: {}".format(log_y))
-
-        return log_y
+        return x_log
 
     @typed
-    def discrete_x(self, discrete_x):
-        # discrete_x parser
-        if not isinstance(discrete_x, bool):
-            raise TypeError("invalid discrete_x type: {}".format(discrete_x))
+    def y_log(self, y_log):
+        # y_log parser
+        if not isinstance(y_log, bool):
+            raise TypeError("invalid y_log type: {}".format(y_log))
 
-        return discrete_x
+        return y_log
 
     @typed
-    def discrete_y(self, discrete_y):
-        # discrete_y parser
-        if not isinstance(discrete_y, bool):
-            raise TypeError("invalid discrete_y type: {}".format(discrete_y))
+    def x_discrete(self, x_discrete):
+        # x_discrete parser
+        if not isinstance(x_discrete, bool):
+            raise TypeError("invalid x_discrete type: {}".format(x_discrete))
 
-        return discrete_y
+        return x_discrete
+
+    @typed
+    def y_discrete(self, y_discrete):
+        # y_discrete parser
+        if not isinstance(y_discrete, bool):
+            raise TypeError("invalid y_discrete type: {}".format(y_discrete))
+
+        return y_discrete
 
     @typed
     def unit(self, unit):
@@ -605,7 +632,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
             "range": (self.x_min, self.x_max),
             "label": self.name,
         }
-        if self.log_x:
+        if self.x_log:
             data["log"] = True
 
         # update?
@@ -619,3 +646,45 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
                     del data[key]
 
         return data
+
+    # deprecated
+
+    @property
+    def log_x(self):
+        _depr_attr("log_x", "x_log")
+        return self.x_log
+
+    @log_x.setter
+    def log_x(self, log_x):
+        _depr_attr("log_x", "x_log")
+        self.x_log = log_x
+
+    @property
+    def log_y(self):
+        _depr_attr("log_y", "y_log")
+        return self.y_log
+
+    @log_y.setter
+    def log_y(self, log_y):
+        _depr_attr("log_y", "y_log")
+        self.y_log = log_y
+
+    @property
+    def discrete_x(self):
+        _depr_attr("discrete_x", "x_discrete")
+        return self.x_discrete
+
+    @discrete_x.setter
+    def discrete_x(self, discrete_x):
+        _depr_attr("discrete_x", "x_discrete")
+        self.x_discrete = discrete_x
+
+    @property
+    def discrete_y(self):
+        _depr_attr("discrete_y", "y_discrete")
+        return self.y_discrete
+
+    @discrete_y.setter
+    def discrete_y(self, discrete_y):
+        _depr_attr("discrete_y", "y_discrete")
+        self.y_discrete = discrete_y

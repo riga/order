@@ -114,25 +114,25 @@ class VariableTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             v.x_labels = {}
 
-        v.log_x = True
-        self.assertTrue(v.log_x)
+        v.x_log = True
+        self.assertTrue(v.x_log)
         with self.assertRaises(TypeError):
-            v.log_x = {}
+            v.x_log = {}
 
-        v.log_y = True
-        self.assertTrue(v.log_y)
+        v.y_log = True
+        self.assertTrue(v.y_log)
         with self.assertRaises(TypeError):
-            v.log_y = {}
+            v.y_log = {}
 
-        v.discrete_x = True
-        self.assertTrue(v.discrete_x)
+        v.x_discrete = True
+        self.assertTrue(v.x_discrete)
         with self.assertRaises(TypeError):
-            v.discrete_x = {}
+            v.x_discrete = {}
 
-        v.discrete_y = True
-        self.assertTrue(v.discrete_y)
+        v.y_discrete = True
+        self.assertTrue(v.y_discrete)
         with self.assertRaises(TypeError):
-            v.discrete_y = {}
+            v.y_discrete = {}
 
         v.unit = "GeV"
         self.assertEqual(v.unit, "GeV")
@@ -196,7 +196,7 @@ class VariableTest(unittest.TestCase):
         v = self.make_var(
             name="mpl_hist",
             binning=(40, 0.0, 10.0),
-            log_x=True,
+            x_log=True,
         )
 
         data = v.get_mpl_hist_data()
@@ -211,3 +211,28 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(data["label"], "bar")
         self.assertEqual(data["color"], "red")
         self.assertTrue("log" not in data)
+
+    def test_deprecated(self):
+        v = self.make_var(
+            name="deprecated_hist",
+            binning=(10, 0.0, 1.0),
+            log_x=True,
+            log_y=True,
+            discrete_x=True,
+            discrete_y=True,
+        )
+
+        self.assertTrue(v.x_log)
+        self.assertTrue(v.y_log)
+        self.assertTrue(v.x_discrete)
+        self.assertTrue(v.y_discrete)
+
+        v.log_x = False
+        v.log_y = False
+        v.discrete_x = False
+        v.discrete_y = False
+
+        self.assertFalse(v.x_log)
+        self.assertFalse(v.y_log)
+        self.assertFalse(v.x_discrete)
+        self.assertFalse(v.y_discrete)

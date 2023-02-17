@@ -43,6 +43,7 @@ elif html_theme == "alabaster":
         "github_repo": "order",
     })
 elif html_theme == "sphinx_book_theme":
+    copyright = copyright.split(",", 1)[0]
     html_theme_options.update({
         "logo_only": True,
         "home_page_in_toc": True,

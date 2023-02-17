@@ -36,7 +36,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     *y_title_short*, *unit*, *unit_format* and *null_value*. See the attribute listing below for
     further information.
 
-    *selection* and *selection_mode* are passed to the :py:class:`~order.mixins.SelectionMixin`,
+    *selection* and *str_selection_mode* are passed to the :py:class:`~order.mixins.SelectionMixin`,
     *tags* to the :py:class:`~order.mixins.TagMixin`, *aux* to the
     :py:class:`~order.mixins.AuxDataMixin`, and *name* and *id* (defaulting to an automatically
     increasing id) to the :py:class:`~order.unique.UniqueObject` constructor.
@@ -258,7 +258,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         unit_format="{title} / {unit}",
         null_value=None,
         selection=None,
-        selection_mode=None,
+        str_selection_mode=None,
         tags=None,
         aux=None,
         # backwards compatibility
@@ -271,7 +271,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)
-        SelectionMixin.__init__(self, selection=selection, selection_mode=selection_mode)
+        SelectionMixin.__init__(self, selection=selection, str_selection_mode=str_selection_mode)
 
         # instance members
         self._expression = None

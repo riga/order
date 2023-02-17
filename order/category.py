@@ -16,7 +16,7 @@ from order.util import to_root_latex
 @unique_tree(parents=-1, deep_children=True, deep_parents=True)
 class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin):
     """ __init__(name, id="+", channel=None, categories=None, label=None, label_short=None, \
-    selection=None, selection_mode=None, tags=None, aux=None)
+    selection=None, str_selection_mode=None, tags=None, aux=None)
     Class that describes an analysis category. This is not to be confused with an analysis
     :py:class:`Channel`. While the definition of a channel can be understood as being fixed by e.g.
     the final state of an event, a category describes an arbitrary sub phase-space. Therefore, a
@@ -30,7 +30,7 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
     are initialized with *categories*.
 
     *label* and *label_short* are forwarded to the :py:class:`~order.mixins.LabelMixin`, *selection*
-    and *selection_mode* to the :py:class:`~order.mixins.SelectionMixin`, *tags* to the
+    and *str_selection_mode* to the :py:class:`~order.mixins.SelectionMixin`, *tags* to the
     :py:class:`~order.mixins.TagMixin`, *aux* to the :py:class:`~order.mixins.AuxDataMixin`, and
     *name* and *id* (defaulting to an auto id) to the :py:class:`~order.unique.UniqueObject`
     constructor.
@@ -54,7 +54,7 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
         import order as od
 
         # toggle the default selection mode to Root-style selection string concatenation
-        od.Category.default_selection_mode = "root"
+        od.Category.default_str_selection_mode = "root"
 
         cat = od.Category(
             name="4j",
@@ -172,7 +172,7 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
         label=None,
         label_short=None,
         selection=None,
-        selection_mode=None,
+        str_selection_mode=None,
         tags=None,
         aux=None,
     ):
@@ -180,7 +180,7 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)
-        SelectionMixin.__init__(self, selection=selection, selection_mode=selection_mode)
+        SelectionMixin.__init__(self, selection=selection, str_selection_mode=str_selection_mode)
         LabelMixin.__init__(self, label=label, label_short=label_short)
 
         # register empty attributes

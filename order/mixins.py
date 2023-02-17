@@ -670,12 +670,13 @@ class DataSourceMixin(object):
 
 class SelectionMixin(object):
     """
-    Mixin-class that adds attibutes and methods to describe a selection rule using ROOT- or
-    numexpr-style expression syntax, or a bare callable.
+    Mixin-class that adds attibutes and methods to describe a selection rule, either as strings,
+    bare callables, or sequences of the two. When rules are defined as strings, ROOT- or
+    numexpr-style expression syntax are supported with convenient logical concatenation.
 
     **Arguments**
 
-    *selection* and *selection_mode* initialize the same-named attributes.
+    *selection* and *str_selection_mode* initialize the same-named attributes.
 
     **Example**
 
@@ -686,8 +687,8 @@ class SelectionMixin(object):
         class MyClass(od.SelectionMixin):
             pass
 
-        # ROOT-style expressions
-        c = MyClass(selection="branchA > 0", selection_mode=MyClass.MODE_ROOT)
+        # ROOT-style string expressions
+        c = MyClass(selection="branchA > 0", str_selection_mode=MyClass.MODE_ROOT)
 
         c.selection
         # -> "branchA > 0"
@@ -700,8 +701,8 @@ class SelectionMixin(object):
         c.selection
         # -> "((myBranchA > 0) && (myBranchB < 100)) * (myWeight)"
 
-        # numexpr-style expressions
-        c = MyClass(selection="branchA > 0", selection_mode=MyClass.MODE_NUMEXPR)
+        # numexpr-style string expressions
+        c = MyClass(selection="branchA > 0", str_selection_mode=MyClass.MODE_NUMEXPR)
 
         c.add_selection("myBranchB < 100")
         c.selection
@@ -713,7 +714,7 @@ class SelectionMixin(object):
         c.selection = my_selection
         c.selection
         # -> <function my_selection()>
-        c.selection_mode
+        c.str_selection_mode
         # -> None
         c.add_selection("myBranchB < 100")
         # -> TypeError
@@ -730,20 +731,20 @@ class SelectionMixin(object):
 
        Flag denoting the numexpr-style selection mode (``"numexpr"``).
 
-    .. py:classattribute:: default_selection_mode
+    .. py:classattribute:: default_str_selection_mode
        type: string
 
-       The default *selection_mode* when none is given in the instance constructor. It is initially
-       set to *MODE_NUMEXPR* if :py:attr:`order.util.ROOT_DEFAULT` is *false*, or to *MODE_ROOT*
-       otherwise.
+       The default *str_selection_mode* when none is given in the instance constructor. It is
+       initially set to *MODE_NUMEXPR* if :py:attr:`order.util.ROOT_DEFAULT` is *false*, or to
+       *MODE_ROOT* otherwise.
 
     .. py:attribute:: selection
-       type: string, callable
+       type: string, callable, list
 
-       The selection string or a callable. When a string, :py:attr:`selection_mode` decides how the
-       string is treated.
+       The selection string, callable or a sequence of them. When a string,
+       :py:attr:`str_selection_mode` decides how the string is treated.
 
-    .. py:attribute:: selection_mode
+    .. py:attribute:: str_selection_mode
        type: string, None
 
        The selection mode. Should either be *MODE_ROOT* or *MODE_NUMEXPR*. Only considered when
@@ -753,23 +754,23 @@ class SelectionMixin(object):
     MODE_ROOT = "root"
     MODE_NUMEXPR = "numexpr"
 
-    default_selection_mode = MODE_ROOT if ROOT_DEFAULT else MODE_NUMEXPR
+    default_str_selection_mode = MODE_ROOT if ROOT_DEFAULT else MODE_NUMEXPR
 
     copy_specs = []
 
-    def __init__(self, selection=None, selection_mode=None):
+    def __init__(self, selection=None, str_selection_mode=None):
         super(SelectionMixin, self).__init__()
 
         # instance members
         self._selection = "1"
-        self._selection_mode = None
+        self._str_selection_mode = None
 
         # fallback to default selection mode
-        if selection_mode is None:
-            selection_mode = self.default_selection_mode
+        if str_selection_mode is None:
+            str_selection_mode = self.default_str_selection_mode
 
         # set initial values
-        self.selection_mode = selection_mode
+        self.str_selection_mode = str_selection_mode
         if selection is not None:
             self.selection = selection
 
@@ -780,15 +781,19 @@ class SelectionMixin(object):
 
     @selection.setter
     def selection(self, selection):
-        if callable(selection):
+        if selection is None:
+            raise TypeError("invalid selection: {}".format(selection))
+
+        # just store the valud when not a string
+        if not isinstance(selection, six.string_types):
             self._selection = selection
-            self._selection_mode = None
+            self._str_selection_mode = None
             return
 
-        # get the selection mode
-        if self.selection_mode == self.MODE_ROOT:
+        # interpret as string, get the selection mode
+        if self.str_selection_mode == self.MODE_ROOT:
             join = join_root_selection
-        elif self.selection_mode == self.MODE_NUMEXPR:
+        elif self.str_selection_mode == self.MODE_NUMEXPR:
             join = join_numexpr_selection
         else:
             raise Exception("when selection is a string, selection mode must be set")
@@ -799,19 +804,19 @@ class SelectionMixin(object):
             raise TypeError("invalid selection type: {}".format(selection))
 
     @typed
-    def selection_mode(self, selection_mode):
-        # selection mode parser
-        if selection_mode is None:
-            return selection_mode
+    def str_selection_mode(self, str_selection_mode):
+        # str_selection_mode parser
+        if str_selection_mode is None:
+            return str_selection_mode
 
-        if not isinstance(selection_mode, six.string_types):
-            raise TypeError("invalid selection_mode type: {}".format(selection_mode))
+        if not isinstance(str_selection_mode, six.string_types):
+            raise TypeError("invalid str_selection_mode type: {}".format(str_selection_mode))
 
-        selection_mode = str(selection_mode)
-        if selection_mode not in (self.MODE_ROOT, self.MODE_NUMEXPR):
-            raise ValueError("unknown selection_mode: {}".format(selection_mode))
+        str_selection_mode = str(str_selection_mode)
+        if str_selection_mode not in (self.MODE_ROOT, self.MODE_NUMEXPR):
+            raise ValueError("unknown str_selection_mode: {}".format(str_selection_mode))
 
-        return selection_mode
+        return str_selection_mode
 
     def add_selection(self, selection, **kwargs):
         """
@@ -826,9 +831,9 @@ class SelectionMixin(object):
                 "selection {}".format(self.selection),
             )
 
-        if self.selection_mode == self.MODE_ROOT:
+        if self.str_selection_mode == self.MODE_ROOT:
             join = join_root_selection
-        elif self.selection_mode == self.MODE_NUMEXPR:
+        elif self.str_selection_mode == self.MODE_NUMEXPR:
             join = join_numexpr_selection
         else:
             raise Exception("when selection is a string, selection mode must be set")

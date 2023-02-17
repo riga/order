@@ -223,7 +223,7 @@ class DataSourceMixinTest(unittest.TestCase):
 class SelectionMixinTest(unittest.TestCase):
 
     def test_constructor_root(self):
-        s = SelectionMixin("myBranchC > 0", selection_mode=SelectionMixin.MODE_ROOT)
+        s = SelectionMixin("myBranchC > 0", str_selection_mode=SelectionMixin.MODE_ROOT)
         self.assertEqual(s.selection, "myBranchC > 0")
 
         s.add_selection("myBranchD < 100", bracket=True)
@@ -239,7 +239,7 @@ class SelectionMixinTest(unittest.TestCase):
         )
 
     def test_constructor_numexpr(self):
-        s = SelectionMixin("myBranchC > 0", selection_mode=SelectionMixin.MODE_NUMEXPR)
+        s = SelectionMixin("myBranchC > 0", str_selection_mode=SelectionMixin.MODE_NUMEXPR)
         self.assertEqual(s.selection, "myBranchC > 0")
 
         s.add_selection("myBranchD < 100", bracket=True)
@@ -255,15 +255,15 @@ class SelectionMixinTest(unittest.TestCase):
         )
 
     def test_constructor_callable(self):
-        s = SelectionMixin("myBranchC > 0", selection_mode=SelectionMixin.MODE_NUMEXPR)
+        s = SelectionMixin("myBranchC > 0", str_selection_mode=SelectionMixin.MODE_NUMEXPR)
         self.assertEqual(s.selection, "myBranchC > 0")
 
         s.selection = lambda: None
         self.assertTrue(callable(s.selection))
-        self.assertIsNone(s.selection_mode)
+        self.assertIsNone(s.str_selection_mode)
 
     def test_selections(self):
-        s = SelectionMixin(selection_mode=SelectionMixin.MODE_ROOT)
+        s = SelectionMixin(str_selection_mode=SelectionMixin.MODE_ROOT)
 
         s.selection = "myBranchC > 0"
         self.assertEqual(s.selection, "myBranchC > 0")
@@ -275,11 +275,13 @@ class SelectionMixinTest(unittest.TestCase):
         s.add_selection("myBranchD > 0", op="||", bracket=True)
         self.assertEqual(s.selection, "((myBranchC > 0) || (myBranchD > 0))")
 
-        s.selection = ["myBranchC > 0", "myBranchE > 0"]
+        s.selection = "1"
+        s.add_selection(["myBranchC > 0", "myBranchE > 0"])
         self.assertEqual(s.selection, "(myBranchC > 0) && (myBranchE > 0)")
 
-        s.selection_mode = SelectionMixin.MODE_NUMEXPR
-        s.selection = ["myBranchC > 0", "myBranchE > 0"]
+        s.selection = "1"
+        s.str_selection_mode = SelectionMixin.MODE_NUMEXPR
+        s.add_selection(["myBranchC > 0", "myBranchE > 0"])
         self.assertEqual(s.selection, "(myBranchC > 0) & (myBranchE > 0)")
 
 

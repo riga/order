@@ -174,6 +174,16 @@ def flatten(struct, depth=-1):
     return [struct]
 
 
+def try_float(obj):
+    """
+    Tries to cast *obj* to float and returns it. If the conversion fails, *None* is returned.
+    """
+    try:
+        return float(obj)
+    except:
+        return None
+
+
 def to_root_latex(s):
     """
     Converts latex expressions in a string *s* to ROOT-compatible latex.
@@ -193,8 +203,8 @@ def _parse_selection(*selection):
             if s == 1:
                 continue
         elif isinstance(s, six.string_types):
-            # special case: skip empty strings
-            if not s.strip():
+            # special case: skip empty strings and ones
+            if not s.strip() or try_float(s) == 1:
                 continue
         else:
             raise Exception("invalid selection string: {}".format(s))

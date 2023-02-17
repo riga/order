@@ -10,7 +10,7 @@ __all__ = ["Dataset", "DatasetInfo"]
 
 import six
 
-from order.unique import UniqueObject, unique_tree
+from order.unique import UniqueObject, UniqueObjectIndex, unique_tree
 from order.mixins import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, LabelMixin
 from order.process import Process
 from order.shift import Shift
@@ -48,8 +48,15 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
 
     **Copy behavior**
 
+    ``copy()``
+
     The :py:attr:`campaign` attribute is carried over as a reference, all remaining attributes are
     copied. Note that the copied dataset is also registered in the campaign.
+
+    ``copy_shallow()``
+
+    All attributs are copied except for the :py:attr:`campaign` and containd :py:attr:`processes`
+    which are set to default values instead.
 
     **Example**
 
@@ -145,7 +152,18 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
 
     # attributes for copying
     copy_specs = (
-        [{"attr": "_campaign", "ref": True}] +
+        [
+            {
+                "attr": "_campaign",
+                "ref": True,
+                "skip_shallow": True,
+            },
+            {
+                "attr": "_processes",
+                "skip_shallow": True,
+                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Process)),
+            },
+        ] +
         UniqueObject.copy_specs +
         AuxDataMixin.copy_specs +
         TagMixin.copy_specs +

@@ -9,7 +9,7 @@ config.
 __all__ = ["Campaign", "Config"]
 
 
-from order.unique import UniqueObject, unique_tree
+from order.unique import UniqueObject, UniqueObjectIndex, unique_tree
 from order.mixins import CopyMixin, AuxDataMixin, TagMixin
 from order.shift import Shift
 from order.dataset import Dataset
@@ -35,7 +35,14 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
 
     **Copy behavior**
 
+    ``copy()``
+
     All attributes are copied.
+
+    ``copy_shallow()``
+
+    All attributs are copied except for contained :py:attr:`datasets` which are set to a default
+    value instead.
 
     **Example**
 
@@ -75,6 +82,13 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
     cls_name_plural = "campaigns"
 
     copy_specs = (
+        [
+            {
+                "attr": "_datasets",
+                "skip_shallow": True,
+                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Dataset)),
+            },
+        ] +
         UniqueObject.copy_specs +
         AuxDataMixin.copy_specs +
         TagMixin.copy_specs
@@ -170,8 +184,16 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
 
     **Copy behavior**
 
+    ``copy()``
+
     The :py:attr:`campaign` and :py:attr:`analysis` attributes are carried over as references, all
     remaining attributes are copied. Note that the copied config is also registered in the analysis.
+
+    ``copy_shallow()``
+
+    All attributs are copied except for the :py:attr:`analysis` and :py:attr:`campaign`, as well as
+    contained :py:attr:`datasets`, :py:attr:`processes`, :py:attr:`channels`, :py:attr:`variables`
+    and :py:attr:`shifts` which are set to default values instead.
 
     **Example**
 
@@ -228,8 +250,46 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
 
     copy_specs = (
         [
-            {"attr": "_campaign", "ref": True},
-            {"attr": "_analysis", "ref": True},
+            {
+                "attr": "_campaign",
+                "ref": True,
+                "skip_shallow": True,
+            },
+            {
+                "attr": "_analysis",
+                "ref": True,
+                "skip_shallow": True,
+            },
+            {
+                "attr": "_datasets",
+                "skip_shallow": True,
+                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Dataset)),
+            },
+            {
+                "attr": "_processes",
+                "skip_shallow": True,
+                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Process)),
+            },
+            {
+                "attr": "_channels",
+                "skip_shallow": True,
+                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Channel)),
+            },
+            {
+                "attr": "_categories",
+                "skip_shallow": True,
+                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Category)),
+            },
+            {
+                "attr": "_variables",
+                "skip_shallow": True,
+                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Variable)),
+            },
+            {
+                "attr": "_shifts",
+                "skip_shallow": True,
+                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Shift)),
+            },
         ] +
         UniqueObject.copy_specs +
         AuxDataMixin.copy_specs +

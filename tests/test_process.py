@@ -52,10 +52,13 @@ class ProcessTest(unittest.TestCase):
     def test_copy(self):
         p = Process("ttVV", 7, xsecs={13: 5}, color=(0.3, 0.4, 0.5), is_data=False, aux={1: 2})
         p.add_process("ttVV_dl", 8)
+        p.add_parent_process("ttX", 6)
         self.assertEqual(len(p.processes), 1)
+        self.assertEqual(len(p.parent_processes), 1)
 
         p2 = p.copy(name="ttVVV", id=9, aux={3: 4})
         self.assertEqual(len(p2.processes), 1)
+        self.assertEqual(len(p2.parent_processes), 1)
 
         self.assertEqual(p2.name, "ttVVV")
         self.assertEqual(p2.id, 9)
@@ -66,6 +69,27 @@ class ProcessTest(unittest.TestCase):
         self.assertFalse(p2.has_aux(1))
         self.assertEqual(p.get_process(8).get_parent_process(7), p)
         self.assertEqual(p2.get_process(8).get_parent_process(9), p2)
+        self.assertEqual(p.get_parent_process(6).get_process(7), p)
+        self.assertEqual(p2.get_parent_process(6).get_process(9), p2)
+
+    def test_copy_shallow(self):
+        p = Process("ttVV", 7, xsecs={13: 5}, color=(0.3, 0.4, 0.5), is_data=False, aux={1: 2})
+        p.add_process("ttVV_dl", 8)
+        p.add_parent_process("ttX", 6)
+        self.assertEqual(len(p.processes), 1)
+        self.assertEqual(len(p.parent_processes), 1)
+
+        p2 = p.copy_shallow(name="ttVVV", id=9, aux={3: 4})
+        self.assertEqual(len(p2.processes), 0)
+        self.assertEqual(len(p2.parent_processes), 0)
+
+        self.assertEqual(p2.name, "ttVVV")
+        self.assertEqual(p2.id, 9)
+        self.assertEqual(p2.get_xsec(13), 5)
+        self.assertEqual(p2.color, p.color)
+        self.assertEqual(list(p2.aux.keys())[0], 3)
+        self.assertTrue(p2.has_aux(3))
+        self.assertFalse(p2.has_aux(1))
 
     def test_parent_processes(self):
         c = Process("child", 10)

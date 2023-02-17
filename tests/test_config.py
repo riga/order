@@ -68,6 +68,19 @@ class CampaignTest(unittest.TestCase):
             a2.datasets.get_first().processes.get_first(),
         )
 
+    def test_copy_shallow(self):
+        a = Campaign("2017A", 1)
+        d = Dataset("ttH", 1, campaign=a)
+        p = d.add_process("ttH_bb", 2)
+
+        a2 = a.copy_shallow()
+
+        self.assertEqual(a2.name, "2017A")
+        self.assertEqual(a2.id, 1)
+        self.assertEqual(len(a.datasets), 1)
+        self.assertEqual(len(a2.datasets), 0)
+        self.assertIs(a.datasets.n.ttH.processes.n.ttH_bb, p)
+
 
 class ConfigTest(unittest.TestCase):
 
@@ -94,3 +107,14 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(c2.name, "2017B")
         self.assertEqual(c2.id, 2)
         self.assertEqual(c2.campaign, c.campaign)
+
+    def test_copy_shallow(self):
+        a = Campaign("2017A", 1)
+        c = Config(a)
+
+        c2 = c.copy_shallow()
+
+        self.assertEqual(c2.name, "2017A")
+        self.assertEqual(c2.id, 1)
+        self.assertIsNone(c2.analysis)
+        self.assertIsNone(c2.campaign)

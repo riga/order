@@ -43,7 +43,13 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
     **Copy behavior**
 
+    ``copy()``
+
     All attributes are copied.
+
+    ``copy_shallow()``
+
+    No difference with respect to ``copy()``, all attributes are copied.
 
     **Example**
 
@@ -184,7 +190,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
        type: boolean
 
        Whether or not the x-axis is partitioned by discrete values (i.e, an integer axis). There is
-       not constraint on the :py:attribute:`binning` setting, but it should be set accordingly.
+       not constraint on the :py:attr:`binning` setting, but it should be set accordingly.
 
     .. py:attribute:: y_discrete
        type: boolean

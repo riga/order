@@ -93,6 +93,7 @@ class CategoryTest(unittest.TestCase):
         c.add_category("eq4j_eq2b")
 
         self.assertEqual(len(SL.categories), 1)
+        self.assertEqual(len(c.categories), 1)
 
         c2 = c.copy(name="SL2", id="+")
 
@@ -100,3 +101,18 @@ class CategoryTest(unittest.TestCase):
         self.assertEqual(len(c.categories), 1)
         self.assertEqual(len(c2.categories), 1)
         self.assertEqual(c2.channel, c.channel)
+
+    def test_copy_shallow(self):
+        SL = Channel("SL", 1)
+        c = Category("eq4j", channel=SL)
+        c.add_category("eq4j_eq2b")
+
+        self.assertEqual(len(SL.categories), 1)
+        self.assertEqual(len(c.categories), 1)
+
+        c2 = c.copy_shallow()
+
+        self.assertEqual(len(SL.categories), 1)
+        self.assertEqual(len(c.categories), 1)
+        self.assertEqual(len(c2.categories), 0)
+        self.assertIsNone(c2.channel)

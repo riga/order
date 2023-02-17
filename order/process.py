@@ -13,7 +13,7 @@ import sys
 import six
 from scinum import Number
 
-from order.unique import UniqueObject, unique_tree
+from order.unique import UniqueObject, UniqueObjectIndex, unique_tree
 from order.mixins import CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, LabelMixin, ColorMixin
 from order.util import typed
 
@@ -48,7 +48,14 @@ class Process(
 
     **Copy behavior**
 
+    ``copy()``
+
     All attributes are copied.
+
+    ``copy_shallow()``
+
+    All attributes except for (child) :py:attr:`processes` and :py:attr:`parent_processes` are
+    copied.
 
     **Example**
 
@@ -104,6 +111,18 @@ class Process(
 
     # attributes for copying
     copy_specs = (
+        [
+            {
+                "attr": "_processes",
+                "skip_shallow": True,
+                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Process)),
+            },
+            {
+                "attr": "_parent_processes",
+                "skip_shallow": True,
+                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Process)),
+            },
+        ] +
         UniqueObject.copy_specs +
         AuxDataMixin.copy_specs +
         TagMixin.copy_specs +

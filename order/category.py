@@ -8,7 +8,7 @@ Classes to describe object that help distinguishing events.
 __all__ = ["Channel", "Category"]
 
 
-from order.unique import UniqueObject, unique_tree
+from order.unique import UniqueObject, UniqueObjectIndex, unique_tree
 from order.mixins import CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, LabelMixin
 from order.util import to_root_latex
 
@@ -37,8 +37,15 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
 
     **Copy behavior**
 
+    ``copy()``
+
     The :py:attr:`channel` attribute is carried over as a reference, all remaining attributes are
-    copied. Note that the copied dataset is also registered in the channel.
+    copied. Note that the copied category is also registered in the channel.
+
+    ``copy_shallow()``
+
+    All attributs are copied except for the :py:attr:`channel` and (child) :py:attr:`categories`
+    which are set to default values instead.
 
     **Example**
 
@@ -137,7 +144,18 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
 
     # attributes for copying
     copy_specs = (
-        [{"attr": "_channel", "ref": True}] +
+        [
+            {
+                "attr": "_channel",
+                "ref": True,
+                "skip_shallow": True,
+            },
+            {
+                "attr": "_categories",
+                "skip_shallow": True,
+                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Category)),
+            },
+        ] +
         UniqueObject.copy_specs +
         AuxDataMixin.copy_specs +
         TagMixin.copy_specs +
@@ -243,7 +261,14 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
 
     **Copy behavior**
 
+    ``copy()``
+
     All attributes are copied.
+
+    ``copy_shallow()``
+
+    All attributs are copied except for child :py:attr:`categories` which is set to a default value
+    instead.
 
     **Example**
 
@@ -286,6 +311,13 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
 
     # attributes for copying
     copy_specs = (
+        [
+            {
+                "attr": "_categories",
+                "skip_shallow": True,
+                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Category)),
+            },
+        ] +
         UniqueObject.copy_specs +
         AuxDataMixin.copy_specs +
         TagMixin.copy_specs +

@@ -81,3 +81,19 @@ class ShiftTest(unittest.TestCase):
         self.assertEqual(s3.source, s.source)
         self.assertEqual(s3.type, s.type)
         self.assertEqual(s3.label, s.label)
+
+    def test_copy_shallow(self):
+        s = Shift("scale_down", 5, type=Shift.SHAPE)
+        s2 = s.copy_shallow(name="scale_up", id=6, label_short="sup")
+
+        self.assertEqual(s2.name, "scale_up")
+        self.assertEqual(s2.type, Shift.SHAPE)
+        self.assertEqual(s2.label, s2.name)
+        self.assertEqual(s2.label_short, "sup")
+
+        s3 = s.copy()
+        self.assertEqual(s3.name, s.name)
+        self.assertEqual(s3.direction, s.direction)
+        self.assertEqual(s3.source, s.source)
+        self.assertEqual(s3.type, s.type)
+        self.assertEqual(s3.label, s.label)

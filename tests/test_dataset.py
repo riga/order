@@ -114,6 +114,26 @@ class DatasetTest(unittest.TestCase):
         self.assertEqual(len(d.campaign.datasets), 2)
         self.assertTrue(d2 in d.campaign.datasets)
 
+    def test_copy_shallow(self):
+        c = Campaign("2017B", 2)
+        d = Dataset(
+            name="ttH",
+            id=1,
+            campaign=c,
+            keys=["/ttHTobb_M125.../.../..."],
+            n_files=123,
+            n_events=456789,
+        )
+        d.add_process("ttH", 1)
+        d2 = d.copy_shallow()
+
+        self.assertEqual(d2.name, "ttH")
+        self.assertEqual(d2.id, 1)
+        self.assertEqual(len(d.processes), 1)
+        self.assertEqual(len(d2.processes), 0)
+        self.assertIsNone(d2.campaign)
+        self.assertEqual(len(d.campaign.datasets), 1)
+
 
 class DatasetInfoTest(unittest.TestCase):
 

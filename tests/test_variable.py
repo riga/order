@@ -192,6 +192,23 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(v3.expression, v.expression)
         self.assertEqual(v3.selection, v.selection)
 
+    def test_copy_shallow(self):
+        v = self.make_var("copy_var")
+        v2 = v.copy_shallow(
+            name="otherVar",
+            id=Variable.AUTO_ID,
+            expression="otherExpression",
+        )
+
+        self.assertEqual(v2.name, "otherVar")
+        self.assertEqual(v2.expression, "otherExpression")
+        self.assertEqual(v2.selection, "myBranchC > 0")
+
+        v3 = v.copy()
+        self.assertEqual(v3.name, v.name)
+        self.assertEqual(v3.expression, v.expression)
+        self.assertEqual(v3.selection, v.selection)
+
     def test_mpl_data(self):
         v = self.make_var(
             name="mpl_hist",

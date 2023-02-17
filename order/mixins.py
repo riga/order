@@ -37,6 +37,10 @@ class CopySpec(object):
     this is done be temporarily setting the attribute to a *ref_placeholder* value, performing the
     deep copy, and then (re)setting the attribute to the original object.
 
+    When *skip* (*skip_shallow*) is *True*, the attribute is not copied when the source objects is
+    copied through :py:meth:`CopyMixin.copy` (:py:meth:`CopyMixin.copy_shallow`). When skipped,
+    the attribute of the copied object will be *skip_value*.
+
     **Members**
 
     .. py:attribute:: dst
@@ -52,12 +56,28 @@ class CopySpec(object):
     .. py:attribute:: ref
        type: bool
 
-       Whether or not the attribute should be passed as a reference instead of copying.
+       Whether or not the attribute should be passed as a reference instead of being copied.
 
     .. py:attribute:: ref_placeholder
        type: any
 
-       Placeholder value that is used during the copying process.
+       Placeholder value for attributes carried over as a reference that is used during the copying
+       process.
+
+    .. py:attribute:: skip
+       type: bool
+
+       Whether or not the attribute is skipped when copied with :py:meth:`CopyMixin.copy`.
+
+    .. py:attribute:: skip_shallow
+       type: bool
+
+       Whether or not the attribute is skipped when copyied with :py:meth:`CopyMixin.copy_shallow`.
+
+    .. py:attribute:: skip_value
+       type: any
+
+       Value to be used for attributes that are skipped in the copy process.
     """
 
     @classmethod
@@ -78,13 +98,30 @@ class CopySpec(object):
                 msg = "cannot create {} from dict, a 'dst' or 'attr' field is required, got '{}'"
                 raise ValueError(msg.format(cls.__name__, obj))
             kwargs["src"] = obj.get("src", obj.get("attr"))
-            kwargs["ref"] = obj.get("ref", False)
-            kwargs["ref_placeholder"] = obj.get("ref_placeholder", None)
+            if "ref" in obj:
+                kwargs["ref"] = obj.get("ref", False)
+            if "ref_placeholder" in obj:
+                kwargs["ref_placeholder"] = obj.get("ref_placeholder", None)
+            if "skip" in obj:
+                kwargs["skip"] = obj.get("skip", False)
+            if "skip_shallow" in obj:
+                kwargs["skip_shallow"] = obj.get("skip_shallow", False)
+            if "skip_value" in obj:
+                kwargs["skip_value"] = obj.get("skip_value")
             return cls(**kwargs)
 
         raise TypeError("cannot create {} from object '{}'".format(cls.__name__, obj))
 
-    def __init__(self, dst, src=None, ref=False, ref_placeholder=None):
+    def __init__(
+        self,
+        dst,
+        src=None,
+        ref=False,
+        ref_placeholder=None,
+        skip=False,
+        skip_shallow=False,
+        skip_value=None,
+    ):
         super(CopySpec, self).__init__()
 
         # store attributes
@@ -92,6 +129,9 @@ class CopySpec(object):
         self.src = src or dst
         self.ref = ref
         self.ref_placeholder = ref_placeholder
+        self.skip = skip
+        self.skip_shallow = skip_shallow
+        self.skip_value = skip_value
 
     def __eq__(self, spec):
         """
@@ -123,7 +163,8 @@ class CopyMixin(object):
     .. note::
 
         At the moment, custom specs are only required for attributes that should not be copied but
-        carried over to the copied instance as a reference.
+        either carried over to the copied instance as a reference, or skipped in case only a shallow
+        copy is requested via :py:meth:`copy_shallow`.
 
     **Example**
 
@@ -137,22 +178,41 @@ class CopyMixin(object):
 
             copy_specs = [
                 {"attr": "obj", "ref": True},
+                {"attr": "complex_obj", "ref": True, "skip_shallow": True},
             ]
 
-            def __init__(self, name, obj):
+            def __init__(self, name, obj, complex_obj=None):
                 super(MyClass, self).__init__()
                 self.name = name
                 self.obj = obj
+                self.complex_obj = complex_obj
 
-        a = MyClass("foo", some_object)
+        a = MyClass("foo", some_object, "some_other_complex_object")
         a.name
         # -> "foo"
+
+        # normal copy
 
         b = a.copy()
         b.name
         # -> "foo"
 
         b.obj is a.obj
+        # -> True
+
+        b.complex_obj is a.complext_obj
+        # -> True
+
+        # shallow copy (skipping certain attributes)
+
+        c = a.copy_shallow()
+        c.name
+        # -> "foo"
+
+        c.obj is a.obj
+        # -> True
+
+        c.complex_obj is None  # note the None here
         # -> True
 
     **Members**
@@ -163,7 +223,28 @@ class CopyMixin(object):
        List of copy specifications per attribute.
     """
 
+    class Deferred(object):
+
+        def __init__(self, func):
+            self.func = func
+
+        def __call__(self, *args, **kwargs):
+            return self.func(*args, **kwargs)
+
     copy_spec = []
+
+    @classmethod
+    def _create_specs(cls, specs):
+        # ensure that specs contain CopySpec objects
+        # also remove duplicates, priotize last occurances
+        _specs = []
+
+        for spec in specs[::-1]:
+            spec = CopySpec.new(spec.__dict__ if isinstance(spec, CopySpec) else spec)
+            if spec not in _specs:
+                _specs.append(spec)
+
+        return _specs[::-1]
 
     def copy(self, *args, **kwargs):
         r"""copy(*args, **kwargs, _specs=None, _skip=None)
@@ -172,36 +253,45 @@ class CopyMixin(object):
         Additional specifications per attribute are taken from :py:attr:`copy_specs` or *_specs* if
         set. *_skip* can be a sequence of source attribute names that should be skipped.
         """
-        # extract the copy configuration from kwargs
-        specs = kwargs.pop("_specs", None) or self.copy_specs
-        skip = kwargs.pop("_skip", None) or []
+        # get CopySpec objects
+        specs = self._create_specs(kwargs.pop("_specs", None) or self.copy_specs)
 
-        # unite args and kwargs
-        kwargs.update(args_to_kwargs(self.__class__.__init__ if six.PY2 else self.__class__, args))
+        # apply additional skips
+        for src in (kwargs.pop("_skip", None) or []):
+            for spec in specs:
+                if spec.src == src:
+                    spec.skip = True
+                    break
 
-        # ensure that specs contain CopySpec objects
-        # also remove duplicates, prioritize last occurances
-        _specs = []
-        for spec in specs[::-1]:
-            if not isinstance(spec, CopySpec):
-                spec = CopySpec.new(spec)
-            if spec not in _specs:
-                _specs.append(spec)
-        specs = _specs[::-1]
-
-        # maybe skip some specs, identified by the source attribute
-        specs = list(filter((lambda spec: spec.src not in skip), specs))
-
-        # attributes that are not copied but carried over as a reference should be set to a
-        # placeholder first and reset later on
+        # attributes that are skipped or carried over as a reference should be set to a placeholder
+        # first and reset later on
+        skips = {}
         refs = {}
         for spec in specs:
-            if spec.ref:
+            if spec.skip:
+                skip_value = (
+                    spec.skip_value()
+                    if isinstance(spec.skip_value, self.Deferred) else
+                    spec.skip_value
+                )
+                skips[spec] = getattr(self, spec.src)
+                setattr(self, spec.src, skip_value)
+            elif spec.ref:
+                ref_placeholder = (
+                    spec.ref_placeholder()
+                    if isinstance(spec.ref_placeholder, self.Deferred) else
+                    spec.ref_placeholder
+                )
                 refs[spec] = getattr(self, spec.src)
-                setattr(self, spec.src, spec.ref_placeholder)
+                setattr(self, spec.src, ref_placeholder)
 
         # perform the deep copy operation
         inst = copy.deepcopy(self)
+
+        # reset skipped attributes
+        for spec, obj in skips.items():
+            # reset the old value of this instance
+            setattr(self, spec.src, obj)
 
         # reset references
         for spec, obj in refs.items():
@@ -210,11 +300,30 @@ class CopyMixin(object):
             # add a reference to the copied instance
             setattr(inst, spec.dst, obj)
 
+        # unite args and kwargs
+        kwargs.update(args_to_kwargs(self.__class__.__init__ if six.PY2 else self.__class__, args))
+
         # set additional attributes
         for attr, obj in kwargs.items():
             setattr(inst, attr, obj)
 
         return inst
+
+    def copy_shallow(self, *args, **kwargs):
+        r"""copy_shallow(*args, **kwargs, _specs=None, _skip=None)
+        Just like :py:meth:`copy`, creates a copy of this instance and returns it, however with all
+        attributes that were declared as *skip_shallow* skipped (see :py:class:`CopySpec`).
+        """
+        # get CopySpec objects
+        specs = self._create_specs(kwargs.pop("_specs", None) or self.copy_specs)
+
+        # use skip_shallow flags
+        for spec in specs:
+            spec.skip |= spec.skip_shallow
+
+        # use copy implementation
+        kwargs["_specs"] = specs
+        return self.copy(*args, **kwargs)
 
 
 class AuxDataMixin(object):

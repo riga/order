@@ -33,7 +33,13 @@ class Shift(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
 
     **Copy behavior**
 
+    ``copy()``
+
     All attributes are copied.
+
+    ``copy_shallow()``
+
+    No difference with respect to ``copy()``, all attributes are copied.
 
     **Example**
 

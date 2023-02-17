@@ -3,4 +3,6 @@ six
 
 sphinx>=5.0,<6
 sphinx_rtd_theme
+sphinx_book_theme
 autodocsumm==0.2.*
+myst-parser~=0.18

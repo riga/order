@@ -29,12 +29,7 @@ add_module_names = False
 
 html_title = "{} v{}".format(project, version)
 html_logo = "../logo240.png"
-html_sidebars = {"**": [
-    "about.html",
-    "localtoc.html",
-    "searchbox.html",
-]}
-html_theme = "sphinx_rtd_theme"
+html_theme = "sphinx_book_theme"
 html_theme_options = {}
 if html_theme == "sphinx_rtd_theme":
     html_theme_options.update({
@@ -46,7 +41,16 @@ elif html_theme == "alabaster":
     html_theme_options.update({
         "github_user": "riga",
         "github_repo": "order",
-        "travis_button": True,
+    })
+elif html_theme == "sphinx_book_theme":
+    html_theme_options.update({
+        "logo_only": True,
+        "home_page_in_toc": True,
+        "show_navbar_depth": 2,
+        "repository_url": "https://github.com/riga/order",
+        "use_repository_button": True,
+        "use_issues_button": True,
+        "use_edit_page_button": True,
     })
 
 extensions = [
@@ -55,6 +59,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.autosectionlabel",
     "autodocsumm",
+    "myst_parser",
     "pydomain_patch",
 ]
 
@@ -63,5 +68,5 @@ autodoc_member_order = "bysource"
 
 def setup(app):
     app.add_css_file("styles_common.css")
-    if html_theme in ("sphinx_rtd_theme", "alabaster"):
+    if html_theme in ("sphinx_rtd_theme", "alabaster", "sphinx_book_theme"):
         app.add_css_file("styles_{}.css".format(html_theme))

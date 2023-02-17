@@ -12,9 +12,6 @@ Open the `intro.ipynb <https://github.com/riga/order/blob/master/examples/intro.
 2. Properties implement type checks and, where applicable, conversions! Assigments such as ``my_object.some_string_attribute = 123`` (can) immediately fail. This way, type ambiguities during analysis execution are avoided and detected early.
 3. The code style is `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`__ compatible (checked via `flake8 <https://pypi.org/project/flake8/>`__).
 
-.. contents:: Contents
-   :local:
-
 
 *UniqueObject* and *UniqueObjectIndex*
 --------------------------------------
@@ -439,7 +436,7 @@ Copying objects
 ---------------
 
 Most classes inherit from the :py:class:`~order.mixins.CopyMixin`.
-As a result, instances can be copied through the :py:meth:`~order.mixins.CopyMixin.copy` method defined on the mixin class itself.
+As a result, instances can be copied via :py:meth:`~order.mixins.CopyMixin.copy`, returning a full, deep copy including relations to other objects, or via :py:meth:`~order.mixins.CopyMixin.copy_shallow` which copies everything *but* those relations.
 You can pass keyword arguments to configure / overwrite certain attributes of the copied object instead of copying them from the original one.
 
 The copy mechanism can be demonstrated using :py:class:`~order.variable.Variable`'s.

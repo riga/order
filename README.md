@@ -1,6 +1,6 @@
 <center>
   <a href="https://github.com/riga/order">
-    <img src="https://raw.githubusercontent.com/riga/order/master/logo240.png" />
+    <img src="https://media.githubusercontent.com/media/riga/order/master/assets/logo240.png" />
   </a>
 </center>
 

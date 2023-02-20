@@ -28,7 +28,8 @@ pygments_style = "sphinx"
 add_module_names = False
 
 html_title = "{} v{}".format(project, version)
-html_logo = "../logo240.png"
+html_logo = "../assets/logo240.png"
+html_favicon = "../assets/favicon.ico"
 html_theme = "sphinx_book_theme"
 html_theme_options = {}
 if html_theme == "sphinx_rtd_theme":
@@ -61,6 +62,7 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "autodocsumm",
     "myst_parser",
+    "sphinx_lfs_content",
     "pydomain_patch",
 ]
 

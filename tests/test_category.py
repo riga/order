@@ -77,6 +77,20 @@ class CategoryTest(unittest.TestCase):
         c.label = None
         self.assertEqual(c.label_short, c.name)
 
+    def test_nesting(self):
+        # top level
+        c = Category("all")
+
+        # second level
+        e = c.add_category("e")
+        j1 = c.add_category("j1")
+
+        # third level with overlap
+        e_j1 = e.add_category("e_j1")
+        j1.add_category(e_j1)
+
+        self.assertEqual(len(c.get_leaf_categories()), 1)
+
     def test_channel(self):
         SL = Channel("SL", 1)
         c = Category("eq4j", channel=SL, label=r"$\eq$ 4 jets")

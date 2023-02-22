@@ -875,10 +875,15 @@ def unique_tree(**kwargs):
             def get_leaves(self):
                 """
                 Returns all child {plural} from the :py:attr:`{plural}` index that have no child
-                {plural} themselves in a recursive fashion.
+                {plural} themselves in a recursive fashion. Possible duplicates due to nested
+                structures are removed.
                 """
                 walker = getattr(self, "walk_" + plural)()
-                return [obj for obj, _, objs in walker if not objs]
+                leaves = []
+                for obj, _, objs in walker:
+                    if not objs and obj not in leaves:
+                        leaves.append(obj)
+                return leaves
 
         #
         # child methods, disabled parents
@@ -1146,10 +1151,15 @@ def unique_tree(**kwargs):
                 def get_roots(self):
                     """
                     Returns all parent {plural} from the :py:attr:`parent_{plural}` index that have
-                    no parent {plural} themselves in a recursive fashion.
+                    no parent {plural} themselves in a recursive fashion. Possible duplicates due to
+                    nested structures are removed.
                     """
                     walker = getattr(self, "walk_parent_" + plural)()
-                    return [obj for obj, _, objs in walker if not objs]
+                    roots = []
+                    for obj, _, objs in walker:
+                        if not objs and obj not in roots:
+                            roots.append(obj)
+                    return roots
 
         #
         # parent methods, exactly 1 parent

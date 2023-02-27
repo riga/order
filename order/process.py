@@ -50,7 +50,11 @@ class Process(
 
     ``copy()``
 
-    All attributes are copied.
+    All attributes are copied. Also, please be aware that deep copies of heavily nested process
+    structures might lead to python running into a recursion error (``maximum recursion depth
+    exceeded while calling a Python object``). If this is the case, you might want to consider
+    `increasing the recursion depth
+    <https://docs.python.org/3/library/sys.html#sys.setrecursionlimit>`__.
 
     ``copy_shallow()``
 
@@ -115,12 +119,12 @@ class Process(
             {
                 "attr": "_processes",
                 "skip_shallow": True,
-                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Process)),
+                "skip_value": CopyMixin.Deferred(lambda inst: UniqueObjectIndex(cls=Process)),
             },
             {
                 "attr": "_parent_processes",
                 "skip_shallow": True,
-                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Process)),
+                "skip_value": CopyMixin.Deferred(lambda inst: UniqueObjectIndex(cls=Process)),
             },
         ] +
         UniqueObject.copy_specs +

@@ -270,7 +270,7 @@ class CopyMixin(object):
         for spec in specs:
             if spec.skip:
                 skip_value = (
-                    spec.skip_value()
+                    spec.skip_value(self)
                     if isinstance(spec.skip_value, self.Deferred) else
                     spec.skip_value
                 )
@@ -278,7 +278,7 @@ class CopyMixin(object):
                 setattr(self, spec.src, skip_value)
             elif spec.ref:
                 ref_placeholder = (
-                    spec.ref_placeholder()
+                    spec.ref_placeholder(self)
                     if isinstance(spec.ref_placeholder, self.Deferred) else
                     spec.ref_placeholder
                 )

@@ -161,7 +161,7 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
             {
                 "attr": "_processes",
                 "skip_shallow": True,
-                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Process)),
+                "skip_value": CopyMixin.Deferred(lambda inst: UniqueObjectIndex(cls=Process)),
             },
         ] +
         UniqueObject.copy_specs +

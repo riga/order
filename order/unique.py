@@ -675,25 +675,14 @@ def unique_tree(**kwargs):
         # patch the init method
         orig_init = decorated_cls.__init__
         def __init__(self, *args, **kwargs):
-            if getattr(self, "_child_indices", None) is None:
-                self._child_indices = []
-            if getattr(self, "_parent_indices", None) is None:
-                self._parent_indices = []
-            if getattr(self, "_all_indices", None) is None:
-                self._all_indices = []
-
             # register the child index
             child_index = UniqueObjectIndex(cls=cls)
             setattr(self, "_" + plural, child_index)
-            self._child_indices.append(child_index)
-            self._all_indices.append(child_index)
 
             # register the child index
             if parents:
                 parent_index = UniqueObjectIndex(cls=cls)
                 setattr(self, "_parent_" + plural, parent_index)
-                self._parent_indices.append(parent_index)
-                self._all_indices.append(parent_index)
 
             # call the original inint
             orig_init(self, *args, **kwargs)

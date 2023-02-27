@@ -5,6 +5,7 @@ __all__ = ["ChannelTest", "CategoryTest"]
 
 
 import unittest
+import itertools
 
 from order import Channel, Category
 
@@ -90,6 +91,56 @@ class CategoryTest(unittest.TestCase):
         j1.add_category(e_j1)
 
         self.assertEqual(len(c.get_leaf_categories()), 1)
+
+    def test_multi_nesting(self):
+        base = Category("base")
+        categories = {
+            "cat1": [base.add_category("cat_1_{}".format(c)) for c in "ABCD"],
+            "cat2": [base.add_category("cat_2_{}".format(c)) for c in "ABCD"],
+            "cat3": [base.add_category("cat_3_{}".format(c)) for c in "ABCD"],
+            "cat4": [base.add_category("cat_4_{}".format(c)) for c in "ABCD"],
+        }
+
+        def create_name(cat1=None, cat2=None, cat3=None, cat4=None):
+            return "cat__" + "__".join(
+                cat[4:]
+                for cat in [cat1, cat2, cat3, cat4]
+                if cat is not None
+            )
+
+        # create the full combinatorics
+        n_groups = len(categories)
+        group_names = list(categories.keys())
+        for _n_groups in range(2, n_groups + 1):
+            for _group_names in itertools.combinations(group_names, _n_groups):
+                _categories = [categories[group_name] for group_name in _group_names]
+                for root_cats in itertools.product(*_categories):
+                    root_cats = dict(zip(_group_names, root_cats))
+                    cat_name = create_name(**{
+                        group_name: cat.name
+                        for group_name, cat in root_cats.items()
+                    })
+                    cat = Category(name=cat_name)
+                    for _parent_group_names in itertools.combinations(_group_names, _n_groups - 1):
+                        if len(_parent_group_names) == 1:
+                            parent_cat_name = root_cats[_parent_group_names[0]].name
+                        else:
+                            parent_cat_name = create_name(**{
+                                group_name: root_cats[group_name].name
+                                for group_name in _parent_group_names
+                            })
+                        parent_cat = base.get_category(parent_cat_name, deep=True)
+                        parent_cat.add_category(cat)
+
+        self.assertEqual(len(base.get_leaf_categories()), 256)
+
+        last_cat = base.get_category("cat__1_D__2_D__3_D__4_D")
+        self.assertEqual(len(last_cat.parent_categories), 4)
+        self.assertEqual(len(last_cat.get_root_categories()), 1)
+
+        last_cat_copy = last_cat.copy_shallow()
+        self.assertEqual(len(last_cat_copy.parent_categories), 0)
+        self.assertEqual(len(last_cat_copy.get_root_categories()), 0)
 
     def test_channel(self):
         SL = Channel("SL", 1)

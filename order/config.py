@@ -86,7 +86,7 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
             {
                 "attr": "_datasets",
                 "skip_shallow": True,
-                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Dataset)),
+                "skip_value": CopyMixin.Deferred(lambda inst: UniqueObjectIndex(cls=Dataset)),
             },
         ] +
         UniqueObject.copy_specs +
@@ -263,32 +263,32 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
             {
                 "attr": "_datasets",
                 "skip_shallow": True,
-                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Dataset)),
+                "skip_value": CopyMixin.Deferred(lambda inst: UniqueObjectIndex(cls=Dataset)),
             },
             {
                 "attr": "_processes",
                 "skip_shallow": True,
-                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Process)),
+                "skip_value": CopyMixin.Deferred(lambda inst: UniqueObjectIndex(cls=Process)),
             },
             {
                 "attr": "_channels",
                 "skip_shallow": True,
-                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Channel)),
+                "skip_value": CopyMixin.Deferred(lambda inst: UniqueObjectIndex(cls=Channel)),
             },
             {
                 "attr": "_categories",
                 "skip_shallow": True,
-                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Category)),
+                "skip_value": CopyMixin.Deferred(lambda inst: UniqueObjectIndex(cls=Category)),
             },
             {
                 "attr": "_variables",
                 "skip_shallow": True,
-                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Variable)),
+                "skip_value": CopyMixin.Deferred(lambda inst: UniqueObjectIndex(cls=Variable)),
             },
             {
                 "attr": "_shifts",
                 "skip_shallow": True,
-                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Shift)),
+                "skip_value": CopyMixin.Deferred(lambda inst: UniqueObjectIndex(cls=Shift)),
             },
         ] +
         UniqueObject.copy_specs +

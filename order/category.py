@@ -40,12 +40,16 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
     ``copy()``
 
     The :py:attr:`channel` attribute is carried over as a reference, all remaining attributes are
-    copied. Note that the copied category is also registered in the channel.
+    copied. Note that the copied category is also registered in the channel. Also, please be aware
+    that deep copies of heavily nested category structures might lead to python running into a
+    recursion error (``maximum recursion depth exceeded while calling a Python object``). If this is
+    the case, you might want to consider `increasing the recursion depth
+    <https://docs.python.org/3/library/sys.html#sys.setrecursionlimit>`__.
 
     ``copy_shallow()``
 
-    All attributs are copied except for the :py:attr:`channel` and (child) :py:attr:`categories`
-    which are set to default values instead.
+    All attributs are copied except for the :py:attr:`channel`, (child) :py:attr:`categories` and
+    :py:attr:`parent_categories` which are set to default values instead.
 
     **Example**
 
@@ -153,7 +157,12 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
             {
                 "attr": "_categories",
                 "skip_shallow": True,
-                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Category)),
+                "skip_value": CopyMixin.Deferred(lambda inst: UniqueObjectIndex(cls=Category)),
+            },
+            {
+                "attr": "_parent_categories",
+                "skip_shallow": True,
+                "skip_value": CopyMixin.Deferred(lambda inst: UniqueObjectIndex(cls=Category)),
             },
         ] +
         UniqueObject.copy_specs +
@@ -315,7 +324,7 @@ class Channel(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
             {
                 "attr": "_categories",
                 "skip_shallow": True,
-                "skip_value": CopyMixin.Deferred(lambda: UniqueObjectIndex(cls=Category)),
+                "skip_value": CopyMixin.Deferred(lambda inst: UniqueObjectIndex(cls=Category)),
             },
         ] +
         UniqueObject.copy_specs +

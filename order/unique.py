@@ -712,19 +712,19 @@ def unique_tree(**kwargs):
         if decorated_cls.__doc__:
             decorated_cls.__doc__ += """
     .. py:attribute:: {plural}
-       type: UniqueObjectIndex
-       read-only
 
-       The :py:class:`~order.unique.UniqueObjectIndex` of child {plural}.
+        type: :py:class:`UniqueObjectIndex` (read-only)
+
+        The :py:class:`~order.unique.UniqueObjectIndex` of child {plural}.
     """.format(plural=plural)
 
             if parents:
                 decorated_cls.__doc__ += """
     .. py:attribute:: parent_{plural}
-       type: UniqueObjectIndex
-       read-only
 
-       The :py:class:`~order.unique.UniqueObjectIndex` of parent {plural}.
+        type: :py:class:`UniqueObjectIndex` (read-only)
+
+        The :py:class:`~order.unique.UniqueObjectIndex` of parent {plural}.
     """.format(plural=plural)
 
         #

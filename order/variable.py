@@ -86,146 +86,160 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
     **Members**
 
     .. py:attribute:: expression
-       type: string, callable, None
 
-       The expression of this variable. Defaults to name if *None*.
+        type: string, callable, None
+
+        The expression of this variable. Defaults to name if *None*.
 
     .. py:attribute:: binning
-       type: tuple, list
 
-       Descibes the bin edges when given a list, or the number of bins, minimum value and maximum
-       value when passed a 3-tuple.
+        type: tuple, list
+
+        Descibes the bin edges when given a list, or the number of bins, minimum value and maximum
+        value when passed a 3-tuple.
 
     .. py:attribute:: even_binning
-       type: bool
-       read-only
 
-       Whether or not the binning is even.
+        type: bool (read-only)
+
+        Whether or not the binning is even.
 
     .. py:attribute:: x_title
-       type: string
 
-       The title of the x-axis in standard LaTeX format.
+        type: string
+
+        The title of the x-axis in standard LaTeX format.
 
     .. py:attribute:: x_title_root
-       type: string
-       read-only
 
-       The title of the x-axis, converted to ROOT-style latex.
+        type: string (read-only)
+
+        The title of the x-axis, converted to ROOT-style latex.
 
     .. py:attribute:: x_title_short
-       type: string
 
-       Short version for the title of the x-axis in standard LaTeX format. Defaults to *x_title*
-       when not explicitely set.
+        type: string
+
+        Short version for the title of the x-axis in standard LaTeX format. Defaults to *x_title*
+        when not explicitely set.
 
     .. py:attribute:: x_title_short_root
-       type: string
-       read-only
 
-       The short version of the title of the x-axis, converted to ROOT-style latex.
+        type: string (read-only)
+
+        The short version of the title of the x-axis, converted to ROOT-style latex.
 
     .. py:attribute:: y_title
-       type: string
 
-       The title of the y-axis in standard LaTeX format.
+        type: string
+
+        The title of the y-axis in standard LaTeX format.
 
     .. py:attribute:: y_title_root
-       type: string
-       read-only
 
-       The title of the y-axis, converted to ROOT-style latex.
+        type: string (read-only)
+
+        The title of the y-axis, converted to ROOT-style latex.
 
     .. py:attribute:: y_title_short
-       type: string
 
-       Short version for the title of the y-axis in standard LaTeX format. Defaults to *y_title*
-       when not explicitely set.
+        type: string
+
+        Short version for the title of the y-axis in standard LaTeX format. Defaults to *y_title*
+        when not explicitely set.
 
     .. py:attribute:: y_title_short_root
-       type: string
-       read-only
 
-       The short version of the title of the y-axis, converted to ROOT-style latex.
+        type: string (read-only)
+
+        The short version of the title of the y-axis, converted to ROOT-style latex.
 
     .. py:attribute:: x_labels
-       type: list, None
 
-       A list of custom bin labels or *None*.
+        type: list, None
+
+        A list of custom bin labels or *None*.
 
     .. py:attribute:: x_labels_root
-       type: list, None
-       read-only
 
-       A list of custom bin labels, converted to ROOT-style latex, or *None*.
+        type: list, None (read-only)
+
+        A list of custom bin labels, converted to ROOT-style latex, or *None*.
 
     .. py:attribute:: unit
-       type: string, None
 
-       The unit to be shown on both, x- and y-axis. When *None*, no unit is shown.
+        type: string, None
+
+        The unit to be shown on both, x- and y-axis. When *None*, no unit is shown.
 
     .. py:attribute:: unit_format
-       type: string
 
-       The format string for concatenating axis titles and units, e.g. ``"{title} / {unit}"``. The
-       format string must contain the fields *title* and *unit*.
+        type: string
+
+        The format string for concatenating axis titles and units, e.g. ``"{title} / {unit}"``. The
+        format string must contain the fields *title* and *unit*.
 
     .. py:attribute:: null_value
-       type: int, float, None
 
-       A configurable NULL value for this variable, possibly denoting missing values. *None* is
-       considered as "non-configured".
+        type: int, float, None
+
+        A configurable NULL value for this variable, possibly denoting missing values. *None* is
+        considered as "non-configured".
 
     .. py:attribute:: x_log
-       type: boolean
 
-       Whether or not the x-axis should be drawn logarithmically.
+        type: boolean
+
+        Whether or not the x-axis should be drawn logarithmically.
 
     .. py:attribute:: y_log
-       type: boolean
 
-       Whether or not the y-axis should be drawn logarithmically.
+        type: boolean
+
+        Whether or not the y-axis should be drawn logarithmically.
 
     .. py:attribute:: x_discrete
-       type: boolean
 
-       Whether or not the x-axis is partitioned by discrete values (i.e, an integer axis). There is
-       not constraint on the :py:attr:`binning` setting, but it should be set accordingly.
+        type: boolean
+
+        Whether or not the x-axis is partitioned by discrete values (i.e, an integer axis). There is
+        not constraint on the :py:attr:`binning` setting, but it should be set accordingly.
 
     .. py:attribute:: y_discrete
-       type: boolean
 
-       Whether or not the y-axis is partitioned by discrete values (i.e, an integer axis).
+        type: boolean
+
+        Whether or not the y-axis is partitioned by discrete values (i.e, an integer axis).
 
     .. py:attribute:: n_bins
-       type: int
-       read-only
 
-       The number of bins.
+        type: int (read-only)
+
+        The number of bins.
 
     .. py:attribute:: x_min
-       type: float
-       read-only
 
-       The minimum value of the x-axis.
+        type: float (read-only)
+
+        The minimum value of the x-axis.
 
     .. py:attribute:: x_max
-       type: float
-       read-only
 
-       The maximum value of the x-axis.
+        type: float (read-only)
+
+        The maximum value of the x-axis.
 
     .. py:attribute:: bin_width
-       type: float
-       read-only
 
-       The width of a bin.
+        type: float (read-only)
+
+        The width of a bin.
 
     .. py:attribute:: bin_edges
-       type: list
-       read-only
 
-       A list of the *n_bins* + 1 bin edges.
+        type: list (read-only)
+
+        A list of the *n_bins* + 1 bin edges.
     """
 
     cls_name_singular = "variable"

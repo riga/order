@@ -68,14 +68,16 @@ class Campaign(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
     **Members**
 
     .. py:attribute:: ecm
-       type: float
 
-       The center-of-mass energy in arbitrary units.
+        type: float
+
+        The center-of-mass energy in arbitrary units.
 
     .. py:attribute:: bx
-       type: float
 
-       The bunch crossing in arbitrary units.
+        type: float
+
+        The bunch crossing in arbitrary units.
     """
 
     cls_name_singular = "campaign"
@@ -232,17 +234,17 @@ class Config(UniqueObject, CopyMixin, AuxDataMixin, TagMixin):
     **Members**
 
     .. py:attribute:: campaign
-       type: Campaign
-       read-only
 
-       The :py:class:`Campaign` instance this config belongs to.
+        type: :py:class:`Campaign` (read-only)
+
+        The :py:class:`Campaign` instance this config belongs to.
 
     .. py:attribute:: analysis
-       type: Analysis
-       read-only
 
-       The :py:class:`~order.analysis.Analysis` instance this config belongs to. When set, *this*
-       config is added to the index of configs of the analysis object.
+        type: :py:class:`Analysis` (read-only)
+
+        The :py:class:`~order.analysis.Analysis` instance this config belongs to. When set, *this*
+        config is added to the index of configs of the analysis object.
     """
 
     cls_name_singular = "config"

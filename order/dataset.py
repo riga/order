@@ -118,33 +118,35 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
     **Members**
 
     .. py:attribute:: campaign
-       type: Campaign, None
 
-       The :py:class:`~order.config.Campaign` object this dataset belongs to. When set, *this*
-       dataset is also added to the dataset index of the campaign object.
+        type: :py:class:`Campaign`, None
+
+        The :py:class:`~order.config.Campaign` object this dataset belongs to. When set, *this*
+        dataset is also added to the dataset index of the campaign object.
 
     .. py:attribute:: info
-       type: dictionary
 
-       Mapping of shift names to :py:class:`DatasetInfo` instances.
+        type: dictionary
+
+        Mapping of shift names to :py:class:`DatasetInfo` instances.
 
     .. py:attribute:: keys
-       type: list
-       read-only
 
-       The dataset keys of the nominal :py:class:`DatasetInfo` object.
+        type: list (read-only)
+
+        The dataset keys of the nominal :py:class:`DatasetInfo` object.
 
     .. py:attribute:: n_files
-       type: integer
-       read-only
 
-       The number of files of the nominal :py:class:`DatasetInfo` object.
+        type: integer (read-only)
+
+        The number of files of the nominal :py:class:`DatasetInfo` object.
 
     .. py:attribute:: n_events
-       type: integer
-       read-only
 
-       The number of events of the nominal :py:class:`DatasetInfo` object.
+        type: integer (read-only)
+
+        The number of events of the nominal :py:class:`DatasetInfo` object.
     """
 
     cls_name_singular = "dataset"
@@ -316,19 +318,22 @@ class DatasetInfo(CopyMixin, AuxDataMixin, TagMixin):
     **Members**
 
     .. py:attribute:: keys
-       type: list
 
-       The dataset keys, e.g. ``["/ttHTobb_M125.../.../..."]``.
+        type: list
+
+        The dataset keys, e.g. ``["/ttHTobb_M125.../.../..."]``.
 
     .. py:attribute:: n_files
-       type: integer
 
-       The number of files.
+        type: integer
+
+        The number of files.
 
     .. py:attribute:: n_events
-       type: integer
 
-       The number of events.
+        type: integer
+
+        The number of events.
     """
 
     copy_specs = (

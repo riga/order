@@ -112,35 +112,36 @@ class Category(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin, 
     **Members**
 
     .. py:attribute:: channel
-       type: Channel, None
 
-       The channel instance of this category, or *None* when not set.
+        type: :py:class:`Channel`, None
+
+        The channel instance of this category, or *None* when not set.
 
     .. py:attribute:: full_label
-       type: string
-       read-only
 
-       The label of this category, prefix with the channel label if a channel is set.
+        type: string (read-only)
+
+        The label of this category, prefix with the channel label if a channel is set.
 
     .. py:attribute:: full_label_short
-       type: string
-       read-only
 
-       The short label of this category, prefix with the short channel label if a channel is set.
+        type: string (read-only)
+
+        The short label of this category, prefix with the short channel label if a channel is set.
 
     .. py:attribute:: full_label_root
-       type: string
-       read-only
 
-       The label of this category, prefix with the channel label if a channel is set, converted to
-       ROOT-style latex.
+        type: string (read-only)
+
+        The label of this category, prefix with the channel label if a channel is set, converted to
+        ROOT-style latex.
 
     .. py:attribute:: full_label_short_root
-       type: string
-       read-only
 
-       The short label of this category, prefix with the short channel label if a channel is set,
-       converted to ROOT-style latex.
+        type: string (read-only)
+
+        The short label of this category, prefix with the short channel label if a channel is set,
+        converted to ROOT-style latex.
     """
 
     cls_name_singular = "category"

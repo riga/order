@@ -105,9 +105,10 @@ class Process(
     **Members**
 
     .. py:attribute:: xsecs
-       type: dictionary (float -> scinum.Number)
 
-       Cross sections mapped to a center-of-mass energies with arbitrary units.
+        type: dictionary (float -> :py:class:`scinum.Number`)
+
+        Cross sections mapped to a center-of-mass energies with arbitrary units.
     """
 
     cls_name_singular = "process"

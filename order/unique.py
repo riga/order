@@ -86,16 +86,16 @@ class UniqueObjectIndex(CopyMixin):
     **Members**
 
     .. py:attribute:: cls
-       type: class
-       read-only
 
-       Class of objects hold by this index.
+        type: :py:class:`UniqueObjectMeta` (read-only)
+
+        Class of objects hold by this index.
 
     .. py:attribute:: n
-       type: DotAccessProxy
-       read-only
 
-       An object that provides simple attribute access to contained objects via name.
+        type: :py:class:`DotAccessProxy` (read-only)
+
+        An object that provides simple attribute access to contained objects via name.
     """
 
     copy_specs = [
@@ -402,26 +402,28 @@ class UniqueObject(six.with_metaclass(UniqueObjectMeta)):
     **Members**
 
     .. py:classattribute:: cls_name_singular
-       type: str
 
-       The name of the unique object class in singular form, e.g. for producing automatic messages.
+        type: str
+
+        The name of the unique object class in singular form, e.g. for producing automatic messages.
 
     .. py:classattribute:: cls_name_plural
-       type: str
 
-       The name of the unique object class in plural form, e.g. for producing automatic messages.
+        type: str
+
+        The name of the unique object class in plural form, e.g. for producing automatic messages.
 
     .. py:attribute:: name
-       type: str
-       read-only
 
-       The unique name.
+        type: str (read-only)
+
+        The unique name.
 
     .. py:attribute:: id
-       type: int
-       read-only
 
-       The unique id.
+        type: int (read-only)
+
+        The unique id.
     """
 
     cls_name_singular = "unique_object"

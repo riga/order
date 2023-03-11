@@ -44,40 +44,47 @@ class CopySpec(object):
     **Members**
 
     .. py:attribute:: dst
-       type: string
 
-       The destination attribute.
+        type: string
+
+        The destination attribute.
 
     .. py:attribute:: src
-       type: string
 
-       The source attribute.
+        type: string
+
+        The source attribute.
 
     .. py:attribute:: ref
-       type: bool
 
-       Whether or not the attribute should be passed as a reference instead of being copied.
+        type: bool
+
+        Whether or not the attribute should be passed as a reference instead of being copied.
 
     .. py:attribute:: ref_placeholder
-       type: any
 
-       Placeholder value for attributes carried over as a reference that is used during the copying
-       process.
+        type: any
+
+        Placeholder value for attributes carried over as a reference that is used during the copying
+        process.
 
     .. py:attribute:: skip
-       type: bool
 
-       Whether or not the attribute is skipped when copied with :py:meth:`CopyMixin.copy`.
+        type: bool
+
+        Whether or not the attribute is skipped when copied with :py:meth:`CopyMixin.copy`.
 
     .. py:attribute:: skip_shallow
-       type: bool
 
-       Whether or not the attribute is skipped when copyied with :py:meth:`CopyMixin.copy_shallow`.
+        type: bool
+
+        Whether or not the attribute is skipped when copyied with :py:meth:`CopyMixin.copy_shallow`.
 
     .. py:attribute:: skip_value
-       type: any
 
-       Value to be used for attributes that are skipped in the copy process.
+        type: any
+
+        Value to be used for attributes that are skipped in the copy process.
     """
 
     @classmethod
@@ -218,9 +225,10 @@ class CopyMixin(object):
     **Members**
 
     .. py:classattribute:: copy_specs
-       type: list
 
-       List of copy specifications per attribute.
+        type: list
+
+        List of copy specifications per attribute.
     """
 
     class Deferred(object):
@@ -373,15 +381,16 @@ class AuxDataMixin(object):
     **Members**
 
     .. py:attribute:: aux
-       type: OrderedDict
 
-       The dictionary of auxiliary data.
+        type: OrderedDict
+
+        The dictionary of auxiliary data.
 
     .. py:attribute:: x
-       type: DotAccessProxy
-       read-only
 
-       An object that provides simple attribute access to auxiliary data.
+        type: :py:class:`DotAccessProxy` (read-only)
+
+        An object that provides simple attribute access to auxiliary data.
     """
 
     _no_default = object()
@@ -496,10 +505,11 @@ class TagMixin(object):
     **Members**
 
     .. py:attribute:: tags
+
        type: set
 
-       The set of tags of this object. See :py:meth:`has_tag` for information about how to evaluate
-       them with patterns or regular expressions.
+        The set of tags of this object. See :py:meth:`has_tag` for information about how to evaluate
+        them with patterns or regular expressions.
     """
 
     copy_specs = []
@@ -586,35 +596,41 @@ class DataSourceMixin(object):
     **Members**
 
     .. py:classattribute:: DATA_SOURCE_DATA
-       type: string
 
-       The data source string for data (``"data"``).
+        type: string
+
+        The data source string for data (``"data"``).
 
     .. py:classattribute:: DATA_SOURCE_MC
-       type: string
 
-       The data source string for mc (``"mc"``).
+        type: string
+
+        The data source string for mc (``"mc"``).
 
     .. py:classattribute:: allow_undefined_data_source
-       type: boolean
 
-       A configuration flag for this class that decides whether empty (*None*) data sources are
-       allowed. *False* by default.
+        type: boolean
+
+        A configuration flag for this class that decides whether empty (*None*) data sources are
+        allowed. *False* by default.
 
     .. py:attribute:: is_data
-       type: boolean
 
-       *True* if this object contains information on real data.
+        type: boolean
+
+        *True* if this object contains information on real data.
 
     .. py:attribute:: is_mc
-       type: boolean
 
-       *True* if this object contains information on MC data.
+        type: boolean
+
+        *True* if this object contains information on MC data.
 
     .. py:attribute:: data_source
-       type: string
 
-       Either *DATA_SOURCE_DATA* or *DATA_SOURCE_MC*, depending on the source of contained data.
+        type: string
+
+        Either *DATA_SOURCE_DATA* or *DATA_SOURCE_MC*, depending on the source of contained data.
     """
 
     DATA_SOURCE_DATA = "data"
@@ -722,33 +738,38 @@ class SelectionMixin(object):
     **Members**
 
     .. py:classattribute:: MODE_ROOT
-       type: string
 
-       Flag denoting the ROOT-style selection mode (``"root"``).
+        type: string
+
+        Flag denoting the ROOT-style selection mode (``"root"``).
 
     .. py:classattribute:: MODE_NUMEXP
-       type: string
 
-       Flag denoting the numexpr-style selection mode (``"numexpr"``).
+        type: string
+
+        Flag denoting the numexpr-style selection mode (``"numexpr"``).
 
     .. py:classattribute:: default_str_selection_mode
-       type: string
 
-       The default *str_selection_mode* when none is given in the instance constructor. It is
-       initially set to *MODE_NUMEXPR* if :py:attr:`order.util.ROOT_DEFAULT` is *false*, or to
-       *MODE_ROOT* otherwise.
+        type: string
+
+        The default *str_selection_mode* when none is given in the instance constructor. It is
+        initially set to *MODE_NUMEXPR* if :py:attr:`order.util.ROOT_DEFAULT` is *false*, or to
+        *MODE_ROOT* otherwise.
 
     .. py:attribute:: selection
-       type: string, callable, list
 
-       The selection string, callable or a sequence of them. When a string,
-       :py:attr:`str_selection_mode` decides how the string is treated.
+        type: string, callable, list
+
+        The selection string, callable or a sequence of them. When a string,
+        :py:attr:`str_selection_mode` decides how the string is treated.
 
     .. py:attribute:: str_selection_mode
-       type: string, None
 
-       The selection mode. Should either be *MODE_ROOT* or *MODE_NUMEXPR*. Only considered when
-       :py:attr:`selection` is a string.
+        type: string, None
+
+        The selection mode. Should either be *MODE_ROOT* or *MODE_NUMEXPR*. Only considered when
+        :py:attr:`selection` is a string.
     """
 
     MODE_ROOT = "root"
@@ -876,27 +897,29 @@ class LabelMixin(object):
     **Members**
 
     .. py:attribute:: label
-       type: string
 
-       The label. When this object has a *name* (configurable via *_label_fallback_attr*) attribute,
-       the label defaults to that value when not set.
+        type: string
+
+        The label. When this object has a *name* (configurable via *_label_fallback_attr*)
+        attribute, the label defaults to that value when not set.
 
     .. py:attribute:: label_root
-       type: string
-       read-only
 
-       The label, converted to ROOT-style latex.
+        type: string (read-only)
+
+        The label, converted to ROOT-style latex.
 
     .. py:attribute:: label_short
-       type: string
 
-       A short label, which defaults to the normal label when not set.
+        type: string
+
+        A short label, which defaults to the normal label when not set.
 
     .. py:attribute:: label_short_root
-       type: string
-       read-only
 
-       Short version of the label, converted to ROOT-style latex.
+        type: string (read-only)
+
+        Short version of the label, converted to ROOT-style latex.
     """
 
     copy_specs = []
@@ -998,184 +1021,220 @@ class ColorMixin(object):
     **Members**
 
     .. py:attribute:: color1_r
-       type: float
 
-       Red component of the primary color.
+        type: float
+
+        Red component of the primary color.
 
     .. py:attribute:: color1_g
-       type: float
 
-       Green component of the primary color.
+        type: float
+
+        Green component of the primary color.
 
     .. py:attribute:: color1_b
-       type: float
 
-       Blue component of the primary color.
+        type: float
+
+        Blue component of the primary color.
 
     .. py:attribute:: color1_r_int
-       type: int
 
-       Red component of the primary color, converted to an integer in the [0, 255] range.
+        type: int
+
+        Red component of the primary color, converted to an integer in the [0, 255] range.
 
     .. py:attribute:: color1_g_int
-       type: int
 
-       Green component of the primary color, converted to an integer in the [0, 255] range.
+        type: int
+
+        Green component of the primary color, converted to an integer in the [0, 255] range.
 
     .. py:attribute:: color1_b_int
-       type: int
 
-       Blue component of the primary color, converted to an integer in the [0, 255] range.
+        type: int
+
+        Blue component of the primary color, converted to an integer in the [0, 255] range.
 
     .. py:attribute:: color1_alpha
-       type: float
 
-       The alpha value of the primary color, defaults to 1.0.
+        type: float
+
+        The alpha value of the primary color, defaults to 1.0.
 
     .. py:attribute:: color1
-       type: tuple (float)
 
-       The RGB values of the primary color in a 3-tuple.
+        type: tuple (float)
+
+        The RGB values of the primary color in a 3-tuple.
 
     .. py:attribute:: color1_int
-       type: tuple (int)
 
-       The RGB int values of the primary color in a 3-tuple.
+        type: tuple (int)
+
+        The RGB int values of the primary color in a 3-tuple.
 
     .. py:attribute:: color2_r
-       type: float
 
-       Red component of the secondary color.
+        type: float
+
+        Red component of the secondary color.
 
     .. py:attribute:: color2_g
-       type: float
 
-       Green component of the secondary color.
+        type: float
+
+        Green component of the secondary color.
 
     .. py:attribute:: color2_b
-       type: float
 
-       Blue component of the secondary color.
+        type: float
+
+        Blue component of the secondary color.
 
     .. py:attribute:: color2_r_int
-       type: int
 
-       Red component of the secondary color, converted to an integer in the [0, 255] range.
+        type: int
+
+        Red component of the secondary color, converted to an integer in the [0, 255] range.
 
     .. py:attribute:: color2_g_int
-       type: int
 
-       Green component of the secondary color, converted to an integer in the [0, 255] range.
+        type: int
+
+        Green component of the secondary color, converted to an integer in the [0, 255] range.
 
     .. py:attribute:: color2_b_int
-       type: int
 
-       Blue component of the secondary color, converted to an integer in the [0, 255] range.
+        type: int
+
+        Blue component of the secondary color, converted to an integer in the [0, 255] range.
 
     .. py:attribute:: color2_alpha
-       type: float
 
-       The alpha value of the secondary color, defaults to 1.0.
+        type: float
+
+        The alpha value of the secondary color, defaults to 1.0.
 
     .. py:attribute:: color2
-       type: tuple (float)
 
-       The RGB values of the secondary color in a 3-tuple.
+        type: tuple (float)
+
+        The RGB values of the secondary color in a 3-tuple.
 
     .. py:attribute:: color2_int
-       type: tuple (int)
 
-       The RGB int values of the secondary color in a 3-tuple.
+        type: tuple (int)
+
+        The RGB int values of the secondary color in a 3-tuple.
 
     .. py:attribute:: color3_r
-       type: float
 
-       Red component of the tertiary color.
+        type: float
+
+        Red component of the tertiary color.
 
     .. py:attribute:: color3_g
-       type: float
 
-       Green component of the tertiary color.
+        type: float
+
+        Green component of the tertiary color.
 
     .. py:attribute:: color3_b
-       type: float
 
-       Blue component of the tertiary color.
+        type: float
+
+        Blue component of the tertiary color.
 
     .. py:attribute:: color3_r_int
-       type: int
 
-       Red component of the tertiary color, converted to an integer in the [0, 255] range.
+        type: int
+
+        Red component of the tertiary color, converted to an integer in the [0, 255] range.
 
     .. py:attribute:: color3_g_int
-       type: int
 
-       Green component of the tertiary color, converted to an integer in the [0, 255] range.
+        type: int
+
+        Green component of the tertiary color, converted to an integer in the [0, 255] range.
 
     .. py:attribute:: color3_b_int
-       type: int
 
-       Blue component of the tertiary color, converted to an integer in the [0, 255] range.
+        type: int
+
+        Blue component of the tertiary color, converted to an integer in the [0, 255] range.
 
     .. py:attribute:: color3_alpha
-       type: float
 
-       The alpha value of the tertiary color, defaults to 1.0.
+        type: float
+
+        The alpha value of the tertiary color, defaults to 1.0.
 
     .. py:attribute:: color3
-       type: tuple (float)
 
-       The RGB values of the tertiary color in a 3-tuple.
+        type: tuple (float)
+
+        The RGB values of the tertiary color in a 3-tuple.
 
     .. py:attribute:: color3_int
-       type: tuple (int)
 
-       The RGB int values of the tertiary color in a 3-tuple.
+        type: tuple (int)
+
+        The RGB int values of the tertiary color in a 3-tuple.
 
     .. py:attribute:: color_r
-       type: float
 
-       Shorthand for :py:attr:`color1_r`.
+        type: float
+
+        Shorthand for :py:attr:`color1_r`.
 
     .. py:attribute:: color_g
-       type: float
 
-       Shorthand for :py:attr:`color1_g`.
+        type: float
+
+        Shorthand for :py:attr:`color1_g`.
 
     .. py:attribute:: color_b
-       type: float
 
-       Shorthand for :py:attr:`color1_b`.
+        type: float
+
+        Shorthand for :py:attr:`color1_b`.
 
     .. py:attribute:: color_r_int
-       type: int
 
-       Shorthand for :py:attr:`color1_r_int`.
+        type: int
+
+        Shorthand for :py:attr:`color1_r_int`.
 
     .. py:attribute:: color_g_int
-       type: int
 
-       Shorthand for :py:attr:`color1_g_int`.
+        type: int
+
+        Shorthand for :py:attr:`color1_g_int`.
 
     .. py:attribute:: color_b_int
-       type: int
 
-       Shorthand for :py:attr:`color1_b_int`.
+        type: int
+
+        Shorthand for :py:attr:`color1_b_int`.
 
     .. py:attribute:: color_alpha
-       type: float
 
-       Shorthand for :py:attr:`color1_alpha`.
+        type: float
+
+        Shorthand for :py:attr:`color1_alpha`.
 
     .. py:attribute:: color
-       type: tuple (float)
 
-       Shorthand for :py:attr:`color1`.
+        type: tuple (float)
+
+        Shorthand for :py:attr:`color1`.
 
     .. py:attribute:: color_int
-       type: tuple (int)
 
-       Shorthand for :py:attr:`color1_int`.
+        type: tuple (int)
+
+        Shorthand for :py:attr:`color1_int`.
     """
 
     default_color = (0.0, 0.0, 0.0, 1.0)

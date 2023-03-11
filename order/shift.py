@@ -69,90 +69,97 @@ class Shift(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
     **Members**
 
     .. py:classattribute:: NOMINAL
-       type: string
 
-       Flag denoting a nominal shift (``"nominal"``). Same as
-       `scinum.Number.NOMINAL <https://scinum.readthedocs.io/en/latest/#scinum.Number.NOMINAL>`__.
+        type: string
+
+        Flag denoting a nominal shift (``"nominal"``). Same as
+        `scinum.Number.NOMINAL <https://scinum.readthedocs.io/en/latest/#scinum.Number.NOMINAL>`__.
 
     .. py:classattribute:: UP
-       type: string
 
-       Flag denoting an up variation (``"up"``). Same as
-       `scinum.Number.UP <https://scinum.readthedocs.io/en/latest/#scinum.Number.UP>`__.
+        type: string
+
+        Flag denoting an up variation (``"up"``). Same as
+        `scinum.Number.UP <https://scinum.readthedocs.io/en/latest/#scinum.Number.UP>`__.
 
     .. py:classattribute:: DOWN
-       type: string
 
-       Flag denoting a down variation (``"down"``). Same as
-       `scinum.Number.DOWN <https://scinum.readthedocs.io/en/latest/#scinum.Number.DOWN>`__.
+        type: string
+
+        Flag denoting a down variation (``"down"``). Same as
+        `scinum.Number.DOWN <https://scinum.readthedocs.io/en/latest/#scinum.Number.DOWN>`__.
 
     .. py:classattribute:: RATE
-       type: string
 
-       Flag denoting a rate-changing effect (``"rate"``).
+        type: string
+
+        Flag denoting a rate-changing effect (``"rate"``).
 
     .. py:classattribute:: SHAPE
-       type: string
 
-       Flag denoting a shape-changing effect (``"shape"``).
+        type: string
+
+        Flag denoting a shape-changing effect (``"shape"``).
 
     .. py:classattribute:: RATE_SHAPE
-       type: string
 
-       Flag denoting a both rate- and shape-changing effect (``"rate_shape"``).
+        type: string
+
+        Flag denoting a both rate- and shape-changing effect (``"rate_shape"``).
 
     .. py:attribute:: source
-       type: string
-       read-only
 
-       The source of this shift, e.g. *NOMINAL*, ``"pdf"``, etc.
+        type: string (read-only)
+
+        The source of this shift, e.g. *NOMINAL*, ``"pdf"``, etc.
 
     .. py:attribute:: direction
-       type: string
-       read-only
 
-       The direction of this shift, either *NOMINAL*, *UP* or *DOWN*.
+        type: string (read-only)
+
+        The direction of this shift, either *NOMINAL*, *UP* or *DOWN*.
 
     .. py:attribute:: type
-       type: string
 
-       The type of this shift, either *RATE*, *SHAPE* or *RATE_SHAPE*.
+        type: string
+
+        The type of this shift, either *RATE*, *SHAPE* or *RATE_SHAPE*.
 
     .. py:attribute:: is_nominal
-       type: bool
-       read-only
 
-       Flag denoting if the shift is nominal.
+        type: bool (read-only)
+
+        Flag denoting if the shift is nominal.
 
     .. py:attribute:: is_up
-       type: bool
-       read-only
 
-       Flag denoting if the shift direction is *UP*.
+        type: bool (read-only)
+
+        Flag denoting if the shift direction is *UP*.
 
     .. py:attribute:: is_down
-       type: bool
-       read-only
 
-       Flag denoting if the shift direction is *DOWN*.
+        type: bool (read-only)
+
+        Flag denoting if the shift direction is *DOWN*.
 
     .. py:attribute:: is_rate
-       type: bool
-       read-only
 
-       Flag denoting if the shift type is rate-changing only.
+        type: bool (read-only)
+
+        Flag denoting if the shift type is rate-changing only.
 
     .. py:attribute:: is_shape
-       type: bool
-       read-only
 
-       Flag denoting if the shift type is shape-changing only.
+        type: bool (read-only)
+
+        Flag denoting if the shift type is shape-changing only.
 
     .. py:attribute:: is_rate_shape
-       type: bool
-       read-only
 
-       Flag denoting if the shift type is rate- and shape-changing.
+        type: bool (read-only)
+
+        Flag denoting if the shift type is rate- and shape-changing.
     """
 
     cls_name_singular = "shift"

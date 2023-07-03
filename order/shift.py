@@ -197,9 +197,6 @@ class Shift(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
             split_name("pdf_up")   # -> ("pdf", "up")
             split_name("pdfup")    # -> ValueError: invalid shift name format: pdfup
         """
-        if name is None:
-            return (None, None)
-
         if name == cls.NOMINAL:
             return (cls.NOMINAL, cls.NOMINAL)
 

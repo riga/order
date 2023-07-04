@@ -854,7 +854,8 @@ def unique_tree(**kwargs):
             def has(self, obj, deep=True):
                 """
                 Checks if the :py:attr:`{plural}` index contains an *obj* which might be a *name*,
-                *id*, or an instance. If *deep* is *True*, the lookup is recursive.
+                *id*, or an instance. If *deep* is *True*, the lookup is recursive through
+                potentially nested child {plural}.
                 """
                 return getattr(self, "get_" + singular)(
                     obj,
@@ -868,8 +869,8 @@ def unique_tree(**kwargs):
                 """ get_{singular}(obj, deep=True, default=no_default)
                 Returns a child {singular} given by *obj*, which might be a *name*, *id*, or an
                 instance from the :py:attr:`{plural}` index. If *deep* is *True*, the lookup is
-                recursive. When no {singular} is found, *default* is returned when set. Otherwise,
-                an error is raised.
+                recursive through potentially nested child {plural}. When no {singular} is found,
+                *default* is returned when set. Otherwise, an error is raised.
                 """
                 indexes = [getattr(self, plural)]
                 while len(indexes) > 0:
@@ -1131,7 +1132,8 @@ def unique_tree(**kwargs):
                 def has(self, obj, deep=True):
                     """
                     Checks if the :py:attr:`parent_{plural}` index contains an *obj*, which might be
-                    a *name*, *id*, or an instance. If *deep* is *True*, the lookup is recursive.
+                    a *name*, *id*, or an instance. If *deep* is *True*, the lookup is recursive
+                    through potentially nested parent {plural}.
                     """
                     return getattr(self, "get_parent_" + singular)(
                         obj,
@@ -1145,8 +1147,9 @@ def unique_tree(**kwargs):
                     """ get_parent_{singular}(obj, deep=True, default=no_default)
                     Returns a parent {singular} given by *obj*, which might be a *name*, *id*, or an
                     instance from the :py:attr:`parent_{plural}` index. If *deep* is *True*, the
-                    lookup is recursive. When no {singular} is found, *default* is returned when
-                    set. Otherwise, an error is raised.
+                    lookup is recursive through potentially nested parent {plural}. When no
+                    {singular} is found, *default* is returned when set. Otherwise, an error is
+                    raised.
                     """
                     indexes = [getattr(self, "parent_" + plural)]
                     while len(indexes) > 0:

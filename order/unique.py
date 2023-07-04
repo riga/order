@@ -13,6 +13,7 @@ __all__ = [
 
 
 import collections
+import warnings
 
 import six
 
@@ -750,6 +751,55 @@ def unique_tree(**kwargs):
             for name in index.names():
                 remove_fn(name)
 
+        # walk helper
+        def _walk(self, next_fn, algo="bfs", depth_first=False, include_self=False):
+            # handle cases where the deprecated depth_first argument is used
+            if depth_first:
+                if algo != "bfs":
+                    raise Exception(
+                        "using both 'algo' and 'depth_first' arguments is ambiguous; " +
+                        "'depth_first' is deprecated; use 'algo=\"{}\" instead'".format(algo),
+                    )
+                warnings.warn(
+                    "the 'depth_first' attribute is deprecated; use 'algo=\"dfs\"' instead'",
+                    DeprecationWarning,
+                )
+                algo = "dfs"
+
+            # check the algo
+            if algo == "dfs":
+                algo = "dfs_preorder"
+            known_algos = ["bfs", "dfs_preorder", "dfs_postorder"]
+            if algo not in known_algos:
+                _known_algos = ", ".join(map("'{}'".format, known_algos))
+                raise ValueError(
+                    "unknown traversel order '{}', should be one of {}".format(algo, _known_algos),
+                )
+
+            lookup = collections.deque([(self, 0)])
+            visited = set()
+            while lookup:
+                obj, depth = lookup[0]
+                if obj in visited:
+                    lookup.popleft()
+                    continue
+
+                objs = list(next_fn(obj))
+                if algo == "dfs_postorder" and any(_obj not in visited for _obj in objs):
+                    lookup.extendleft((obj, depth + 1) for obj in reversed(objs))
+                    continue
+
+                if depth > 0 or include_self:
+                    yield (obj, depth, objs)
+                    visited.add(obj)
+
+                lookup.popleft()
+
+                if algo == "dfs_preorder":
+                    lookup.extendleft((obj, depth + 1) for obj in reversed(objs))
+                elif algo == "bfs":
+                    lookup.extend((obj, depth + 1) for obj in objs)
+
         #
         # child methods, independent of parents
         #
@@ -838,28 +888,30 @@ def unique_tree(**kwargs):
 
             # walk children method
             @patch("walk_" + plural)
-            def walk(self, depth_first=False, include_self=False):
+            def walk(self, algo="bfs", depth_first=False, include_self=False):
                 """
                 Walks through the :py:attr:`{plural}` index and per iteration, yields a child
                 {singular}, its depth relative to *this* {singular}, and its child {plural} in a
-                list that can be modified to alter the walking. When *depth_first* is *True*,
-                iterate depth-first instead of the default breadth-first. When *include_self* is
-                *True*, also yield this {singular} instance with a depth of 0.
+                list that can be modified to alter the walking.
+
+                The traversal order is defined by *algo* which allows different values (more
+                `info <https://en.wikipedia.org/wiki/Tree_traversal>`__):
+
+                    - ``"bfs"``: Breadth-first search.
+                    - ``"dfs"``: Alias for ``"dfs_preorder"``.
+                    - ``"dfs_preorder"``: Pre-order depth-first search.
+                    - ``"dfs_postorder"``: Post-order depth-first search.
+
+                When *include_self* is *True*, this {singular} instance is yielded as well with a
+                depth of 0.
                 """
-                lookup = collections.deque([(self, 0)])
-                while lookup:
-                    obj, depth = lookup.popleft()
-                    objs = list(getattr(obj, plural).values())
-
-                    if include_self:
-                        yield (obj, depth, objs)
-                    else:
-                        include_self = True
-
-                    if depth_first:
-                        lookup.extendleft((obj, depth + 1) for obj in reversed(objs))
-                    else:
-                        lookup.extend((obj, depth + 1) for obj in objs)
+                return _walk(
+                    self,
+                    (lambda obj: getattr(obj, plural).values()),
+                    algo=algo,
+                    depth_first=depth_first,
+                    include_self=include_self,
+                )
 
             # get leaves method
             @patch("get_leaf_" + plural)
@@ -869,9 +921,8 @@ def unique_tree(**kwargs):
                 {plural} themselves in a recursive fashion. Possible duplicates due to nested
                 structures are removed.
                 """
-                walker = getattr(self, "walk_" + plural)()
                 leaves = []
-                for obj, _, objs in walker:
+                for obj, _, objs in getattr(self, "walk_" + plural)():
                     if not objs and obj not in leaves:
                         leaves.append(obj)
                 return leaves
@@ -1114,28 +1165,30 @@ def unique_tree(**kwargs):
 
                 # walk parents method
                 @patch("walk_parent_" + plural)  # noqa: F811
-                def walk(self, depth_first=False, include_self=False):  # noqa: F811
+                def walk(self, algo="bfs", depth_first=False, include_self=False):  # noqa: F811
                     """
                     Walks through the :py:attr:`parent_{plural}` index and per iteration, yields a
                     parent {singular}, its depth relative to *this* {singular}, and its parent
-                    {plural} in a list that can be modified to alter the walking. When *depth_first*
-                    is *True*, iterate depth-first instead of the default breadth-first. When
-                    *include_self* is *True*, also yield this {singular} instance with a depth of 0.
+                    {plural} in a list that can be modified to alter the walking.
+
+                    The traversal order is defined by *algo* which allows different values (more
+                    `info <https://en.wikipedia.org/wiki/Tree_traversal>`__):
+
+                        - ``"bfs"``: Breadth-first search.
+                        - ``"dfs"``: Alias for ``"dfs_preorder"``.
+                        - ``"dfs_preorder"``: Pre-order depth-first search.
+                        - ``"dfs_postorder"``: Post-order depth-first search.
+
+                    When *include_self* is *True*, this {singular} instance is yielded as well with
+                    a depth of 0.
                     """
-                    lookup = collections.deque([(self, 0)])
-                    while lookup:
-                        obj, depth = lookup.popleft()
-                        objs = list(getattr(obj, "parent_" + plural).values())
-
-                        if include_self:
-                            yield (obj, depth, objs)
-                        else:
-                            include_self = True
-
-                        if depth_first:
-                            lookup.extendleft((obj, depth + 1) for obj in reversed(objs))
-                        else:
-                            lookup.extend((obj, depth + 1) for obj in objs)
+                    return _walk(
+                        self,
+                        (lambda obj: getattr(obj, "parent_" + plural).values()),
+                        algo=algo,
+                        depth_first=depth_first,
+                        include_self=include_self,
+                    )
 
                 # get roots method
                 @patch("get_root_" + plural)
@@ -1145,9 +1198,8 @@ def unique_tree(**kwargs):
                     no parent {plural} themselves in a recursive fashion. Possible duplicates due to
                     nested structures are removed.
                     """
-                    walker = getattr(self, "walk_parent_" + plural)()
                     roots = []
-                    for obj, _, objs in walker:
+                    for obj, _, objs in getattr(self, "walk_parent_" + plural)():
                         if not objs and obj not in roots:
                             roots.append(obj)
                     return roots

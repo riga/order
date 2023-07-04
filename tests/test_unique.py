@@ -427,19 +427,23 @@ class UniqueTreeTest(unittest.TestCase):
                 self.assertEqual(n, n1)
                 self.assertEqual(len(nodes), 0)
 
-        def walk(depth, this):
-            return [
-                n
+        def walk(include_self, algo):
+            return tuple(
+                n.name
                 for n, _, _ in n1.walk_nodes(
-                    depth_first=depth,
-                    include_self=this,
+                    algo=algo,
+                    include_self=include_self,
                 )
-            ]
+            )
 
-        self.assertListEqual(walk(False, False), [n2, n3, n4])
-        self.assertListEqual(walk(False, True), [n1, n2, n3, n4])
-        self.assertListEqual(walk(True, False), [n2, n4, n3])
-        self.assertListEqual(walk(True, True), [n1, n2, n4, n3])
+        self.assertEqual(walk(False, "bfs"), ("b", "c", "d"))
+        self.assertEqual(walk(True, "bfs"), ("a", "b", "c", "d"))
+
+        self.assertEqual(walk(False, "dfs_preorder"), ("b", "d", "c"))
+        self.assertEqual(walk(True, "dfs_preorder"), ("a", "b", "d", "c"))
+
+        self.assertEqual(walk(False, "dfs_postorder"), ("d", "b", "c"))
+        self.assertEqual(walk(True, "dfs_postorder"), ("d", "b", "c", "a"))
 
         self.assertListEqual(
             [n for n, _, _ in n4.walk_parent_nodes(include_self=True)],

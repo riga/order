@@ -767,8 +767,10 @@ def unique_tree(**kwargs):
                 algo = "dfs"
 
             # check the algo
-            if algo == "dfs":
+            if algo == "dfs" or algo == "dfs_pre":
                 algo = "dfs_preorder"
+            elif algo == "dfs_post":
+                algo = "dfs_postorder"
             known_algos = ["bfs", "dfs_preorder", "dfs_postorder"]
             if algo not in known_algos:
                 _known_algos = ", ".join(map("'{}'".format, known_algos))
@@ -899,9 +901,11 @@ def unique_tree(**kwargs):
                 `info <https://en.wikipedia.org/wiki/Tree_traversal>`__):
 
                     - ``"bfs"``: Breadth-first search.
-                    - ``"dfs"``: Alias for ``"dfs_preorder"``.
                     - ``"dfs_preorder"``: Pre-order depth-first search.
                     - ``"dfs_postorder"``: Post-order depth-first search.
+                    - ``"dfs"``: Alias for ``"dfs_preorder"``.
+                    - ``"dfs_pre"``: Alias for ``"dfs_preorder"``.
+                    - ``"dfs_post"``: Alias for ``"dfs_postorder"``.
 
                 When *include_self* is *True*, this {singular} instance is yielded as well with a
                 depth of 0.
@@ -1178,9 +1182,11 @@ def unique_tree(**kwargs):
                     `info <https://en.wikipedia.org/wiki/Tree_traversal>`__):
 
                         - ``"bfs"``: Breadth-first search.
-                        - ``"dfs"``: Alias for ``"dfs_preorder"``.
                         - ``"dfs_preorder"``: Pre-order depth-first search.
                         - ``"dfs_postorder"``: Post-order depth-first search.
+                        - ``"dfs"``: Alias for ``"dfs_preorder"``.
+                        - ``"dfs_pre"``: Alias for ``"dfs_preorder"``.
+                        - ``"dfs_post"``: Alias for ``"dfs_postorder"``.
 
                     When *include_self* is *True*, this {singular} instance is yielded as well with
                     a depth of 0.

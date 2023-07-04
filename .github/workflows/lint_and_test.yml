@@ -80,12 +80,11 @@ jobs:
       - name: Test 🎢
         run: python -m unittest tests
 
-  test_legacy:
+  test_legacy_py36:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
         python-version:
-          - "2.7"
           - "3.6"
     name: test (python ${{ matrix.python-version }})
     steps:
@@ -98,6 +97,29 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies ☕️
+        run: |
+          pip install -U pip
+          pip install -r requirements_test.txt
+
+      - name: Test 🎢
+        run: python -m unittest tests
+
+  test_legacy_py27:
+    runs-on: ubuntu-20.04
+    container:
+      image: python:2.7.18-buster
+    strategy:
+      matrix:
+        python-version:
+          - "2.7"
+    name: test (python ${{ matrix.python-version }})
+    steps:
+      - name: Checkout ⬇️
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
 
       - name: Install dependencies ☕️
         run: |

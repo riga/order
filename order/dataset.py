@@ -269,19 +269,19 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
 
         return _info
 
-    def set_info(self, shift_name, info):
+    def set_info(self, name, info):
         """
-        Sets an :py:class:`DatasetInfo` object *info* for a given *shift_name*. Returns the object.
+        Sets an :py:class:`DatasetInfo` object *info* for a given *name*. Returns the object.
         """
-        shift_name, info = list(self.__class__.info.fparse(self, {shift_name: info}).items())[0]
-        self.info[shift_name] = info
+        name, info = list(self.__class__.info.fparse(self, {name: info}).items())[0]
+        self.info[name] = info
         return info
 
-    def get_info(self, shift_name):
+    def get_info(self, name):
         """
-        Returns the :py:class:`DatasetInfo` object for a given *shift_name*.
+        Returns the :py:class:`DatasetInfo` object for a given *name*.
         """
-        return self.info[shift_name]
+        return self.info[name]
 
     @property
     def keys(self):

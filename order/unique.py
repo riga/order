@@ -243,7 +243,7 @@ class UniqueObjectIndex(CopyMixin):
 
         return obj
 
-    def extend(self, objs, overwrite=True):
+    def extend(self, objs, overwrite=False):
         """
         Adds multiple new objects to the index. All elements of the sequence *objs*, as well as
         *overwrite*, are forwarded to :py:meth:`add` and the added objects are returned in a list.

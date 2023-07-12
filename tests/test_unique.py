@@ -143,7 +143,7 @@ class UniqueObjectIndexTest(unittest.TestCase):
         C, idx = self.make_index()
         self.assertEqual(len(idx), 3)
 
-        objs = idx.extend([C("baz", 3), C("test", 4)])
+        objs = idx.extend([C("baz", 3), C("test", 4)], overwrite=True)
         self.assertEqual(len(idx), 4)
 
         with self.assertRaises(DuplicateNameException):

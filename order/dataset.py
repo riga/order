@@ -73,6 +73,7 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
             keys=["/ttHTobb_M125.../.../..."],
             n_files=123,
             n_events=456789,
+            gen_order="nlo",
         )
 
         d.info.keys()
@@ -94,11 +95,13 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
                     "keys": ["/ttHTobb_M125.../.../..."],
                     "n_files": 123,
                     "n_events": 456789,
+                    "gen_order": "nlo",
                 },
                 "scale_up": {
                     "keys": ["/ttHTobb_M125_scaleUP.../.../..."],
                     "n_files": 100,
                     "n_events": 40000,
+                    "gen_order": "nlo",
                 },
             },
         )
@@ -147,6 +150,12 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
         type: integer (read-only)
 
         The number of events of the nominal :py:class:`DatasetInfo` object.
+
+    .. py:attribute:: gen_order
+
+        type: string (read-only)
+
+        The generator perturbation order of the nominal :py:class:`DatasetInfo` object.
     """
 
     cls_name_singular = "dataset"
@@ -298,6 +307,11 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
         # n_events getter, nominal info object
         return self.info[Shift.NOMINAL].n_events
 
+    @property
+    def gen_order(self):
+        # gen_order getter, nominal info object
+        return self.info[Shift.NOMINAL].gen_order
+
 
 class DatasetInfo(CopyMixin, AuxDataMixin, TagMixin):
     """
@@ -334,6 +348,12 @@ class DatasetInfo(CopyMixin, AuxDataMixin, TagMixin):
         type: integer
 
         The number of events.
+
+    .. py:attribute:: gen_order
+
+        type: string
+
+        The generator perturbation order.
     """
 
     copy_specs = (
@@ -341,7 +361,7 @@ class DatasetInfo(CopyMixin, AuxDataMixin, TagMixin):
         TagMixin.copy_specs
     )
 
-    def __init__(self, keys=None, n_files=-1, n_events=-1, tags=None, aux=None):
+    def __init__(self, keys=None, n_files=-1, n_events=-1, gen_order=None, tags=None, aux=None):
         CopyMixin.__init__(self)
         AuxDataMixin.__init__(self, aux=aux)
         TagMixin.__init__(self, tags=tags)
@@ -358,6 +378,8 @@ class DatasetInfo(CopyMixin, AuxDataMixin, TagMixin):
             self.n_files = n_files
         if n_events is not None:
             self.n_events = n_events
+        if gen_order is not None:
+            self.gen_order = gen_order
 
     @typed
     def keys(self, keys):
@@ -389,6 +411,14 @@ class DatasetInfo(CopyMixin, AuxDataMixin, TagMixin):
             raise TypeError("invalid n_events type: {}".format(n_events))
 
         return n_events
+
+    @typed
+    def gen_order(self, gen_order):
+        # gen_order parser
+        if not isinstance(gen_order, six.string_types):
+            raise TypeError("invalid gen_order type: {}".format(gen_order))
+
+        return gen_order
 
 
 # prevent circular imports

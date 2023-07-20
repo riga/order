@@ -107,9 +107,9 @@ class Process(
 
     .. py:attribute:: xsecs
 
-        type: dictionary (float -> :py:class:`scinum.Number`)
+        type: dictionary (any -> :py:class:`scinum.Number`)
 
-        Cross sections mapped to a center-of-mass energies with arbitrary units.
+        Cross sections values mapped to keys (e.g. center-of-mass energies).
     """
 
     cls_name_singular = "process"

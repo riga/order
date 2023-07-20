@@ -41,6 +41,7 @@ class ProcessTest(unittest.TestCase):
     def test_attributes(self):
         p = Process("ST", 6, xsecs={13: 5})
         self.assertEqual(p.get_xsec(13).n, 5.0)
+        self.assertIsInstance(list(p.xsecs.keys())[0], float)
 
         p.set_xsec(13, 6)
         self.assertEqual(p.get_xsec(13).n, 6.0)
@@ -48,6 +49,11 @@ class ProcessTest(unittest.TestCase):
         p.xsecs = {14: 7}
         self.assertNotIn(13, p.xsecs)
         self.assertEqual(p.get_xsec(14).n, 7.0)
+
+        p.xsecs = {(14, "nnlo"): 7.5}
+        self.assertNotIn(13, p.xsecs)
+        self.assertNotIn(14, p.xsecs)
+        self.assertEqual(p.get_xsec((14, "nnlo")).n, 7.5)
 
     def test_copy(self):
         p = Process("ttVV", 7, xsecs={13: 5}, color=(0.3, 0.4, 0.5), is_data=False, aux={1: 2})

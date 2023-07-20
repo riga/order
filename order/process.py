@@ -33,8 +33,9 @@ class Process(
 
     **Arguments**
 
-    *xsecs* should be a mapping of center-of-mass energies to cross sections values (automatically
-    converted to `scinum.Number <https://scinum.readthedocs.io/en/latest/#number>`__ instances).
+    *xsecs* should be a mapping of (e.g.) center-of-mass energies to cross sections values
+    (automatically converted to `scinum.Number <https://scinum.readthedocs.io/en/latest/#number>`__
+    instances).
 
     *color*, *color1*, *color2* and *color3* are forwarded to the
     :py:class:`~order.mixins.ColorMixin`, *label* and *label_short* to the
@@ -181,40 +182,46 @@ class Process(
 
         # parse particular values
         _xsecs = {}
-        for ecm, xsec in xsecs.items():
-            if not isinstance(ecm, (int, float)):
-                raise TypeError("invalid xsec energy type: {}".format(ecm))
+        for key, xsec in xsecs.items():
+            # when key is a number, make sure it's a float
+            if isinstance(key, (int, Number)):
+                key = float(key)
+            # value check
             if not isinstance(xsec, Number):
                 try:
                     xsec = Number(xsec)
                 except:
                     raise TypeError("invalid xsec value type: {}".format(xsec))
-            _xsecs[float(ecm)] = xsec
+            _xsecs[key] = xsec
 
         return _xsecs
 
-    def get_xsec(self, ecm):
+    def get_xsec(self, key):
         """
         Returns the cross section (a
-        `scinum.Number <https://scinum.readthedocs.io/en/latest/#number>`__ instance) for a
-        center-of-mass energy *ecm*.
+        `scinum.Number <https://scinum.readthedocs.io/en/latest/#number>`__ instance) for a *key*
+        (e.g. a center-of-mass energy). When *key* is an integer or a number instance, it is
+        converted to float first.
         """
-        return self.xsecs[ecm]
+        if isinstance(key, (int, Number)):
+            key = float(key)
+        return self.xsecs[key]
 
-    def set_xsec(self, ecm, xsec):
+    def set_xsec(self, key, xsec):
         """
-        Sets the cross section for a center-of-mass energy *ecm* to *xsec*. When *xsec* is not a
+        Sets the cross section for a *key* (e.g. a center-of-mass energy) to *xsec*. When *key* is
+        an integer or a number instance, it is converted to float first. When *xsec* is not a
         `scinum.Number <https://scinum.readthedocs.io/en/latest/#number>`__ instance, it is
         converted to one. The (probably converted) value is returned.
         """
-        ecm, xsec = list(self.__class__.xsecs.fparse(self, {ecm: xsec}).items())[0]
-        self.xsecs[ecm] = xsec
+        key, xsec = list(self.__class__.xsecs.fparse(self, {key: xsec}).items())[0]
+        self.xsecs[key] = xsec
         return xsec
 
-    def pretty_print(self, ecm=None, offset=40, max_depth=-1, stream=None, _depth=0, **kwargs):
-        """ pretty_print(ecm=None, offset=40, max_depth=-1, stream=None, **kwargs)
+    def pretty_print(self, xsec_key=None, offset=40, max_depth=-1, stream=None, _depth=0, **kwargs):
+        """ pretty_print(xsec_key=None, offset=40, max_depth=-1, stream=None, **kwargs)
         Prints this process and potentially its subprocesses down to a maximum depth *max_depth* in
-        a structured fashion. When *ecm* is set, process cross section values are shown as well
+        a structured fashion. When *xsec_key* is set, process cross section values are shown as well
         with a maximum horizontal distance of *offset*. *stream* can be a file object and defaults
         to *sys.stdout*. All *kwargs* are forwarded to the :py:meth:`Number.str` methods of the
         cross section numbers.
@@ -225,10 +232,10 @@ class Process(
         # start the entry to print
         entry = "| " * _depth + "> {} ({})".format(self.name, self.id)
 
-        # add cross-section values following an offset when ecm is set
-        if ecm is not None:
+        # add cross-section values following an offset when xsec_key is set
+        if xsec_key is not None:
             entry += " " * (offset - len(entry))
-            xsec = self.xsecs.get(ecm)
+            xsec = self.xsecs.get(xsec_key)
             entry += "  " * _depth + (xsec.str(**kwargs) if xsec else "no cross-section")
 
         stream.write(six.b(entry + "\n") if six.PY3 else (entry + "\n"))
@@ -239,7 +246,7 @@ class Process(
 
         for proc in self.processes:
             proc.pretty_print(
-                ecm=ecm,
+                xsec_key=xsec_key,
                 offset=offset,
                 max_depth=max_depth,
                 stream=stream,

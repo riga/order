@@ -166,11 +166,11 @@ class Shift(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, LabelMixin):
     cls_name_plural = "shifts"
 
     # nominal flag
-    NOMINAL = sn.Number.NOMINAL
+    NOMINAL = str(sn.Number.NOMINAL)
 
     # shift directions
-    UP = sn.Number.UP
-    DOWN = sn.Number.DOWN
+    UP = str(sn.Number.UP)
+    DOWN = str(sn.Number.DOWN)
 
     # shift types
     RATE = "rate"

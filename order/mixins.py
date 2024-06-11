@@ -11,6 +11,7 @@ __all__ = [
 ]
 
 
+import sys
 import re
 import copy
 import collections
@@ -294,7 +295,12 @@ class CopyMixin(object):
                 setattr(self, spec.src, ref_placeholder)
 
         # perform the deep copy operation
-        inst = copy.deepcopy(self)
+        orig_rec_limit = sys.getrecursionlimit()
+        try:
+            sys.setrecursionlimit(max(orig_rec_limit, 10000))
+            inst = copy.deepcopy(self)
+        finally:
+            sys.setrecursionlimit(orig_rec_limit)
 
         # reset skipped attributes
         for spec, obj in skips.items():

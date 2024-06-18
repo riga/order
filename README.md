@@ -1,12 +1,10 @@
-<center>
+<h1>
   <a href="https://github.com/riga/order">
     <img src="https://media.githubusercontent.com/media/riga/order/master/assets/logo240.png" />
   </a>
-</center>
-
+</h1>
 
 <!-- marker-after-logo -->
-
 
 [![Documentation status](https://readthedocs.org/projects/python-order/badge/?version=latest)](http://python-order.readthedocs.io/en/latest)
 [![Lint and test](https://github.com/riga/order/actions/workflows/lint_and_test.yml/badge.svg)](https://github.com/riga/order/actions/workflows/lint_and_test.yml)
@@ -29,9 +27,7 @@ If you're designing a high-energy physics analysis (e.g. with data recorded by a
 - variables, and
 - systematic shifts.
 
-
 <!-- marker-after-header -->
-
 
 ## Getting started
 
@@ -43,15 +39,12 @@ You can also run the notebook interactively on colab or binder:
 
 You can find the full [API documentation on readthedocs](http://python-order.readthedocs.io).
 
-
 <!-- marker-after-getting-started -->
-
 
 ## Projects using order
 
 - [uhh-cms/cmsdb](https://github.com/uhh-cms/cmsdb)
 - tba
-
 
 ## Installation and dependencies
 
@@ -62,7 +55,6 @@ pip install order
 ```
 
 The only dependencies are [scinum](https://pypi.python.org/pypi/scinum) and [six](https://pypi.python.org/pypi/six) (Python 2 support that will be dropped soon), which are installed with the above command.
-
 
 ## Contributing and testing
 
@@ -91,7 +83,6 @@ In addition, [PEP 8](https://www.python.org/dev/peps/pep-0008) compatibility sho
 ```shell
 flake8 order tests setup.py
 ```
-
 
 ## Development
 

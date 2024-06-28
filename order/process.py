@@ -238,7 +238,7 @@ class Process(
             xsec = self.xsecs.get(xsec_key)
             entry += "  " * _depth + (xsec.str(**kwargs) if xsec else "no cross-section")
 
-        stream.write(six.b(entry + "\n") if six.PY3 else (entry + "\n"))
+        stream.write(entry + "\n")
 
         # stop here when max_depth is reached
         if 0 <= max_depth <= _depth:

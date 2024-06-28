@@ -9,12 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout ⬇️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Setup python 🐍
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.9
 
@@ -30,12 +30,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout ⬇️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Setup python 🐍
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.9
 
@@ -63,12 +63,12 @@ jobs:
     name: test (python ${{ matrix.python-version }})
     steps:
       - name: Checkout ⬇️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Setup Python ${{ matrix.python-version }} 🐍
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -89,12 +89,12 @@ jobs:
     name: test (python ${{ matrix.python-version }})
     steps:
       - name: Checkout ⬇️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Setup Python ${{ matrix.python-version }} 🐍
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -117,7 +117,7 @@ jobs:
     name: test (python ${{ matrix.python-version }})
     steps:
       - name: Checkout ⬇️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
@@ -133,7 +133,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout ⬇️
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
           submodules: recursive
@@ -148,7 +148,7 @@ jobs:
           pytest --cov=order --cov-report xml:coverage.xml tests
 
       - name: Upload report 🔝
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml

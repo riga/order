@@ -103,7 +103,7 @@ class UniqueObjectIndex(CopyMixin):
         {"attr": "_cls", "ref": True},
     ]
 
-    def __init__(self, cls, objects=None):
+    def __init__(self, cls, objects=None, lazy_factories=None):
         CopyMixin.__init__(self)
 
         # set the cls using the typed parser
@@ -116,6 +116,11 @@ class UniqueObjectIndex(CopyMixin):
         # add initial objects
         if objects is not None:
             self.extend(objects)
+
+        # set lazy factory functions mapped to keys
+        self._lazy_factories = {}
+        if lazy_factories is not None:
+            self._lazy_factories.update(lazy_factories)
 
         # save a dot access proxy for easy access of objects via name
         self._n = DotAccessProxy(self.get)
@@ -177,6 +182,14 @@ class UniqueObjectIndex(CopyMixin):
     @property
     def n(self):
         return self._n
+
+    def add_lazy_factory(self, key, func):
+        """
+        Adds a lazy factory function *func* to the :py:attr:`lazy_factories` for *key*. When
+        :py:meth:`get` is invoked with *key* and the object is not found, the factory function is
+        called instead to create a new object.
+        """
+        self._lazy_factories[key] = func
 
     def names(self):
         """
@@ -268,7 +281,9 @@ class UniqueObjectIndex(CopyMixin):
         """ get(obj, default=no_default)
         Returns an object that is stored in the index. *obj* might be a *name*, *id*, or an instance
         of *cls*. If *default* is given, it is used as the default return value if no such object
-        could be found. Otherwise, an error is raised.
+        could be found. Otherwise, if *obj* refers to a known lazy factory function previously
+        registered with :py:meth:`add_lazy_factory`, the factory is called to create a new object
+        which is added to the index and returned.
         """
         # when it's already an object, do the lookup by it's name
         orig_obj = obj
@@ -282,6 +297,16 @@ class UniqueObjectIndex(CopyMixin):
         # default
         if default != _no_default:
             return default
+
+        # lazy factory?
+        if obj in self._lazy_factories:
+            _obj = self._lazy_factories[obj](self)
+            if not isinstance(_obj, self._cls):
+                raise TypeError(
+                    "lazy factory function '{}' of {} produced object of wrong type: {}".format(
+                        obj, self, _obj,
+                    ))
+            return self.add(_obj, overwrite=True)
 
         raise ValueError("object '{}' not known to index '{}'".format(orig_obj, self))
 

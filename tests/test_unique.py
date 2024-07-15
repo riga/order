@@ -139,6 +139,21 @@ class UniqueObjectIndexTest(unittest.TestCase):
         with self.assertRaises(DuplicateIdException):
             idx.add("baz", 2)
 
+    def test_lazy_factory(self):
+        C, idx = self.make_index()
+        self.assertEqual(len(idx), 3)
+
+        self.assertFalse(idx.has("lazy"))
+
+        def factory(_):
+            return C("lazy", 4)
+
+        idx.add_lazy_factory("lazy", factory)
+
+        self.assertFalse(idx.has("lazy"))
+        self.assertIsInstance(idx.get("lazy"), C)
+        self.assertTrue(idx.has("lazy"))
+
     def test_extend(self):
         C, idx = self.make_index()
         self.assertEqual(len(idx), 3)

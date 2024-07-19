@@ -54,7 +54,7 @@ class UniqueObjectIndex(CopyMixin):
 
     All attributes are copied, **except** for
 
-       - the index of objects itself.
+        - the index of objects itself.
 
     **Example**
 
@@ -127,7 +127,7 @@ class UniqueObjectIndex(CopyMixin):
 
     def _repr_parts(self):
         return [
-            ("cls", class_id(self.cls)),
+            ("cls", class_id(self._cls)),
             ("len", len(self)),
         ]
 
@@ -150,7 +150,7 @@ class UniqueObjectIndex(CopyMixin):
         """
         Returns the number of objects in the index.
         """
-        return len(self._index)
+        return len(self._index) + len(self._lazy_factories)
 
     def __contains__(self, obj):
         """
@@ -162,6 +162,7 @@ class UniqueObjectIndex(CopyMixin):
         """
         Iterates through the index and yields the contained objects (i.e. the *values*).
         """
+        self._build_lazy_objects()
         for obj in self._index:
             yield obj
 
@@ -191,34 +192,70 @@ class UniqueObjectIndex(CopyMixin):
         """
         self._lazy_factories[key] = func
 
+    def _build_lazy_object(self, key, silent=False):
+        """
+        Builds a lazy object that was registered with :py:meth:`add_lazy_factory` under *key*, adds
+        it to the index and returns it. When *silent* is *True*, no exception is raised when the
+        object could not be built.
+        """
+        if key not in self._lazy_factories and silent:
+            return None
+
+        # build the object
+        obj = self._lazy_factories[key](self)
+        if not isinstance(obj, self._cls):
+            raise TypeError(
+                "lazy factory function '{}' of {} produced object of wrong type: {}".format(
+                    key, self, obj,
+                ),
+            )
+
+        # remove the key from the lazy factories
+        del self._lazy_factories[key]
+
+        return self.add(obj, overwrite=True)
+
+    def _build_lazy_objects(self, silent=False):
+        """
+        Builds all lazy objects that were registered with :py:meth:`add_lazy_factory` and adds them
+        to the index. When *silent* is *True*, no exception is raised when an object could not be
+        built.
+        """
+        for key in list(self._lazy_factories.keys()):
+            self._build_lazy_object(key, silent=silent)
+
     def names(self):
         """
         Returns the names of the contained objects in the index.
         """
-        return list(obj.name for obj in self._index)
+        return list(obj.name for obj in self._index) + list(self._lazy_factories.keys())
 
     def ids(self):
         """
         Returns the ids of the contained objects in the index.
         """
+        self._build_lazy_objects()
         return list(obj.id for obj in self._index)
 
     def keys(self):
         """
         Returns the (name, id) pairs of all objects contained in the index.
         """
+        self._build_lazy_objects()
         return list((obj.name, obj.id) for obj in self._index)
 
     def values(self):
         """
         Returns all objects contained in the index.
         """
+        self._build_lazy_objects()
         return list(self._index)
 
     def items(self):
         """
         Returns (name, id, object) 3-tuples of all objects contained in the index
         """
+        self._build_lazy_objects()
         return list((obj.name, obj.id, obj) for obj in self._index)
 
     def add(self, *args, **kwargs):
@@ -233,21 +270,21 @@ class UniqueObjectIndex(CopyMixin):
         overwrite = kwargs.pop("overwrite", False)
 
         # determine the object to add
-        if len(args) == 1 and isinstance(args[0], self.cls):
+        if len(args) == 1 and isinstance(args[0], self._cls):
             obj = args[0]
         else:
-            obj = self.cls(*args, **kwargs)
+            obj = self._cls(*args, **kwargs)
 
         # check if obj is a duplicate and whether it should overwrite or cause an exception
         for _obj in self:
             if obj.name == _obj.name:
                 if not overwrite:
-                    raise DuplicateNameException(self.cls, obj.name)
+                    raise DuplicateNameException(self._cls, obj.name)
                 self.remove(obj.name)
                 break
             if obj.id == _obj.id:
                 if not overwrite:
-                    raise DuplicateIdException(self.cls, obj.id)
+                    raise DuplicateIdException(self._cls, obj.id)
                 self.remove(obj.id)
                 break
 
@@ -300,13 +337,7 @@ class UniqueObjectIndex(CopyMixin):
 
         # lazy factory?
         if obj in self._lazy_factories:
-            _obj = self._lazy_factories[obj](self)
-            if not isinstance(_obj, self._cls):
-                raise TypeError(
-                    "lazy factory function '{}' of {} produced object of wrong type: {}".format(
-                        obj, self, _obj,
-                    ))
-            return self.add(_obj, overwrite=True)
+            return self._build_lazy_object(obj)
 
         raise ValueError("object '{}' not known to index '{}'".format(orig_obj, self))
 
@@ -316,6 +347,8 @@ class UniqueObjectIndex(CopyMixin):
         the default return value if no object could be found. Otherwise, an exception is raised.
         """
         if len(self) > 0:
+            if not self._index:
+                self._build_lazy_object(list(self._lazy_factories.keys())[0])
             return self._index[0]
 
         # default
@@ -330,6 +363,8 @@ class UniqueObjectIndex(CopyMixin):
         the default return value if no object could be found. Otherwise, an exception is raised.
         """
         if len(self) > 0:
+            if not self._index:
+                self._build_lazy_object(list(self._lazy_factories.keys())[-1])
             return self._index[-1]
 
         # default
@@ -343,6 +378,15 @@ class UniqueObjectIndex(CopyMixin):
         Checks if an object is contained in the index. *obj* might be a *name*, *id*, or an instance
         of the wrapped *cls*.
         """
+        # eager check for lazy factories when the object is or has a name
+        name = None
+        if isinstance(obj, self._cls):
+            name = obj.name
+        elif isinstance(obj, six.string_types):
+            name = obj
+        if name and name in self._lazy_factories:
+            return True
+
         return self.get(obj, default=_not_found) != _not_found
 
     def index(self, obj):

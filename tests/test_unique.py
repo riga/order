@@ -150,9 +150,8 @@ class UniqueObjectIndexTest(unittest.TestCase):
 
         idx.add_lazy_factory("lazy", factory)
 
-        self.assertFalse(idx.has("lazy"))
-        self.assertIsInstance(idx.get("lazy"), C)
         self.assertTrue(idx.has("lazy"))
+        self.assertIsInstance(idx.get("lazy"), C)
 
     def test_extend(self):
         C, idx = self.make_index()

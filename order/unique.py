@@ -202,16 +202,13 @@ class UniqueObjectIndex(CopyMixin):
             return None
 
         # build the object
-        obj = self._lazy_factories[key](self)
+        obj = self._lazy_factories.pop(key)(self)
         if not isinstance(obj, self._cls):
             raise TypeError(
                 "lazy factory function '{}' of {} produced object of wrong type: {}".format(
                     key, self, obj,
                 ),
             )
-
-        # remove the key from the lazy factories
-        del self._lazy_factories[key]
 
         return self.add(obj, overwrite=True)
 
@@ -221,6 +218,9 @@ class UniqueObjectIndex(CopyMixin):
         to the index. When *silent* is *True*, no exception is raised when an object could not be
         built.
         """
+        if not self._lazy_factories:
+            return
+
         for key in list(self._lazy_factories.keys()):
             self._build_lazy_object(key, silent=silent)
 
@@ -276,7 +276,7 @@ class UniqueObjectIndex(CopyMixin):
             obj = self._cls(*args, **kwargs)
 
         # check if obj is a duplicate and whether it should overwrite or cause an exception
-        for _obj in self:
+        for _obj in self._index:
             if obj.name == _obj.name:
                 if not overwrite:
                     raise DuplicateNameException(self._cls, obj.name)
@@ -287,6 +287,12 @@ class UniqueObjectIndex(CopyMixin):
                     raise DuplicateIdException(self._cls, obj.id)
                 self.remove(obj.id)
                 break
+
+        # also check for lazy factories
+        if obj.name in self._lazy_factories:
+            if not overwrite:
+                raise DuplicateNameException(self._cls, obj.name)
+            self._lazy_factories.pop(obj.name)
 
         # add to the index
         self._index.append(obj)
@@ -327,7 +333,7 @@ class UniqueObjectIndex(CopyMixin):
         if isinstance(obj, self._cls):
             obj = obj.name
 
-        for _obj in self:
+        for _obj in self._index:
             if obj in (_obj.name, _obj.id):
                 return _obj
 

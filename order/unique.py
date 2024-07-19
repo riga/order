@@ -113,14 +113,14 @@ class UniqueObjectIndex(CopyMixin):
         # create the index
         self._index = []
 
-        # add initial objects
-        if objects is not None:
-            self.extend(objects)
-
         # set lazy factory functions mapped to keys
         self._lazy_factories = {}
         if lazy_factories is not None:
             self._lazy_factories.update(lazy_factories)
+
+        # add initial objects
+        if objects is not None:
+            self.extend(objects)
 
         # save a dot access proxy for easy access of objects via name
         self._n = DotAccessProxy(self.get)

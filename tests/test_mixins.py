@@ -299,6 +299,18 @@ class LabelMixinTest(unittest.TestCase):
         obj.label = None
         self.assertIsNone(obj.label_short)
 
+    def test_constructor_list(self):
+        obj = LabelMixin(label=[r"$\eq$ 3 jets", "2 tags"], label_short=["3j", "2t"])
+
+        self.assertEqual(obj.label, [r"$\eq$ 3 jets", "2 tags"])
+        self.assertEqual(obj.label_short, ["3j", "2t"])
+        self.assertEqual(obj.label_root, ["#eq 3 jets", "2 tags"])
+
+        obj.label_short = None
+        self.assertEqual(obj.label_short, obj.label)
+        obj.label = None
+        self.assertIsNone(obj.label_short)
+
 
 class ColorMixinTest(unittest.TestCase):
 

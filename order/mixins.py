@@ -871,7 +871,8 @@ class SelectionMixin(object):
 class LabelMixin(object):
     r"""
     Mixin-class that provides a label, a short version of that label, and some convenience
-    attributes.
+    attributes. Both labels can either be strings or list of strings. The latter case can be useful
+    for formatting at a late stage, e.g., for showing multiline labels.
 
     **Arguments**
 
@@ -904,26 +905,26 @@ class LabelMixin(object):
 
     .. py:attribute:: label
 
-        type: string
+        type: string, list
 
         The label. When this object has a *name* (configurable via *_label_fallback_attr*)
-        attribute, the label defaults to that value when not set.
+        attribute, the label defaults to that value when not set. Can also be a list of strings.
 
     .. py:attribute:: label_root
 
-        type: string (read-only)
+        type: string, list (read-only)
 
         The label, converted to ROOT-style latex.
 
     .. py:attribute:: label_short
 
-        type: string
+        type: string, list
 
         A short label, which defaults to the normal label when not set.
 
     .. py:attribute:: label_short_root
 
-        type: string (read-only)
+        type: string, list (read-only)
 
         Short version of the label, converted to ROOT-style latex.
     """
@@ -961,12 +962,16 @@ class LabelMixin(object):
             self._label = None
         elif isinstance(label, six.string_types):
             self._label = str(label)
+        elif isinstance(label, (list, tuple)):
+            self._label = list(map(str, label))
         else:
             raise TypeError("invalid label type: {}".format(label))
 
     @property
     def label_root(self):
         # label_root getter
+        if isinstance(self.label, (list, tuple)):
+            return [to_root_latex(label) for label in self.label]
         return to_root_latex(self.label)
 
     @property
@@ -981,12 +986,16 @@ class LabelMixin(object):
             self._label_short = None
         elif isinstance(label_short, six.string_types):
             self._label_short = str(label_short)
+        elif isinstance(label_short, (list, tuple)):
+            self._label_short = list(map(str, label_short))
         else:
             raise TypeError("invalid label_short type: {}".format(label_short))
 
     @property
     def label_short_root(self):
         # label_short_root getter
+        if isinstance(self.label_short, (list, tuple)):
+            return [to_root_latex(label) for label in self.label_short]
         return to_root_latex(self.label_short)
 
 

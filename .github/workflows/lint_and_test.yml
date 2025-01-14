@@ -51,75 +51,28 @@ jobs:
         run: twine check "dist/$( python setup.py --fullname ).tar.gz"
 
   test:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version:
-          - "3.7"
-          - "3.8"
-          - "3.9"
-          - "3.10"
-          - "3.11"
-    name: test (python ${{ matrix.python-version }})
+        version:
+          - {python: "2.7", os: ubuntu-22.04}
+          - {python: "3.6", os: ubuntu-20.04}
+          - {python: "3.7", os: ubuntu-22.04}
+          - {python: "3.8", os: ubuntu-latest}
+          - {python: "3.9", os: ubuntu-latest}
+          - {python: "3.10", os: ubuntu-latest}
+          - {python: "3.11", os: ubuntu-latest}
+    runs-on: ${{ matrix.version.os }}
+    name: test (python ${{ matrix.version.python }})
     steps:
       - name: Checkout ⬇️
         uses: actions/checkout@v4
         with:
           persist-credentials: false
 
-      - name: Setup Python ${{ matrix.python-version }} 🐍
+      - name: Setup Python ${{ matrix.version.python }} 🐍
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies ☕️
-        run: |
-          pip install -U pip
-          pip install -r requirements_test.txt
-
-      - name: Test 🎢
-        run: python -m unittest tests
-
-  test_legacy_py36:
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        python-version:
-          - "3.6"
-    name: test (python ${{ matrix.python-version }})
-    steps:
-      - name: Checkout ⬇️
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Setup Python ${{ matrix.python-version }} 🐍
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies ☕️
-        run: |
-          pip install -U pip
-          pip install -r requirements_test.txt
-
-      - name: Test 🎢
-        run: python -m unittest tests
-
-  test_legacy_py27:
-    runs-on: ubuntu-20.04
-    container:
-      image: python:2.7.18-buster
-    strategy:
-      matrix:
-        python-version:
-          - "2.7"
-    name: test (python ${{ matrix.python-version }})
-    steps:
-      - name: Checkout ⬇️
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
+          python-version: ${{ matrix.version.python }}
 
       - name: Install dependencies ☕️
         run: |
@@ -148,7 +101,7 @@ jobs:
           pytest --cov=order --cov-report xml:coverage.xml tests
 
       - name: Upload report 🔝
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml

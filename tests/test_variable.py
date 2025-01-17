@@ -153,6 +153,10 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(v.get_full_x_title(), "Muon transverse momentum / GeV")
         self.assertEqual(v.get_full_x_title(unit=None), "Muon transverse momentum / GeV")
         self.assertEqual(v.get_full_x_title(unit=""), "Muon transverse momentum")
+        self.assertEqual(
+            v.get_full_x_title(unit_format="{title} [{unit}]"),
+            "Muon transverse momentum [GeV]",
+        )
         self.assertEqual(v.get_full_x_title(short=True), "$\\mu p_{T}$ / GeV")
         self.assertEqual(v.get_full_x_title(short=True, root=True), "#mu p_{T} / GeV")
 
@@ -161,6 +165,10 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(v.get_full_y_title(bin_width=0.2), "Entries / 0.2 GeV")
         self.assertEqual(v.get_full_y_title(unit=""), "Entries / 0.25")
         self.assertEqual(v.get_full_y_title(unit="10^9eV"), "Entries / 0.25 10^9eV")
+        self.assertEqual(
+            v.get_full_y_title(unit_format="{title} [{unit}]"),
+            "Entries [0.25 GeV]",
+        )
         self.assertEqual(v.get_full_y_title(bin_width=0.2, unit=""), "Entries / 0.2")
         self.assertEqual(v.get_full_y_title(short=True), "N / 0.25 GeV")
         self.assertEqual(
@@ -168,6 +176,10 @@ class VariableTest(unittest.TestCase):
             "foo;Muon transverse momentum / GeV;Entries / 0.25 GeV",
         )
         self.assertEqual(v.get_full_title(short=True), r"foo;$\mu p_{T}$ / GeV;N / 0.25 GeV")
+        self.assertEqual(
+            v.get_full_title(unit_format="{title} [{unit}]"),
+            "foo;Muon transverse momentum [GeV];Entries [0.25 GeV]",
+        )
 
         v.unit_format = "{title} [{unit}]"
         self.assertEqual(

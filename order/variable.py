@@ -558,7 +558,7 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         bin_width = self.bin_width
         return [self.x_min + i * bin_width for i in range(self.n_bins + 1)]
 
-    def get_full_x_title(self, unit=None, short=False, root=ROOT_DEFAULT):
+    def get_full_x_title(self, unit=None, unit_format=None, short=False, root=ROOT_DEFAULT):
         """
         Returns the full title (i.e. with unit string) of the x-axis. When *unit* is *None*, it
         defaults to the :py:attr:`unit` if this instance. No unit is shown if it is one or it
@@ -575,11 +575,14 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
         # create the full title
         if unit and unit not in ("1", 1):
-            title = self.unit_format.format(title=title, unit=unit)
+            if unit_format is None:
+                unit_format = self.unit_format
+            title = unit_format.format(title=title, unit=unit)
 
         return to_root_latex(title) if root else title
 
-    def get_full_y_title(self, bin_width=None, unit=None, short=False, root=ROOT_DEFAULT):
+    def get_full_y_title(self, bin_width=None, unit=None, unit_format=None, short=False,
+            root=ROOT_DEFAULT):
         """
         Returns the full title (i.e. with bin width and unit string) of the y-axis. When not *None*,
         the value *bin_width* instead of the one evaluated from *binning* when even. When *unit* is
@@ -608,13 +611,17 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
         # create the full title
         if parts:
-            title = self.unit_format.format(title=title, unit=" ".join(parts))
+            if unit_format is None:
+                unit_format = self.unit_format
+            title = unit_format.format(title=title, unit=" ".join(parts))
 
         return to_root_latex(title) if root else title
 
     def get_full_title(
         self,
         name=None,
+        unit=None,
+        unit_format=None,
         short=False,
         short_x=None,
         short_y=None,
@@ -634,8 +641,10 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
         if short_y is None:
             short_y = short
 
-        x_title = self.get_full_x_title(short=short_x, root=root)
-        y_title = self.get_full_y_title(bin_width=bin_width, short=short_y, root=root)
+        x_title = self.get_full_x_title(unit=unit, unit_format=unit_format, short=short_x,
+            root=root)
+        y_title = self.get_full_y_title(unit=unit, unit_format=unit_format, bin_width=bin_width,
+            short=short_y, root=root)
 
         return ";".join([name, x_title, y_title])
 

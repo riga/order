@@ -13,3 +13,4 @@ build
 docs/_build
 .coverage
 coverage*.xml
+.python-version

@@ -265,8 +265,6 @@ class Dataset(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, DataSourceMixin, 
 
         _info = {}
         for name, obj in info.items():
-            if not isinstance(name, six.string_types):
-                raise TypeError("invalid info name type: {}".format(name))
             if not isinstance(obj, DatasetInfo):
                 if not isinstance(obj, dict):
                     try:

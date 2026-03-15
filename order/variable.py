@@ -247,6 +247,12 @@ class Variable(UniqueObject, CopyMixin, AuxDataMixin, TagMixin, SelectionMixin):
 
     # attributes for copying
     copy_specs = (
+        [
+            {
+                "attr": "_expression",
+                "ref": True,
+            },
+        ] +
         UniqueObject.copy_specs +
         AuxDataMixin.copy_specs +
         TagMixin.copy_specs +

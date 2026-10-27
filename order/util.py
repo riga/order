@@ -74,7 +74,6 @@ class typed(property):
             # build the default name
             if name is None:
                 name = fparse.__name__
-            self.__name__ = name
 
             # the name of the wrapped member
             m_name = "_" + name
@@ -85,6 +84,9 @@ class typed(property):
                 self._fset(m_name) if setter else None,
                 self._fdel(m_name) if deleter else None,
             )
+
+            # set the name after the super constructor, which resets it on python >= 3.13
+            self.__name__ = name
 
     def __call__(self, fparse):
         return self.__class__(fparse, *self._args)

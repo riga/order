@@ -877,6 +877,22 @@ def unique_tree(**kwargs):
                 elif algo == "bfs":
                     lookup.extend((obj, depth + 1) for obj in objs)
 
+        # deep get helper, skipping objects whose index was already searched
+        def _deep_get(self, obj, index_attr, deep):
+            indexes = collections.deque([getattr(self, index_attr)])
+            visited = set()
+            while indexes:
+                index = indexes.popleft()
+                _obj = index.get(obj, default=_not_found)
+                if _obj != _not_found:
+                    return _obj
+                if deep:
+                    for _obj in index:
+                        if id(_obj) not in visited:
+                            visited.add(id(_obj))
+                            indexes.append(getattr(_obj, index_attr))
+            return _not_found
+
         #
         # child methods, independent of parents
         #
@@ -949,14 +965,9 @@ def unique_tree(**kwargs):
                 recursive through potentially nested child {plural}. When no {singular} is found,
                 *default* is returned when set. Otherwise, an error is raised.
                 """
-                indexes = [getattr(self, plural)]
-                while len(indexes) > 0:
-                    index = indexes.pop(0)
-                    _obj = index.get(obj, default=_not_found)
-                    if _obj != _not_found:
-                        return _obj
-                    if deep:
-                        indexes.extend(getattr(_obj, plural) for _obj in index)
+                _obj = _deep_get(self, obj, plural, deep)
+                if _obj != _not_found:
+                    return _obj
 
                 # default
                 if default != _no_default:
@@ -1230,14 +1241,9 @@ def unique_tree(**kwargs):
                     {singular} is found, *default* is returned when set. Otherwise, an error is
                     raised.
                     """
-                    indexes = [getattr(self, "parent_" + plural)]
-                    while len(indexes) > 0:
-                        index = indexes.pop(0)
-                        _obj = index.get(obj, default=_not_found)
-                        if _obj != _not_found:
-                            return _obj
-                        if deep:
-                            indexes.extend(getattr(_obj, "parent_" + plural) for _obj in index)
+                    _obj = _deep_get(self, obj, "parent_" + plural, deep)
+                    if _obj != _not_found:
+                        return _obj
 
                     # default
                     if default != _no_default:
